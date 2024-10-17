@@ -54,7 +54,10 @@ Running our code
 1. Create a secrets folder that is on the same level as the project folder.
 2. Head to [GCP Console](https://console.cloud.google.com/home/dashboard).
 3. Search for "Service Accounts" from the top search box OR go to: "IAM & Admins" > "Service Accounts" and create a new service account called "MSMBAllstars".
-4. For "Grant this service account access to project", select "Cloud Storage" > "Storage Object Viewer"
+4. For "Grant this service account access to project", and give the account the following three permissions:
+      - "Cloud Storage" > "Storage Object Viewer"
+      - "Cloud Storage" > "Storage Object User"
+      - "Cloud Storage" > "Storage Object Creator"
 5. Click done. This will create a service account.
 6. Click on the "..." under the "Actions" column and select "Manage keys".
 7. Click on "ADD KEY" > "Create new key" with "Key type" as JSON.
@@ -71,7 +74,7 @@ Running our code
 3. Repeat step 2 for src/preprocessing/docker-shell.bat.
 
 **Execute Dockerfile**
-1. Make sure the Docker application is operational.
+1. Execute docker-shell.sh from its directory to build and run the docker container.
 2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
 ![bucket-data](assets/bucket-data.png)
 
