@@ -3,9 +3,9 @@
 # exit immediately if a command exits with a non-zero status
 set -e
 
-export IMAGE_NAME="preprocessing-preprocess-image"
+export IMAGE_NAME="preprocessing-atp-data"
 export BASE_DIR=$(pwd)
-export SECRETS_DIR=$(pwd)/../../../../secrets/
+export SECRETS_DIR=$(pwd)/../../../secrets/
 export GCS_BUCKET_NAME="msmballstars-data"
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"

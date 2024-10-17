@@ -68,13 +68,16 @@ Running our code
 2. Search for "Buckets" from the top search box OR go to: "Cloud Storage" > "Buckets" and create a new bucket with an appropriate bucket name e.g. "msmballstars-test".
 3. Click done. This will create a new GCS Bucket.
 
+**Add Raw Data to GCS Bucket**
+1. In the new GCS Bucket, create a folder called "raw_data".
+2. Upload all of the atp_matches_<year>.csv files from https://github.com/JeffSackmann/tennis_atp/tree/master into the "raw_data" folder.
+
 **Set GCP Credentials**
 1. Head to src/preprocessing/docker-shell.sh.
 2. Replace `GCS_BUCKET_NAME` and `GCP_PROJECT` with corresponding GCS Bucket Name that you have chosen above and GCP Project Name.
-3. Repeat step 2 for src/preprocessing/docker-shell.bat.
 
 **Execute Dockerfile**
-1. Execute docker-shell.sh from its directory to build and run the docker container.f
+1. Execute docker-shell.sh from its directory to build and run the docker container.
 2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
 ![bucket-data](assets/bucket-data.png)
 
