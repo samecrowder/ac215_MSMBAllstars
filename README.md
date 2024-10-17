@@ -2,9 +2,10 @@ AC215 - Milestone 2 (MSMBAllstars)
 ==============================
 **Team Members**
 
-- Amelia Li
-- Rebecca Qiu
-- Peter Wu
+- Itamar Belson
+- Kenny Chen
+- Sam Crowder
+- Clay Coleman
 
 **Group Name**
 
@@ -12,11 +13,12 @@ MSMBAllstars
 
 **Project**
 
-The goal of this project is to develop a machine learning application that accurately identifies the types of food present in a user-uploaded image. Based on the foods identified, the application will provide the user with relevant nutritional information and personalized dietary recommendations. This project will involve key phases of data preprocessing, model development, and application interface development, leveraging TensorFlow's Food-101 dataset.
+The goal of this project is to develop a machine learning application that accurately predicts the outcome of a tennis match given a handful of inputs about the matchup.
+We plan to use a recurrent architecture (e.g. LSTM) trained on an autoregressive format of the underlying data, as in train on match i to j for player 1 and similarly for player 2, (using the same LSTM block across two players)  join the two hidden state outputs at j, and predict probability of winning in match j+1 where player 1 and player 2 will play (where i <= j).
 
 ### Milestone 2 ###
 
-We'll predominantly employ TensorFlow's Food-101 dataset, featuring 101,000 annotated food images across 101 categories. Additionally, we will correlate the identified food items with nutritional metrics obtained from Kaggle's Nutrition datasets and a database called Nutritional Facts for Most Common Foods, which together offer around 9,000 nutritional records. Our dataset is securely hosted in a private Google Cloud Bucket.
+We'll primarily use a dataset available on GitHub of all ATP matches over the last several decades, presented in CSV format. This dataset can be viewed here: https://github.com/JeffSackmann/tennis_atp/tree/master.
 
 Project Organization
 ------------
@@ -37,14 +39,12 @@ Project Organization
                 └── requirements.txt
 Preprocess container
 ------------
-- This container ingests 4.65GB of the [Food-101 dataset](https://www.tensorflow.org/datasets/catalog/food101) and performs image preprocessing before uploading the modified data to a GCS Bucket.
-- It also fetches and uploads [nutritional data](https://raw.githubusercontent.com/prasertcbs/basic-dataset/master/nutrients.csv) as a CSV file to the same GCS Bucket.
 - Required inputs: GCS Project Name and GCS Bucket Name.
 - Output: Processed data stored in the GCS Bucket.
 
-(1) `src/preprocessing/preprocess.py`: This file manages the preprocessing of our 4.65GB dataset. Image dimensions are resized to 128x128 pixels to expedite subsequent processing. We apply random transformations such as horizontal flips, rotations, and zooms. These preprocessed images are batch-processed and uploaded to the GCS Bucket as a zip file.
+(1) `src/preprocessing/preprocess.py`: This file manages the preprocessing of our dataset. TODO(sam) determine what preprocessing we do exactly
 
-(2) `src/preprocessing/requirements.txt`: Lists the Python packages essential for image preprocessing.
+(2) `src/preprocessing/requirements.txt`: Lists the Python packages essential for image preprocessing. TODO(sam) which of these do we actually need?
 
 (3) `src/preprocessing/Dockerfile`: The Dockerfile is configured to use `python:3.9-slim-buster`. It sets up volumes and uses secret keys (which should not be uploaded to GitHub) for connecting to the GCS Bucket.
 
