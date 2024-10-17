@@ -1,3 +1,7 @@
 #!/bin/bash
+set -e
+
 echo "Starting script"
-exec python preprocess.py "$@"
+python /app/preprocess.py
+
+exec "$@"
