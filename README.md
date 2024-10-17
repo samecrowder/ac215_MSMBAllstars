@@ -42,9 +42,9 @@ Preprocess container
 - Required inputs: GCS Project Name and GCS Bucket Name.
 - Output: Processed data stored in the GCS Bucket.
 
-(1) `src/preprocessing/preprocess.py`: This file manages the preprocessing of our dataset. TODO(sam) determine what preprocessing we do exactly
+(1) `src/preprocessing/preprocess.py`: This file manages the preprocessing of our dataset.
 
-(2) `src/preprocessing/requirements.txt`: Lists the Python packages essential for image preprocessing. TODO(sam) which of these do we actually need?
+(2) `src/preprocessing/Pipfile`: Lists the Python packages essential for image preprocessing.
 
 (3) `src/preprocessing/Dockerfile`: The Dockerfile is configured to use `python:3.9-slim-buster`. It sets up volumes and uses secret keys (which should not be uploaded to GitHub) for connecting to the GCS Bucket.
 
@@ -74,7 +74,7 @@ Running our code
 3. Repeat step 2 for src/preprocessing/docker-shell.bat.
 
 **Execute Dockerfile**
-1. Execute docker-shell.sh from its directory to build and run the docker container.
+1. Execute docker-shell.sh from its directory to build and run the docker container.f
 2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
 ![bucket-data](assets/bucket-data.png)
 
