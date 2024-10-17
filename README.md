@@ -1,4 +1,4 @@
-AC215 - Milestone 2 (PlatePals)
+AC215 - Milestone 2 (MSMBAllstars)
 ==============================
 **Team Members**
 
@@ -8,7 +8,7 @@ AC215 - Milestone 2 (PlatePals)
 
 **Group Name**
 
-PlatePals
+MSMBAllstars
 
 **Project**
 
@@ -62,7 +62,7 @@ Running our code
 
 **Setup GCS Bucket**
 1. Head to [GCP Console](https://console.cloud.google.com/home/dashboard).
-2. Search for "Buckets" from the top search box OR go to: "Cloud Storage" > "Buckets" and create a new bucket with an appropriate bucket name e.g. "platepals-test".
+2. Search for "Buckets" from the top search box OR go to: "Cloud Storage" > "Buckets" and create a new bucket with an appropriate bucket name e.g. "msmballstars-test".
 3. Click done. This will create a new GCS Bucket.
 
 **Set GCP Credentials**
@@ -72,8 +72,7 @@ Running our code
 
 **Execute Dockerfile**
 1. Make sure the Docker application is operational.
-2. **NOTE: EXECUTION MAY TAKE 2-3 HOURS DEPENDING ON NETWORK SPEED.** Navigate to src/preprocessing and execute `sh docker-shell.sh`.
-3. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
+2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
 ![bucket-data](assets/bucket-data.png)
 
 DVC Setup
@@ -88,11 +87,3 @@ This step is entirely optional.
 5. Run the command `git add .gitignore version1.dvc`
 6. Run `git commit -m "added raw data"`.
 9. You have now committed the latest version of the data using dvc.
-
-
-Challenges and Future Directions
-------------
-
-1. **Data Transfer Time**: We've observed that the data download and upload process currently takes between 2-3 hours. Although we've optimized the process to some extent, we aim to investigate further to determine whether these durations can be shortened. This is on our agenda for the next milestone.
-
-2. **Remote Data and DVC Integration**: Our attempts to integrate DVC have been unsuccessful due to the remote storage of our dataset in a GCS Bucket. The in-class examples primarily utilize locally-stored data, making our remote setup a complicating factor. We're exploring alternative solutions, such as employing `gcsfuse` to potentially mount our GCS Bucket, to address this challenge.
