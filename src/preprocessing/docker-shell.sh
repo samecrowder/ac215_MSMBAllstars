@@ -5,11 +5,11 @@ set -e
 
 export IMAGE_NAME="preprocessing-preprocess-image"
 export BASE_DIR=$(pwd)
-export SECRETS_DIR=$(pwd)/../../../secrets/
+export SECRETS_DIR=$(pwd)/../../../../secrets/
 export GCS_BUCKET_NAME="msmballstars-data"
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
-export GOOGLE_APPLICATION_CREDENTIALS=/../secrets/data-service-account.json
+export GOOGLE_APPLICATION_CREDENTIALS=./data-service-account.json
 
 # Check to see if path to secrets is correct
 if [ ! -f "$SECRETS_DIR/data-service-account.json" ]; then
