@@ -1,8 +1,8 @@
 export IMAGE_NAME="preprocessing-preprocess-image"
 export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../../secrets/
-export GCS_BUCKET_NAME="msmballstars_data"
-export GCP_PROJECT="AC215"
+export GCS_BUCKET_NAME="msmballstars-data"
+export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
 export GOOGLE_APPLICATION_CREDENTIALS=/../secrets/data-service-account.json
 

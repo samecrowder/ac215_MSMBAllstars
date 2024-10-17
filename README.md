@@ -1,92 +1,98 @@
-## Milestone 2 Template
-
-```
-The files are empty placeholders only. You may adjust this template as appropriate for your project.
-Never commit large data files,trained models, personal API Keys/secrets to GitHub
-```
-
-#### Project Milestone 2 Organization
-
-```
-├── Readme.md
-├── data # DO NOT UPLOAD DATA TO GITHUB, only .gitkeep to keep the directory or a really small sample
-├── notebooks
-│   └── eda.ipynb
-├── references
-├── reports
-│   └── Statement of Work_Sample.pdf
-└── src
-    ├── datapipeline
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── dataloader.py
-    │   ├── docker-shell.sh
-    │   ├── preprocess_cv.py
-    │   ├── preprocess_rag.py
-    ├── docker-compose.yml
-    └── models
-        ├── Dockerfile
-        ├── docker-shell.sh
-        ├── infer_model.py
-        ├── model_rag.py
-        └── train_model.py
-```
-
-# AC215 - Milestone2 - Cheesy App
-
+AC215 - Milestone 2 (PlatePals)
+==============================
 **Team Members**
-Pavlos Parmigianopapas, Pavlos Ricottapapas and Pavlos Gouda-papas
+
+- Amelia Li
+- Rebecca Qiu
+- Peter Wu
 
 **Group Name**
-The Grate Cheese Group
+
+PlatePals
 
 **Project**
-In this project, we aim to develop an AI-powered cheese application. The app will feature visual recognition technology to identify various types of cheese and include a chatbot for answering all kinds of cheese-related questions. Users can simply take a photo of the cheese, and the app will identify it, providing detailed information. Additionally, the chatbot will allow users to ask cheese-related questions. It will be powered by a RAG model and fine-tuned models, making it a specialist in cheese expertise.
 
-### Milestone2 ###
+The goal of this project is to develop a machine learning application that accurately identifies the types of food present in a user-uploaded image. Based on the foods identified, the application will provide the user with relevant nutritional information and personalized dietary recommendations. This project will involve key phases of data preprocessing, model development, and application interface development, leveraging TensorFlow's Food-101 dataset.
 
-In this milestone, we have the components for data management, including versioning, as well as the computer vision and language models.
+### Milestone 2 ###
 
-**Data**
-We gathered a dataset of 100,000 cheese images representing approximately 1,500 different varieties. The dataset, approximately 100GB in size, was collected from the following sources: (1), (2), (3). We have stored it in a private Google Cloud Bucket.
-Additionally, we compiled 250 bibliographical sources on cheese, including books and reports, from sources such as (4) and (5).
+We'll predominantly employ TensorFlow's Food-101 dataset, featuring 101,000 annotated food images across 101 categories. Additionally, we will correlate the identified food items with nutritional metrics obtained from Kaggle's Nutrition datasets and a database called Nutritional Facts for Most Common Foods, which together offer around 9,000 nutritional records. Our dataset is securely hosted in a private Google Cloud Bucket.
 
-**Data Pipeline Containers**
-1. One container processes the 100GB dataset by resizing the images and storing them back to Google Cloud Storage (GCS).
+Project Organization
+------------
+      ├── LICENSE
+      ├── README.md
+      ├── notebooks
+      ├── references
+      ├── requirements.txt
+      ├── setup.py
+      ├── reports
+      └── src
+            |── preprocessing
+                ├── Dockerfile
+                ├── docker-entrypoint.sh
+                ├── docker-shell.bat
+                ├── docker-shell.sh
+                ├── preprocess.py
+                └── requirements.txt
+Preprocess container
+------------
+- This container ingests 4.65GB of the [Food-101 dataset](https://www.tensorflow.org/datasets/catalog/food101) and performs image preprocessing before uploading the modified data to a GCS Bucket.
+- It also fetches and uploads [nutritional data](https://raw.githubusercontent.com/prasertcbs/basic-dataset/master/nutrients.csv) as a CSV file to the same GCS Bucket.
+- Required inputs: GCS Project Name and GCS Bucket Name.
+- Output: Processed data stored in the GCS Bucket.
 
-	**Input:** Source and destination GCS locations, resizing parameters, and required secrets (provided via Docker).
+(1) `src/preprocessing/preprocess.py`: This file manages the preprocessing of our 4.65GB dataset. Image dimensions are resized to 128x128 pixels to expedite subsequent processing. We apply random transformations such as horizontal flips, rotations, and zooms. These preprocessed images are batch-processed and uploaded to the GCS Bucket as a zip file.
 
-	**Output:** Resized images stored in the specified GCS location.
+(2) `src/preprocessing/requirements.txt`: Lists the Python packages essential for image preprocessing.
 
-2. Another container prepares data for the RAG model, including tasks such as chunking, embedding, and populating the vector database.
+(3) `src/preprocessing/Dockerfile`: The Dockerfile is configured to use `python:3.9-slim-buster`. It sets up volumes and uses secret keys (which should not be uploaded to GitHub) for connecting to the GCS Bucket.
 
-## Data Pipeline Overview
+Running our code
+------------
+**Setup GCP Service Account**
+1. Create a secrets folder that is on the same level as the project folder.
+2. Head to [GCP Console](https://console.cloud.google.com/home/dashboard).
+3. Search for "Service Accounts" from the top search box OR go to: "IAM & Admins" > "Service Accounts" and create a new service account called "MSMBAllstars".
+4. For "Grant this service account access to project", select "Cloud Storage" > "Storage Object Viewer"
+5. Click done. This will create a service account.
+6. Click on the "..." under the "Actions" column and select "Manage keys".
+7. Click on "ADD KEY" > "Create new key" with "Key type" as JSON.
+8. Copy this JSON file into the secrets folder created in step 1 and rename it as "data-service-account.json".
 
-1. **`src/datapipeline/preprocess_cv.py`**
-   This script handles preprocessing on our 100GB dataset. It reduces the image sizes to 128x128 (a parameter that can be changed later) to enable faster iteration during processing. The preprocessed dataset is now reduced to 10GB and stored on GCS.
+**Setup GCS Bucket**
+1. Head to [GCP Console](https://console.cloud.google.com/home/dashboard).
+2. Search for "Buckets" from the top search box OR go to: "Cloud Storage" > "Buckets" and create a new bucket with an appropriate bucket name e.g. "platepals-test".
+3. Click done. This will create a new GCS Bucket.
 
-2. **`src/datapipeline/preprocess_rag.py`**
-   This script prepares the necessary data for setting up our vector database. It performs chunking, embedding, and loads the data into a vector database (ChromaDB).
+**Set GCP Credentials**
+1. Head to src/preprocessing/docker-shell.sh.
+2. Replace `GCS_BUCKET_NAME` and `GCP_PROJECT` with corresponding GCS Bucket Name that you have chosen above and GCP Project Name.
+3. Repeat step 2 for src/preprocessing/docker-shell.bat.
 
-3. **`src/datapipeline/Pipfile`**
-   We used the following packages to help with preprocessing:
-   - `special cheese package`
+**Execute Dockerfile**
+1. Make sure the Docker application is operational.
+2. **NOTE: EXECUTION MAY TAKE 2-3 HOURS DEPENDING ON NETWORK SPEED.** Navigate to src/preprocessing and execute `sh docker-shell.sh`.
+3. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
+![bucket-data](assets/bucket-data.png)
 
-4. **`src/preprocessing/Dockerfile(s)`**
-   Our Dockerfiles follow standard conventions, with the exception of some specific modifications described in the Dockerfile/described below.
+DVC Setup
+------------
+This step is entirely optional.
+1. Make sure dvc[gs] is installed by running `pip install dvc[gs]`.
+2. Initialize git at the root of the file by running `git init`.
+3. Initialize dvc at the root of the file by running `dvc init`.
+2. Ensure that the gcloud CLI is installed by running a gcloud command e.g. `gcloud projects list`. [Instructions](https://cloud.google.com/sdk/docs/install) for installation can be found here.
+3. Run the command `gcloud auth application-default login` to be authenticated with the gcloud CLI.
+4. Run the command `dvc import-url gs://{GCS_BUCKET_NAME}/version1`.
+5. Run the command `git add .gitignore version1.dvc`
+6. Run `git commit -m "added raw data"`.
+9. You have now committed the latest version of the data using dvc.
 
 
-## Running Dockerfile
-Instructions for running the Dockerfile can be added here.
-To run Dockerfile - `Instructions here`
+Challenges and Future Directions
+------------
 
-**Models container**
-- This container has scripts for model training, rag pipeline and inference
-- Instructions for running the model container - `Instructions here`
+1. **Data Transfer Time**: We've observed that the data download and upload process currently takes between 2-3 hours. Although we've optimized the process to some extent, we aim to investigate further to determine whether these durations can be shortened. This is on our agenda for the next milestone.
 
-**Notebooks/Reports**
-This folder contains code that is not part of container - for e.g: Application mockup, EDA, any 🔍 🕵️‍♀️ 🕵️‍♂️ crucial insights, reports or visualizations.
-
-----
-You may adjust this template as appropriate for your project.
+2. **Remote Data and DVC Integration**: Our attempts to integrate DVC have been unsuccessful due to the remote storage of our dataset in a GCS Bucket. The in-class examples primarily utilize locally-stored data, making our remote setup a complicating factor. We're exploring alternative solutions, such as employing `gcsfuse` to potentially mount our GCS Bucket, to address this challenge.
