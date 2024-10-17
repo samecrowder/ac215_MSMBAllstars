@@ -1,0 +1,5 @@
+[core]
+    remote = msmballstars_remote
+['remote "msmballstars_remote"']
+    url = gs://msmballstars_data/version2
+    credentialpath = ../secrets/data-service-account.json
