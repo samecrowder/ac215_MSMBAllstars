@@ -6,12 +6,12 @@ set -e
 export IMAGE_NAME="atp-model-service"
 export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../../secrets/
-export GCS_BUCKET_NAME="msmballstars-data"
+export GCS_BUCKET_NAME="msmballstars-data-kc"
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
 export DATA_FOLDER="version1"
-export DATA_FILE="training_data.pkl"
+export DATA_FILE="prob_model.pt"
 export HIDDEN_SIZE=32
 export NUM_LAYERS=2
 export MODEL_PORT=8001

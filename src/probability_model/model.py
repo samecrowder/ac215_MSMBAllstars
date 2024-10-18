@@ -1,6 +1,44 @@
 import torch
 from torch import nn
 
+def scale_data(X1, X2, H2H, scaler_X1, scaler_X2, scaler_H2H):
+    """
+    Create PyTorch dataloaders from the input data.
+
+    Args:
+    X1 (np.array): Array of player 1 features
+    X2 (np.array): Array of player 2 features
+    H2H (np.array): Array of head-to-heaed features
+    scaler_X1 (StandardScaler): Scaler for X1
+    scaler_X2 (StandardScaler): Scaler for X2
+    scaler_H2H (StandardScaler): Scaler for H2H
+
+    Returns:
+    X1_scaled (np.array): Scaled array of player 1 features
+    X2_scaled (np.array): Scaled array of player 2 features
+    H2H_scaled (np.array): Scaled array of head-to-head features
+    """
+    # Assuming X1 and X2 are 3D arrays with shape (samples, time_steps, features)
+    samples, time_steps, features = X1.shape
+
+    # Reshape X1 and X2 to 2D
+    X1_reshaped = X1.reshape(-1, features)
+    X2_reshaped = X2.reshape(-1, features)
+    # H2H_reshaped = H2H.reshape(-1, features)
+
+    # Fit and transform X1 and X2
+    X1_scaled = scaler_X1.transform(X1_reshaped)
+    X2_scaled = scaler_X2.transform(X2_reshaped)
+    # H2H_scaled = scaler_H2H.transform(H2H_reshaped)
+
+    # Reshape back to 3D
+    X1_scaled = X1_scaled.reshape(samples, time_steps, features)
+    X2_scaled = X2_scaled.reshape(samples, time_steps, features)
+    # H2H_scaled = H2H_scaled.reshape(samples, time_steps, features)
+    H2H_scaled = H2H # TODO: Implement scaling for H2H if needed
+
+    return X1_scaled, X2_scaled, H2H_scaled
+
 class TennisLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, h2h_size):
         super(TennisLSTM, self).__init__()

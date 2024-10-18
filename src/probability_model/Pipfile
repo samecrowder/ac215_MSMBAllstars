@@ -4,13 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = {extras = ["standard"], version = "*"}
+fastapi = {extras = ["standard"] }
 pydantic = "*"
-ollama = "*"
 python-dotenv = "*"
 google-cloud-storage = "*"
 numpy = "*"
 torch = "*"
+pandas = "*"
 scikit-learn = "*"
 
 [requires]
