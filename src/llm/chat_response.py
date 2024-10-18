@@ -1,11 +1,9 @@
-from typing import List, Optional
+from typing import List
 
 import ollama
 
 
-def generate_chat_response(
-    query: str, prior_messages: List[str], rag_results: Optional[List[str]] = None
-) -> str:
+def generate_chat_response(query: str, prior_messages: List[str]) -> str:
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         [
@@ -15,8 +13,6 @@ def generate_chat_response(
         ],
         {"role": "user", "content": query},
     ]
-    if rag_results:
-        messages.append({"role": "system", "content": f"Rag results: {rag_results}"})
 
     response = ollama.chat(
         model="llama3.1",
