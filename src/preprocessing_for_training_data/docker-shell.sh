@@ -3,13 +3,14 @@
 # exit immediately if a command exits with a non-zero status
 set -e
 
-export IMAGE_NAME="preprocessing-atp-data"
+export IMAGE_NAME="preprocessing-for-training-data"
 export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../../secrets/
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
 export GCS_BUCKET_NAME="msmballstars-data"
-export RAW_DATA_FOLDER="raw_data"
+export DATA_FOLDER="version1"
+export DATA_FILE="combined_atp_matches.csv"
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
 
 # Check to see if path to secrets is correct
@@ -31,5 +32,6 @@ docker run --rm -it \
 -e GCP_PROJECT="$GCP_PROJECT" \
 -e GCP_ZONE=$GCP_ZONE \
 -e GCS_BUCKET_NAME=$GCS_BUCKET_NAME \
--e RAW_DATA_FOLDER=$RAW_DATA_FOLDER \
+-e DATA_FOLDER=$DATA_FOLDER \
+-e DATA_FILE=$DATA_FILE \
 -e DEV=1 $IMAGE_NAME
