@@ -20,4 +20,4 @@ COPY . .
 ENV PYTHONPATH /root/.local/share/virtualenvs/app-*/lib/python3.9/site-packages
 
 # Run preprocess.py when the container launches
-CMD ["pipenv", "run", "fastapi", "run", "app.py"]
+CMD ["pipenv", "run", "fastapi", "run", "app.py", "--port", "$PORT"]

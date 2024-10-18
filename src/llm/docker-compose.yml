@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  llm_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${LLM_PORT}:${LLM_PORT}"  # Use environment variables here
+    depends_on:
+      - ollama
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      - GCP_PROJECT=${GCP_PROJECT}
+      - GCP_ZONE=${GCP_ZONE}
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+      - ENV=${ENV}
+      - PORT=${LLM_PORT}
+    volumes:
+      - .:/app
+      - ../../../secrets:/secrets
+
+  ollama:
+    build:
+      context: .
+      dockerfile: ollama.Dockerfile
+    ports:
+      - "11434"

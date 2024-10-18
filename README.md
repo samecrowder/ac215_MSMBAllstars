@@ -26,17 +26,28 @@ Project Organization
       ├── README.md
       ├── notebooks
       ├── references
-      ├── requirements.txt
       ├── setup.py
       ├── reports
       └── src
-            |── preprocessing
+            ├── preprocessing
                 ├── Dockerfile
-                ├── docker-entrypoint.sh
-                ├── docker-shell.bat
                 ├── docker-shell.sh
                 ├── preprocess.py
-                └── requirements.txt
+                ├── Pipfile
+                └── Pipfile.lock
+            ├── api
+                ├── Dockerfile
+                ├── docker-shell.sh
+                ├── app.py
+                ├── Pipfile
+                └── Pipfile.lock
+            ├── llm
+                ├── Dockerfile
+                ├── docker-shell.sh
+                ├── app.py
+                ├── Pipfile
+                └── Pipfile.lock
+
 Preprocess container
 ------------
 - Required inputs: GCS Project Name and GCS Bucket Name.
@@ -48,8 +59,7 @@ Preprocess container
 
 (3) `src/preprocessing/Dockerfile`: The Dockerfile is configured to use `python:3.9-slim-buster`. It sets up volumes and uses secret keys (which should not be uploaded to GitHub) for connecting to the GCS Bucket.
 
-Running our code
-------------
+### Running the preprocessing container
 **Setup GCP Service Account**
 1. Create a secrets folder that is on the same level as the project folder.
 2. Head to [GCP Console](https://console.cloud.google.com/home/dashboard).
@@ -77,19 +87,23 @@ Running our code
 2. Replace `GCS_BUCKET_NAME` and `GCP_PROJECT` with corresponding GCS Bucket Name that you have chosen above and GCP Project Name.
 
 **Execute Dockerfile**
-1. Execute docker-shell.sh from its directory to build and run the docker container.
+1. Execute `docker-shell.sh` from its directory to build and run the docker container.
 2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
 ![bucket-data](assets/bucket-data.png)
 
-DVC Setup
+API container
 ------------
-This step is entirely optional.
-1. Make sure dvc[gs] is installed by running `pip install dvc[gs]`.
-2. Initialize git at the root of the file by running `git init`.
-3. Initialize dvc at the root of the file by running `dvc init`.
-2. Ensure that the gcloud CLI is installed by running a gcloud command e.g. `gcloud projects list`. [Instructions](https://cloud.google.com/sdk/docs/install) for installation can be found here.
-3. Run the command `gcloud auth application-default login` to be authenticated with the gcloud CLI.
-4. Run the command `dvc import-url gs://{GCS_BUCKET_NAME}/version1`.
-5. Run the command `git add .gitignore version1.dvc`
-6. Run `git commit -m "added raw data"`.
-9. You have now committed the latest version of the data using dvc.
+**Execute Dockerfile**
+1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8000`.
+
+
+Model container
+------------
+**Execute Dockerfile**
+1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8001`.
+
+
+LLM container
+------------
+**Execute Dockerfile**
+1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8002`.
