@@ -67,8 +67,16 @@ def main():
     df = pd.concat([read_csv_from_gcs(bucket, file) for file in csv_files])
     logging.info(f"Combined data shape: {df.shape}")
 
-    # Remove records with missing values
-    df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
+    # Handle 'tourney_date' conversion with error checking
+    def safe_date_parse(date_str):
+        try:
+            return pd.to_datetime(date_str, format="%Y%m%d")
+        except ValueError:
+            return pd.NaT
+
+    df["tourney_date"] = df["tourney_date"].apply(safe_date_parse)
+    df = df.dropna(subset=["tourney_date"])
+    logging.info(f"Data shape after date parsing: {df.shape}")
 
     # Features that cannot be null
     for col in df.columns:
@@ -78,12 +86,12 @@ def main():
     # For consistency, convert following to features, which are preceeded by winner_ or loser_ but need to be represented as w_ or l_
     cols_to_convert = ["rank", "ht", "age"]
     for col in cols_to_convert:
-        df = df[pd.to_numeric(df[f"winner_{col}"], errors="coerce").notnull()]
-        df = df[pd.to_numeric(df[f"loser_{col}"], errors="coerce").notnull()]
-        df[f"w_{col}"] = df[f"winner_{col}"].astype(float)
-        df[f"l_{col}"] = df[f"loser_{col}"].astype(float)
-        df = df.drop(f"winner_{col}", axis=1)
-        df = df.drop(f"loser_{col}", axis=1)
+        df[f"w_{col}"] = pd.to_numeric(df[f"winner_{col}"], errors="coerce")
+        df[f"l_{col}"] = pd.to_numeric(df[f"loser_{col}"], errors="coerce")
+        df = df.dropna(subset=[f"w_{col}", f"l_{col}"])
+        df = df.drop([f"winner_{col}", f"loser_{col}"], axis=1)
+
+    logging.info(f"Final data shape: {df.shape}")
 
     # Determine the next version folder
     next_version = get_next_version(bucket)
@@ -91,9 +99,7 @@ def main():
     # Write the combined data to a new CSV in the next version folder
     output_file = f"{next_version}/combined_atp_matches.csv"
     logging.info(f"Writing combined data to {output_file}")
-    bucket.blob(output_file).upload_from_string(
-        df.to_csv(index=False), "text/csv"
-    )
+    bucket.blob(output_file).upload_from_string(df.to_csv(index=False), "text/csv")
 
     logging.info(f"Combined data successfully written to {output_file}")
     logging.info("Preprocessing completed")
