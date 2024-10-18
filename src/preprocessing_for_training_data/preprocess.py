@@ -52,7 +52,7 @@ def main():
     logging.info(f"Data shape: {df.shape}")
 
     # Create dataset
-    df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
+    df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y-%m-%d")
     player_dfs, feature_cols = preprocess_data(df)
     X1, X2, H2H, y = [], [], [], []
     for _, matchup in tqdm(df.iterrows()):
