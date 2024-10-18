@@ -7,7 +7,13 @@ import numpy as np
 from tqdm import tqdm
 from io import BytesIO, StringIO
 
-from helper import create_matchup_data, preprocess_data
+from helper import (
+    create_matchup_data,
+    get_h2h_match_history_since_date,
+    get_h2h_stats,
+    get_player_last_nplus1_matches_since_date,
+    preprocess_data,
+)
 
 # Set up logging
 logging.basicConfig(
@@ -19,6 +25,7 @@ BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 DATA_FOLDER = os.environ.get("DATA_FOLDER")
 DATA_FILE = os.environ.get("DATA_FILE")
+LOOKBACK = int(os.environ.get("LOOKBACK"))
 
 
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
@@ -45,7 +52,7 @@ def main():
     logging.info(f"Data shape: {df.shape}")
 
     # Create dataset
-    df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y-%m-%d")
+    df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
     player_dfs, feature_cols = preprocess_data(df)
     X1, X2, H2H, y = [], [], [], []
     for _, matchup in tqdm(df.iterrows()):
@@ -53,23 +60,32 @@ def main():
         loser = matchup["loser_name"]
         date = matchup["tourney_date"]
 
-        # Add winning match
-        p1_features, p2_features, h2h_features = create_matchup_data(
-            winner, loser, date, player_dfs, feature_cols
+        winner_history = get_player_last_nplus1_matches_since_date(
+            player_dfs, winner, LOOKBACK, date
         )
-        X1.append(p1_features)
-        X2.append(p2_features)
-        H2H.append(h2h_features)
-        y.append(1)  # Winner is labeled as 1
+        loser_history = get_player_last_nplus1_matches_since_date(
+            player_dfs, loser, LOOKBACK, date
+        )
+        winner_h2h_history = get_h2h_match_history_since_date(
+            player_dfs, winner, loser, date
+        )
+        winner_h2h_features = get_h2h_stats(winner_h2h_history)
+        loser_h2h_features = [1- winner_h2h_features[0], winner_h2h_features[1]]
+
+        # Add winning match
+        winner_features, loser_features = create_matchup_data(
+            winner_history, loser_history, feature_cols, LOOKBACK
+        )
+        X1.append(winner_features)
+        X2.append(loser_features)
+        H2H.append(winner_h2h_features)
+        y.append(1)  # X1 is winner is labeled as 1
 
         # Add losing match (swap players)
-        p2_features, p1_features, h2h_features_swapped = create_matchup_data(
-            loser, winner, date, player_dfs, feature_cols
-        )
-        X1.append(p1_features)
-        X2.append(p2_features)
-        H2H.append(h2h_features_swapped)
-        y.append(0)  # Loser is labeled as 0
+        X1.append(loser_features.copy())
+        X2.append(winner_features.copy())
+        H2H.append(loser_h2h_features)
+        y.append(0)  # X1 is loser is labeled as 0
 
     # Convert to numpy arrays
     X1 = np.array(X1)
@@ -88,9 +104,11 @@ def main():
     file_obj = BytesIO(serialized_data)
 
     # Write the combined data to a new CSV in the next version folder
-    output_file = f"{DATA_FOLDER}/training_data.pkl"
+    output_file = f"{DATA_FOLDER}/training_data_lookback={LOOKBACK}.pkl"
     logging.info(f"Writing combined data to {output_file}")
-    bucket.blob(output_file).upload_from_file(file_obj, content_type='application/octet-stream')
+    bucket.blob(output_file).upload_from_file(
+        file_obj, content_type="application/octet-stream"
+    )
 
     logging.info(f"Combined data successfully written to {output_file}")
     logging.info("Preprocessing completed")
