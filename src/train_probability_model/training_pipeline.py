@@ -54,18 +54,22 @@ def create_data_loaders(device, X1, X2, H2H, y, test_size=0.2, batch_size=32):
     # Reshape X1 and X2 to 2D
     X1_reshaped = X1.reshape(-1, features)
     X2_reshaped = X2.reshape(-1, features)
+    # TODO: H2H_reshaped = H2H.reshape(-1, features)
 
     # Initialize scalers
     scaler_X1 = StandardScaler()
     scaler_X2 = StandardScaler()
+    # TODO: scaler_H2H = StandardScaler()
 
     # Fit and transform X1 and X2
     X1_scaled = scaler_X1.fit_transform(X1_reshaped)
     X2_scaled = scaler_X2.fit_transform(X2_reshaped)
+    # TODO: H2H_scaled = scaler_H2H.fit_transform(H2H_reshaped)
 
     # Reshape back to 3D
     X1_scaled = X1_scaled.reshape(samples, time_steps, features)
     X2_scaled = X2_scaled.reshape(samples, time_steps, features)
+    # H2H_scaled = H2H_scaled.reshape(samples, time_steps, features)
 
     # Split the scaled data
     X1_train, X1_test, X2_train, X2_test, H2H_train, H2H_test, y_train, y_test = (
@@ -105,7 +109,7 @@ def create_data_loaders(device, X1, X2, H2H, y, test_size=0.2, batch_size=32):
     train_dataset = TennisDataset(X1_train, X2_train, H2H_train, y_train)
     test_dataset = TennisDataset(X1_test, X2_test, H2H_test, y_test)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 

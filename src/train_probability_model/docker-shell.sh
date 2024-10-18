@@ -10,7 +10,7 @@ export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
 export GCS_BUCKET_NAME="msmballstars-data"
 export DATA_FOLDER="version1"
-export DATA_FILE="training_data.pkl"
+export DATA_FILE="training_data_lookback=10.pkl"
 export TEST_SIZE=.2
 export BATCH_SIZE=32
 export HIDDEN_SIZE=32
