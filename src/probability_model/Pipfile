@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = {extras = ["standard"] }
+fastapi = {extras = ["standard"], version = "*"}
 pydantic = "*"
 python-dotenv = "*"
 google-cloud-storage = "*"

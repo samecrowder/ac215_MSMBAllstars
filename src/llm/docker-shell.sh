@@ -18,14 +18,14 @@ if [ ! -f "$SECRETS_DIR/data-service-account.json" ]; then
     exit 1
 fi
 
-# Build the image based on the Dockerfile
-docker build -t $IMAGE_NAME -f Dockerfile .
-
 echo ""
 echo "======================"
 echo "Starting LLM service on port $LLM_PORT"
 echo "======================"
 echo ""
+
+# build with docker compose
+docker-compose build
 
 # Run docker-compose with the environment variables
 docker-compose up --abort-on-container-exit
