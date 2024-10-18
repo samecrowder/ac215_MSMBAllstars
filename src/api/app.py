@@ -7,8 +7,8 @@ if os.environ.get("ENV") != "prod":
 
 import fastapi
 
-from api.model.router import router as model_router
-from api.chat.router import router as chat_router
+from .model.router import router as model_router
+from .chat.router import router as chat_router
 
 app = fastapi.FastAPI()
 

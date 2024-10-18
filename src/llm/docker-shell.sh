@@ -21,16 +21,11 @@ fi
 # Build the image based on the Dockerfile
 docker build -t $IMAGE_NAME -f Dockerfile .
 
-echo "Host GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS"
+echo ""
+echo "======================"
+echo "Starting LLM service on port $LLM_PORT"
+echo "======================"
+echo ""
 
-# Run the container
-docker run --rm -it \
---mount type=bind,source="$BASE_DIR",target=/app \
---mount type=bind,source="$SECRETS_DIR",target=/secrets \
--e GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS \
--e GCP_PROJECT="$GCP_PROJECT" \
--e GCP_ZONE=$GCP_ZONE \
--e GCS_BUCKET_NAME=$GCS_BUCKET_NAME \
--e ENV=prod \
--e PORT=$LLM_PORT \
-$IMAGE_NAME
+# Run docker-compose with the environment variables
+docker-compose up --abort-on-container-exit

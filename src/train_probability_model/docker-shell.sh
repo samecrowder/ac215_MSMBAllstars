@@ -8,7 +8,7 @@ export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../../secrets/
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
-export GCS_BUCKET_NAME="msmballstars-data-kc"
+export GCS_BUCKET_NAME="msmballstars-data"
 export DATA_FOLDER="version1"
 export DATA_FILE="training_data.pkl"
 export TEST_SIZE=.2
@@ -16,7 +16,7 @@ export BATCH_SIZE=32
 export HIDDEN_SIZE=32
 export NUM_LAYERS=2
 export LR=0.001
-export NUM_EPOCHS=100
+export NUM_EPOCHS=10
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
 
 # Check to see if path to secrets is correct

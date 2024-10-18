@@ -8,14 +8,27 @@ if os.environ.get("ENV") != "prod":
 from typing import List, Optional
 
 import fastapi
+from pydantic import BaseModel
+
 from .chat_response import generate_chat_response
 
 app = fastapi.FastAPI()
 
 
-@app.get("/chat")
-def chat(query: str, prior_messages: List[str]):
-    return {"response": generate_chat_response(query, prior_messages)}
+class ChatResponse(BaseModel):
+    response: str
+
+
+class ChatRequest(BaseModel):
+    query: str
+    prior_messages: Optional[List[str]] = None
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(request: ChatRequest):
+    return {
+        "response": generate_chat_response(request.query, request.prior_messages or [])
+    }
 
 
 @app.get("/health")

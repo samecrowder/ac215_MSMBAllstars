@@ -1,10 +1,10 @@
 import requests
 
-from api.external.db_service import (
+from ..external.db_service import (
     get_head_to_head_match_history,
     get_player_last_n_matches,
 )
-from api.utils import get_and_assert_env_var
+from ..utils import get_and_assert_env_var
 
 service_url = get_and_assert_env_var("MODEL_SERVICE_URL")
 

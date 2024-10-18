@@ -3,7 +3,7 @@ from typing import List
 from pydantic import BaseModel
 import requests
 
-from api.utils import get_and_assert_env_var
+from ..utils import get_and_assert_env_var
 
 service_url = get_and_assert_env_var("LLM_SERVICE_URL")
 
