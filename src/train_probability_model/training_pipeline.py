@@ -13,10 +13,10 @@ logging.basicConfig(
 
 class TennisDataset(Dataset):
     def __init__(self, X1, X2, H2H, y):
-        self.X1 = torch.FloatTensor(X1)
-        self.X2 = torch.FloatTensor(X2)
-        self.H2H = torch.FloatTensor(H2H)
-        self.y = torch.FloatTensor(y)
+        self.X1 = X1
+        self.X2 = X2
+        self.H2H = H2H
+        self.y = y
 
     def __len__(self):
         return len(self.y)
@@ -123,8 +123,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-            train_preds.extend(outputs.squeeze().detach().numpy())
-            train_true.extend(y.numpy())
+            train_preds.extend(outputs.squeeze().detach().cpu().numpy())
+            train_true.extend(y.cpu().numpy())
 
         model.eval()
         val_loss = 0.0
@@ -135,8 +135,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 outputs = model(X1, X2, H2H)
                 loss = criterion(outputs, y.unsqueeze(1))
                 val_loss += loss.item()
-                val_preds.extend(outputs.squeeze().numpy())
-                val_true.extend(y.numpy())
+                val_preds.extend(outputs.squeeze().detach().cpu().numpy())
+                val_true.extend(y.cpu().numpy())
 
         train_loss /= len(train_loader)
         val_loss /= len(val_loader)
