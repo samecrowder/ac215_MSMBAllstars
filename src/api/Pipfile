@@ -8,6 +8,9 @@ fastapi = {extras = ["standard"], version = "*"}
 pydantic = "*"
 requests = "*"
 python-dotenv = "*"
+numpy = "*"
+pandas = "*"
+google-cloud-storage = "*"
 
 [requires]
 python_version = "3.9"

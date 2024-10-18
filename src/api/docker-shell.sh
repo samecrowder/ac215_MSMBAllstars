@@ -6,9 +6,11 @@ set -e
 export IMAGE_NAME="atp-predictor-app"
 export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../../secrets/
-export GCS_BUCKET_NAME="msmballstars-data"
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
+export GCS_BUCKET_NAME="msmballstars-data-kc"
+export DATA_FOLDER="version1"
+export DATA_FILE="combined_atp_matches.csv"
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
 export API_PORT=8000
 # Check to see if path to secrets is correct
@@ -36,6 +38,8 @@ docker run --rm -it \
 -e GCP_PROJECT="$GCP_PROJECT" \
 -e GCP_ZONE=$GCP_ZONE \
 -e GCS_BUCKET_NAME=$GCS_BUCKET_NAME \
+-e DATA_FOLDER=$DATA_FOLDER \
+-e DATA_FILE=$DATA_FILE \
 -e ENV=prod \
 -e MODEL_SERVICE_URL=http://127.0.0.1:8001 \
 -e LLM_SERVICE_URL=http://127.0.0.1:8002 \
