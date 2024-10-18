@@ -1,42 +1,11 @@
 from io import StringIO
 import logging
 import os
-from typing import Any, List
 
 from google.cloud import storage
-import numpy as np
 import pandas as pd
-from pydantic import BaseModel
 
-
-def preprocess_data(df):
-
-    # Sort by date
-    df = df.sort_values("tourney_date")
-
-    # Select relevant features
-    feature_cols = [
-        col for col in df.columns if col.startswith("w_") or col.startswith("l_")
-    ]
-
-    # Create player-specific dataframes
-    player_dfs = {}
-    for player in set(df["winner_name"].unique()) | set(df["loser_name"].unique()):
-        player_matches = df[
-            (df["winner_name"] == player) | (df["loser_name"] == player)
-        ].copy()
-        player_matches["is_winner"] = (player_matches["winner_name"] == player).astype(
-            int
-        )
-        player_matches["opponent"] = np.where(
-            player_matches["winner_name"] == player,
-            player_matches["loser_name"],
-            player_matches["winner_name"],
-        )
-        player_dfs[player] = player_matches.reset_index()
-
-    return player_dfs, feature_cols
-
+from .helper import preprocess_data
 
 # Set up logging
 logging.basicConfig(
@@ -74,20 +43,3 @@ logging.info(f"Data shape: {df.shape}")
 df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
 player_dfs, feature_cols = preprocess_data(df)
 logging.info("In-memory databse loaded successfully")
-
-
-class DataFrameModel(BaseModel):
-    columns: List[str]
-    data: List[List[Any]]
-
-
-def get_player_last_nplus1_matches(player_id: str, n: int) -> DataFrameModel:
-    df = player_dfs[player_id].tail(n + 1).reset_index()
-    return DataFrameModel(columns=df.columns.tolist(), data=df.values.tolist())
-
-
-def get_head_to_head_match_history(
-    player_a_id: str, player_b_id: str
-) -> DataFrameModel:
-    df = player_dfs[player_a_id][player_dfs[player_a_id]["opponent"] == player_b_id]
-    return DataFrameModel(columns=df.columns.tolist(), data=df.values.tolist())
