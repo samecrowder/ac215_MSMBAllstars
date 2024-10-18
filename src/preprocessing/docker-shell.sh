@@ -5,8 +5,7 @@ set -e
 
 export IMAGE_NAME="preprocessing-atp-data"
 export BASE_DIR=$(pwd)
-export SECRETS_DIR=$(pwd)/../../../../secrets/
-echo $SECRETS_DIR
+export SECRETS_DIR=$(pwd)/../../../secrets/
 export GCS_BUCKET_NAME="msmballstars-data"
 export GCP_PROJECT="tennis-match-predictor"
 export RAW_DATA_FOLDER="raw_data"
