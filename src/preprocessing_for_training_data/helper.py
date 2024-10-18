@@ -1,4 +1,7 @@
+from typing import Any, Dict, List
+
 import numpy as np
+import pandas as pd
 
 
 def preprocess_data(df):
@@ -36,20 +39,49 @@ def calculate_percentage_difference(val1, val2):
     return (val1 - val2) / val2
 
 
-def create_matchup_data(
-    player1, player2, date, player_dfs, feature_cols, history_len=10
-):
-    p1_history = (
-        player_dfs[player1][player_dfs[player1]["tourney_date"] < date]
-        .tail(history_len + 1)
-        .reset_index()
-    )
-    p2_history = (
-        player_dfs[player2][player_dfs[player2]["tourney_date"] < date]
-        .tail(history_len + 1)
+def get_player_last_nplus1_matches(
+    player_dfs: Dict[str, Any], player_id: str, n: int
+) -> pd.DataFrame:
+    return player_dfs[player_id].tail(n + 1).reset_index()
+
+
+def get_player_last_nplus1_matches_since_date(
+    player_dfs: Dict[str, Any], player_id: str, n: int, date: str
+) -> pd.DataFrame:
+    return (
+        player_dfs[player_id][player_dfs[player_id]["tourney_date"] < date]
+        .tail(n + 1)
         .reset_index()
     )
 
+
+def get_h2h_match_history(
+    player_dfs: Dict[str, Any], player_a_id: str, player_b_id: str
+) -> pd.DataFrame:
+    return player_dfs[player_a_id][player_dfs[player_a_id]["opponent"] == player_b_id]
+
+
+def get_h2h_match_history_since_date(
+    player_dfs: Dict[str, Any], player_a_id: str, player_b_id: str, date: str
+) -> pd.DataFrame:
+    return player_dfs[player_a_id][
+        (player_dfs[player_a_id]["opponent"] == player_b_id)
+        & (player_dfs[player_a_id]["tourney_date"] < date)
+    ]
+
+def get_h2h_stats(h2h_df: pd.DataFrame) -> List[float]:
+    h2h_wins = h2h_df["is_winner"].sum()
+    h2h_total = len(h2h_df)
+    h2h_win_percentage = h2h_wins / h2h_total if h2h_total > 0 else 0.5
+    return [h2h_win_percentage, h2h_total]
+
+
+def create_matchup_data(
+    p1_history,
+    p2_history,
+    feature_cols,
+    history_len=10,
+):
     # Includes the 3 features below that are not stats both players have in a match
     num_features = len(feature_cols) + 3
 
@@ -57,8 +89,6 @@ def create_matchup_data(
     p2_features = []
 
     for df in [p1_history, p2_history]:
-        player_name = player1 if df is p1_history else player2
-
         player_features = []
         for i, matchup in df.iterrows():
             if i == 0:
@@ -99,13 +129,4 @@ def create_matchup_data(
         else:
             p2_features = player_features
 
-    # Head-to-head history
-    h2h = player_dfs[player1][
-        (player_dfs[player1]["opponent"] == player2)
-        & (player_dfs[player1]["tourney_date"] < date)
-    ]
-    h2h_wins = h2h["is_winner"].sum()
-    h2h_total = len(h2h)
-    h2h_win_percentage = h2h_wins / h2h_total if h2h_total > 0 else 0.5
-
-    return p1_features, p2_features, [h2h_win_percentage, h2h_total]
+    return p1_features, p2_features

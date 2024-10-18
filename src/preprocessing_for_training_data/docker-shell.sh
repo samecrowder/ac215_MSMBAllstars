@@ -11,6 +11,7 @@ export GCP_ZONE="us-central1-a"
 export GCS_BUCKET_NAME="msmballstars-data"
 export DATA_FOLDER="version1"
 export DATA_FILE="combined_atp_matches.csv"
+export LOOKBACK=10
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
 
 # Check to see if path to secrets is correct
@@ -34,4 +35,5 @@ docker run --rm -it \
 -e GCS_BUCKET_NAME=$GCS_BUCKET_NAME \
 -e DATA_FOLDER=$DATA_FOLDER \
 -e DATA_FILE=$DATA_FILE \
+-e LOOKBACK=$LOOKBACK \
 -e DEV=1 $IMAGE_NAME
