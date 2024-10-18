@@ -16,7 +16,7 @@ export BATCH_SIZE=32
 export HIDDEN_SIZE=32
 export NUM_LAYERS=2
 export LR=0.001
-export NUM_EPOCHS=10
+export NUM_EPOCHS=100
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
 
 # Check to see if path to secrets is correct

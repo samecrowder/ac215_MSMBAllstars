@@ -71,9 +71,9 @@ def main():
     # Initialize model
     input_size = data["X1"].shape[-1]
     h2h_size = data["H2H"].shape[-1]
-    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS, h2h_size)
+    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS, h2h_size).to(device)
     trainable_params = count_trainable_parameters(model)
-    print(f"Total number of trainable parameters: {trainable_params}")
+    logging.info(f"Total number of trainable parameters: {trainable_params}")
 
     # Train model
     criterion = nn.BCELoss()
