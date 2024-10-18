@@ -6,6 +6,9 @@ name = "pypi"
 [packages]
 pandas = "*"
 google-cloud-storage = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.9"
+
+[dev-packages]
