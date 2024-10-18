@@ -24,15 +24,23 @@ BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 DATA_FOLDER = os.environ.get("DATA_FOLDER")
 DATA_FILE = os.environ.get("DATA_FILE")
+WEIGHTS_FILE = os.environ.get("WEIGHTS_FILE")
 HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE"))
 NUM_LAYERS = int(os.environ.get("NUM_LAYERS"))
 
 
-def read_file_from_gcs(bucket, file_name):
+def read_pt_file_from_gcs(bucket, file_name):
     logging.info(f"Reading file: {file_name}")
     blob = bucket.blob(file_name)
-    pickle_data = blob.download_as_bytes()
-    return pickle.loads(BytesIO(pickle_data).getvalue())
+    file_content = blob.download_as_bytes()
+    return torch.load(BytesIO(file_content), map_location=torch.device("cpu"))
+
+
+def read_pkl_file_from_gcs(bucket, file_name):
+    logging.info(f"Reading file: {file_name}")
+    blob = bucket.blob(file_name)
+    file_content = blob.download_as_bytes()
+    return pickle.loads(BytesIO(file_content).getvalue())
 
 
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
@@ -47,7 +55,7 @@ client = storage.Client()
 bucket = client.bucket(BUCKET_NAME)
 
 # Read data file
-data = read_file_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
+data = read_pkl_file_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
 X1 = data["X1"]
 X2 = data["X2"]
 H2H = data["H2H"]
@@ -75,18 +83,15 @@ scaler_X2.fit(X2_reshaped)
 input_size = X1.shape[-1]
 h2h_size = H2H.shape[-1]
 
-# load the model from GCS
-model_weights_file = f"{DATA_FOLDER}/prob_model.pt"
-bucket.blob(model_weights_file).download_to_file(
-    model_weights_file, content_type="application/octet-stream"
-)
-
+# Load the model weights from GCS
+weights = read_pt_file_from_gcs(bucket, os.path.join(DATA_FOLDER, WEIGHTS_FILE))
 model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS, h2h_size)
-model.load_state_dict(torch.load(model_weights_file))
+model.load_state_dict(weights)
 model.to(device)
 
 
 app = fastapi.FastAPI()
+
 
 class PredictionResponse(BaseModel):
     player_a_win_probability: float
