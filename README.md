@@ -97,7 +97,7 @@ API container
 1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8000`.
 
 
-Model container
+Probability Model container
 ------------
 **Execute Dockerfile**
 1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8001`.

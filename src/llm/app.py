@@ -1,7 +1,5 @@
 import os
 
-from pydantic import BaseModel
-
 if os.environ.get("ENV") != "prod":
     from dotenv import load_dotenv
 
@@ -10,6 +8,8 @@ if os.environ.get("ENV") != "prod":
 from typing import List, Optional
 
 import fastapi
+from pydantic import BaseModel
+
 from .chat_response import generate_chat_response
 
 app = fastapi.FastAPI()
