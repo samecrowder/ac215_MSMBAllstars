@@ -114,7 +114,6 @@ Preprocess container
 **Execute Dockerfile**
 1. Execute `docker-shell.sh` from its directory to build and run the docker container.
 2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
-![bucket-data](assets/bucket-data.png)
 
 Preprocessing for Training Data container
 ------------
