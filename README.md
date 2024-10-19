@@ -26,86 +26,50 @@ We'll primarily use a dataset available on GitHub of all ATP matches over the la
 
 Project Organization
 ------------
-├── LICENSE
 ├── README.md
 ├── data
-│   ├── [multiple csv data files]
+│   └── [multiple csv data files]
 ├── deliverables
 │   ├── containers
-│   │   ├── api_screenshots
-│   │   ├── current_model_performance.png
-│   │   ├── llm_screenshots
-│   │   ├── preprocessing.mov
-│   │   ├── preprocessing_for_training_data.mov
-│   │   ├── probability_model.mov
-│   │   └── train_probability_model.mov
+│   │   └── [screenshots and video captures of containers working]
 │   └── mock-ups
-│       ├── screenshot_mockup_A.png
-│       ├── screenshot_mockup_A_chat.png
-│       ├── screenshot_mockup_B.png
-│       └── screenshot_mockup_B_chat.png
-├── notebooks
-│   └── eda.ipynb
-├── references
-├── reports
-│   └── KICS Milestone 1-1.pdf
+│       └── [mock-ups of the UI]
 └── src
-    ├── api
+    ├── api [containerized service for central API server]
     │   ├── Dockerfile
     │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── __init__.py
     │   ├── app.py
-    │   ├── chat
-    │   ├── docker-shell.sh
-    │   ├── external
-    │   ├── model
-    │   └── utils.py
-    ├── docker-compose.yml
-    ├── llm
+    │   └── docker-shell.sh
+    ├── llm [containerized service for LLM chat server]
     │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── __init__.py
-    │   ├── app.py
-    │   ├── chat_response.py
-    │   ├── docker-compose.yml
-    │   ├── docker-shell.sh
     │   ├── ollama.Dockerfile
-    │   └── utils.py
-    ├── preprocessing
+    │   ├── Pipfile
+    │   ├── app.py
+    │   ├── docker-compose.yml
+    │   └── docker-shell.sh
+    ├── probability_model [containerized service for trained model server]
     │   ├── Dockerfile
     │   ├── Pipfile
-    │   ├── Pipfile.lock
+    │   ├── app.py
+    │   ├── docker-compose.yml
+    │   └── docker-shell.sh
+    ├── preprocessing [containerized pipeline for data preprocessing]
+    │   ├── Dockerfile
+    │   ├── Pipfile
     │   ├── docker-shell.sh
     │   └── preprocess.py
-    ├── preprocessing_for_training_data
+    ├── preprocessing_for_training_data [containerized pipeline for data preprocessing for training]
     │   ├── Dockerfile
     │   ├── Pipfile
-    │   ├── Pipfile.lock
     │   ├── docker-shell.sh
     │   ├── helper.py
     │   └── preprocess.py
-    ├── probability_model
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── __init__.py
-    │   ├── app.py
-    │   ├── docker-compose.yml
-    │   ├── docker-shell.sh
-    │   ├── model.py
-    │   └── utils.py
-    └── train_probability_model
+    └── train_probability_model [containerized pipeline for training the model]
         ├── Dockerfile
         ├── Pipfile
-        ├── Pipfile.lock
-        ├── __init__.py
         ├── docker-shell.sh
-        ├── evaluate.py
-        ├── model.py
         ├── train_model.py
-        └── training_pipeline.py
+        └── model.py
 
 Preprocess container
 ------------
@@ -156,7 +120,7 @@ Preprocessing for Training Data container
 The processed data from the previous step joins all individual ATP results and removes entries with null values that are used as input data to our ML model. The output from the previous step also generates its file for the purpose of create an in-memory database for the API container below. Hence why there is a separation with this container, which takes the data from the previous preprocessing step and outputs data ready to feed into our LSTM.
 
 **Execute Dockerfile**
-1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data from previous step. Also specify `LOOKBACK` which definies the sequence length of training data.
+1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data from previous step. Also specify `LOOKBACK` which defines the sequence length of training data.
 2. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the training data as a .pkl file to the same GCS folder where we read the data from.
 
 Train Probability Model container
@@ -184,7 +148,7 @@ Probability Model container
 This container serves the trained LSTM to return inference predictions.
 
 **Execute Dockerfile**
-1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of model weights to load into our inference model.
+1. Specify in `docker-shell.sh` the `DATA_FOLDER`, `DATA_FILE` and `WEIGHTS_FILE` of model weights to load into our inference model.
 2. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8001`.
 
 
