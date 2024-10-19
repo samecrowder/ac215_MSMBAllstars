@@ -16,37 +16,96 @@ MSMBAllstars
 The goal of this project is to develop a machine learning application that accurately predicts the outcome of a tennis match given a handful of inputs about the matchup.
 We plan to use a recurrent architecture (e.g. LSTM) trained on an autoregressive format of the underlying data, as in train on match i to j for player 1 and similarly for player 2, (using the same LSTM block across two players)  join the two hidden state outputs at j, and predict probability of winning in match j+1 where player 1 and player 2 will play (where i <= j).
 
+At a high level, we take a lookback period to determine the sequence length of our training data. For example, we have two players who will face off, and we'll take the previous `LOOKBACK` window of their matches (against any opponent) prior to their face off, as well as their head to head history, and calculate features at each time step (original values as well as percent differences vs opponent for that match). This counts as one training sample, consisting of player a, player b, and head to head data tensors. 
+
+At model training time, for each sample in a batch, player a and player b tensors are passed through the same LSTM block, then concatenated together along with head to head tensor, then pushed through some linear layers, and finally into a final sigmoid function to produce the probability that the player in the first position will win the match.
+
 ### Milestone 2 ###
 
 We'll primarily use a dataset available on GitHub of all ATP matches over the last several decades, presented in CSV format. This dataset can be viewed here: https://github.com/JeffSackmann/tennis_atp/tree/master.
 
 Project Organization
 ------------
-      ├── LICENSE
-      ├── README.md
-      ├── notebooks
-      ├── references
-      ├── setup.py
-      ├── reports
-      └── src
-            ├── preprocessing
-                ├── Dockerfile
-                ├── docker-shell.sh
-                ├── preprocess.py
-                ├── Pipfile
-                └── Pipfile.lock
-            ├── api
-                ├── Dockerfile
-                ├── docker-shell.sh
-                ├── app.py
-                ├── Pipfile
-                └── Pipfile.lock
-            ├── llm
-                ├── Dockerfile
-                ├── docker-shell.sh
-                ├── app.py
-                ├── Pipfile
-                └── Pipfile.lock
+├── LICENSE
+├── README.md
+├── data
+│   ├── [multiple csv data files]
+├── deliverables
+│   ├── containers
+│   │   ├── api_screenshots
+│   │   ├── current_model_performance.png
+│   │   ├── llm_screenshots
+│   │   ├── preprocessing.mov
+│   │   ├── preprocessing_for_training_data.mov
+│   │   ├── probability_model.mov
+│   │   └── train_probability_model.mov
+│   └── mock-ups
+│       ├── screenshot_mockup_A.png
+│       ├── screenshot_mockup_A_chat.png
+│       ├── screenshot_mockup_B.png
+│       └── screenshot_mockup_B_chat.png
+├── notebooks
+│   └── eda.ipynb
+├── references
+├── reports
+│   └── KICS Milestone 1-1.pdf
+└── src
+    ├── api
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── __init__.py
+    │   ├── app.py
+    │   ├── chat
+    │   ├── docker-shell.sh
+    │   ├── external
+    │   ├── model
+    │   └── utils.py
+    ├── docker-compose.yml
+    ├── llm
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── __init__.py
+    │   ├── app.py
+    │   ├── chat_response.py
+    │   ├── docker-compose.yml
+    │   ├── docker-shell.sh
+    │   ├── ollama.Dockerfile
+    │   └── utils.py
+    ├── preprocessing
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── docker-shell.sh
+    │   └── preprocess.py
+    ├── preprocessing_for_training_data
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── docker-shell.sh
+    │   ├── helper.py
+    │   └── preprocess.py
+    ├── probability_model
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── __init__.py
+    │   ├── app.py
+    │   ├── docker-compose.yml
+    │   ├── docker-shell.sh
+    │   ├── model.py
+    │   └── utils.py
+    └── train_probability_model
+        ├── Dockerfile
+        ├── Pipfile
+        ├── Pipfile.lock
+        ├── __init__.py
+        ├── docker-shell.sh
+        ├── evaluate.py
+        ├── model.py
+        ├── train_model.py
+        └── training_pipeline.py
 
 Preprocess container
 ------------
@@ -91,19 +150,48 @@ Preprocess container
 2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
 ![bucket-data](assets/bucket-data.png)
 
+Preprocessing for Training Data container
+------------
+
+The processed data from the previous step joins all individual ATP results and removes entries with null values that are used as input data to our ML model. The output from the previous step also generates its file for the purpose of create an in-memory database for the API container below. Hence why there is a separation with this container, which takes the data from the previous preprocessing step and outputs data ready to feed into our LSTM.
+
+**Execute Dockerfile**
+1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data from previous step. Also specify `LOOKBACK` which definies the sequence length of training data.
+2. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the training data as a .pkl file to the same GCS folder where we read the data from.
+
+Train Probability Model container
+------------
+
+We now take the data from the previous container and train our LSTM.
+
+**Execute Dockerfile**
+1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data for training from previous step. Also specify the numeric valus for training.
+2. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the model weights data as a .pt file to the same GCS folder where we read the data from.
+
 API container
 ------------
+
+The API container will route traffic from our front-end to our model servers.
+
 **Execute Dockerfile**
-1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8000`.
+1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data (the first preprocessing, not the second one for model training data). This will load an in-memory database to pull historical match data for players to be used before issuing an API request to the Probability Model container.
+2. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8000`.
 
 
 Probability Model container
 ------------
+
+This container serves the trained LSTM to return inference predictions.
+
 **Execute Dockerfile**
-1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8001`.
+1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of model weights to load into our inference model.
+2. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8001`.
 
 
 LLM container
 ------------
+
+This container serves a LLM for our chat interface, should we choose to include one in our UI.
+
 **Execute Dockerfile**
 1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8002`.
