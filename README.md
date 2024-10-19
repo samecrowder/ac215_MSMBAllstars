@@ -26,50 +26,50 @@ We'll primarily use a dataset available on GitHub of all ATP matches over the la
 
 Project Organization
 ------------
-├── README.md
-├── data
-│   └── [multiple csv data files]
-├── deliverables
-│   ├── containers
-│   │   └── [screenshots and video captures of containers working]
-│   └── mock-ups
-│       └── [mock-ups of the UI]
-└── src
-    ├── api [containerized service for central API server]
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── app.py
-    │   └── docker-shell.sh
-    ├── llm [containerized service for LLM chat server]
-    │   ├── Dockerfile
-    │   ├── ollama.Dockerfile
-    │   ├── Pipfile
-    │   ├── app.py
-    │   ├── docker-compose.yml
-    │   └── docker-shell.sh
-    ├── probability_model [containerized service for trained model server]
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── app.py
-    │   ├── docker-compose.yml
-    │   └── docker-shell.sh
-    ├── preprocessing [containerized pipeline for data preprocessing]
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── docker-shell.sh
-    │   └── preprocess.py
-    ├── preprocessing_for_training_data [containerized pipeline for data preprocessing for training]
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── docker-shell.sh
-    │   ├── helper.py
-    │   └── preprocess.py
-    └── train_probability_model [containerized pipeline for training the model]
-        ├── Dockerfile
-        ├── Pipfile
-        ├── docker-shell.sh
-        ├── train_model.py
-        └── model.py
+    ├── README.md
+    ├── data
+    │   └── [multiple csv data files]
+    ├── deliverables
+    │   ├── containers
+    │   │   └── [screenshots and video captures of containers working]
+    │   └── mock-ups
+    │       └── [mock-ups of the UI]
+    └── src
+        ├── api [containerized service for central API server]
+        │   ├── Dockerfile
+        │   ├── Pipfile
+        │   ├── app.py
+        │   └── docker-shell.sh
+        ├── llm [containerized service for LLM chat server]
+        │   ├── Dockerfile
+        │   ├── ollama.Dockerfile
+        │   ├── Pipfile
+        │   ├── app.py
+        │   ├── docker-compose.yml
+        │   └── docker-shell.sh
+        ├── probability_model [containerized service for trained model server]
+        │   ├── Dockerfile
+        │   ├── Pipfile
+        │   ├── app.py
+        │   ├── docker-compose.yml
+        │   └── docker-shell.sh
+        ├── preprocessing [containerized pipeline for data preprocessing]
+        │   ├── Dockerfile
+        │   ├── Pipfile
+        │   ├── docker-shell.sh
+        │   └── preprocess.py
+        ├── preprocessing_for_training_data [containerized pipeline for data preprocessing for training]
+        │   ├── Dockerfile
+        │   ├── Pipfile
+        │   ├── docker-shell.sh
+        │   ├── helper.py
+        │   └── preprocess.py
+        └── train_probability_model [containerized pipeline for training the model]
+            ├── Dockerfile
+            ├── Pipfile
+            ├── docker-shell.sh
+            ├── train_model.py
+            └── model.py
 
 Preprocess container
 ------------
