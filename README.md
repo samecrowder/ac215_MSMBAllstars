@@ -28,86 +28,86 @@ There are 193337 records in total for ATP Men's Singles matches in this dataset.
 
 Project Organization
 ------------
-├── LICENSE
-├── README.md
-├── data
-│   ├── [multiple csv data files]
-├── deliverables
-│   ├── containers
-│   │   ├── api_screenshots
-│   │   ├── current_model_performance.png
-│   │   ├── llm_screenshots
-│   │   ├── preprocessing.mov
-│   │   ├── preprocessing_for_training_data.mov
-│   │   ├── probability_model.mov
-│   │   └── train_probability_model.mov
-│   └── mock-ups
-│       ├── screenshot_mockup_A.png
-│       ├── screenshot_mockup_A_chat.png
-│       ├── screenshot_mockup_B.png
-│       └── screenshot_mockup_B_chat.png
-├── notebooks
-│   └── eda.ipynb
-├── references
-├── reports
-│   └── KICS Milestone 1-1.pdf
-└── src
-    ├── api
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── __init__.py
-    │   ├── app.py
-    │   ├── chat
-    │   ├── docker-shell.sh
-    │   ├── external
-    │   ├── model
-    │   └── utils.py
-    ├── docker-compose.yml
-    ├── llm
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── __init__.py
-    │   ├── app.py
-    │   ├── chat_response.py
-    │   ├── docker-compose.yml
-    │   ├── docker-shell.sh
-    │   ├── ollama.Dockerfile
-    │   └── utils.py
-    ├── preprocessing
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── docker-shell.sh
-    │   └── preprocess.py
-    ├── preprocessing_for_training_data
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── docker-shell.sh
-    │   ├── helper.py
-    │   └── preprocess.py
-    ├── probability_model
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── __init__.py
-    │   ├── app.py
-    │   ├── docker-compose.yml
-    │   ├── docker-shell.sh
-    │   ├── model.py
-    │   └── utils.py
-    └── train_probability_model
-        ├── Dockerfile
-        ├── Pipfile
-        ├── Pipfile.lock
-        ├── __init__.py
-        ├── docker-shell.sh
-        ├── evaluate.py
-        ├── model.py
-        ├── train_model.py
-        └── training_pipeline.py
+   ├── LICENSE
+   ├── README.md
+   ├── data
+   │   ├── [multiple csv data files]
+   ├── deliverables
+   │   ├── containers
+   │   │   ├── api_screenshots
+   │   │   ├── current_model_performance.png
+   │   │   ├── llm_screenshots
+   │   │   ├── preprocessing.mov
+   │   │   ├── preprocessing_for_training_data.mov
+   │   │   ├── probability_model.mov
+   │   │   └── train_probability_model.mov
+   │   └── mock-ups
+   │       ├── screenshot_mockup_A.png
+   │       ├── screenshot_mockup_A_chat.png
+   │       ├── screenshot_mockup_B.png
+   │       └── screenshot_mockup_B_chat.png
+   ├── notebooks
+   │   └── eda.ipynb
+   ├── references
+   ├── reports
+   │   └── KICS Milestone 1-1.pdf
+   └── src
+      ├── api
+      │   ├── Dockerfile
+      │   ├── Pipfile
+      │   ├── Pipfile.lock
+      │   ├── __init__.py
+      │   ├── app.py
+      │   ├── chat
+      │   ├── docker-shell.sh
+      │   ├── external
+      │   ├── model
+      │   └── utils.py
+      ├── docker-compose.yml
+      ├── llm
+      │   ├── Dockerfile
+      │   ├── Pipfile
+      │   ├── Pipfile.lock
+      │   ├── __init__.py
+      │   ├── app.py
+      │   ├── chat_response.py
+      │   ├── docker-compose.yml
+      │   ├── docker-shell.sh
+      │   ├── ollama.Dockerfile
+      │   └── utils.py
+      ├── preprocessing
+      │   ├── Dockerfile
+      │   ├── Pipfile
+      │   ├── Pipfile.lock
+      │   ├── docker-shell.sh
+      │   └── preprocess.py
+      ├── preprocessing_for_training_data
+      │   ├── Dockerfile
+      │   ├── Pipfile
+      │   ├── Pipfile.lock
+      │   ├── docker-shell.sh
+      │   ├── helper.py
+      │   └── preprocess.py
+      ├── probability_model
+      │   ├── Dockerfile
+      │   ├── Pipfile
+      │   ├── Pipfile.lock
+      │   ├── __init__.py
+      │   ├── app.py
+      │   ├── docker-compose.yml
+      │   ├── docker-shell.sh
+      │   ├── model.py
+      │   └── utils.py
+      └── train_probability_model
+         ├── Dockerfile
+         ├── Pipfile
+         ├── Pipfile.lock
+         ├── __init__.py
+         ├── docker-shell.sh
+         ├── evaluate.py
+         ├── model.py
+         ├── train_model.py
+         └── training_pipeline.py
 
 Preprocess container
 ------------
@@ -150,7 +150,6 @@ Preprocess container
 **Execute Dockerfile**
 1. Execute `docker-shell.sh` from its directory to build and run the docker container.
 2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
-![bucket-data](assets/bucket-data.png)
 
 Preprocessing for Training Data container
 ------------
