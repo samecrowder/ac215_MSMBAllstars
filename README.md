@@ -24,6 +24,8 @@ At model training time, for each sample in a batch, player a and player b tensor
 
 We'll primarily use a dataset available on GitHub of all ATP matches over the last several decades, presented in CSV format. This dataset can be viewed here: https://github.com/JeffSackmann/tennis_atp/tree/master.
 
+There are 193337 records in total for ATP Men's Singles matches in this dataset.
+
 Project Organization
 ------------
 ├── LICENSE
