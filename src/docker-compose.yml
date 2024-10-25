@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file: .env.dev
+    ports:
+      - "${API_PORT:-8000}:${API_PORT:-8000}"
+    environment:
+      - PORT=${API_PORT:-8000}
+      - MODEL_HOST=model
+      - MODEL_PORT=${MODEL_PORT:-8001}
+      - LLM_HOST=llm
+      - LLM_PORT=${LLM_PORT:-8002}
+      - ENV=prod
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
+      - GCP_PROJECT=tennis-match-predictor
+      - GCP_ZONE=us-central1-a
+      - GCS_BUCKET_NAME=msmballstars-data
+      - DATA_FOLDER=version1
+      - DATA_FILE=combined_atp_matches.csv
+    networks:
+      - msmballstars-network
+    volumes:
+      - ./api:/app
+      - ./.env.dev:/app/.env.dev
+      - ../../secrets:/secrets
+
+  llm:
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
+    env_file: .env.dev
+    ports:
+      - "${LLM_PORT:-8002}:${LLM_PORT:-8002}"
+    environment:
+      - PORT=${LLM_PORT:-8002}
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
+      - GCP_PROJECT=tennis-match-predictor
+      - GCP_ZONE=us-central1-a
+      - GCS_BUCKET_NAME=msmballstars-data
+    depends_on:
+      - ollama
+    networks:
+      - msmballstars-network
+    volumes:
+      - ./llm:/app
+      - ./.env.dev:/app/.env.dev
+      - ../../secrets:/secrets
+
+  ollama:
+    build:
+      context: ./llm
+      dockerfile: ollama.Dockerfile
+    ports:
+      - "11434"
+    networks:
+      - msmballstars-network
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
+
+
+networks:
+  msmballstars-network:
+    driver: bridge

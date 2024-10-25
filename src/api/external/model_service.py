@@ -1,3 +1,4 @@
+import os
 import requests
 
 from ..external.db_service import player_dfs, feature_cols
@@ -7,9 +8,10 @@ from ..external.helper import (
     get_h2h_stats,
     get_player_last_nplus1_matches,
 )
-from ..utils import get_and_assert_env_var
 
-service_url = get_and_assert_env_var("MODEL_SERVICE_URL")
+
+MODEL_HOST = os.getenv("MODEL_HOST", "model")
+MODEL_PORT = os.getenv("MODEL_PORT", "8001")
 
 
 def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) -> float:
@@ -27,7 +29,7 @@ def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) ->
     )
 
     response = requests.post(
-        service_url,
+        "http://{MODEL_HOST}:{MODEL_PORT}",
         json={
             "X1": player_a_features,
             "X2": player_b_features,
