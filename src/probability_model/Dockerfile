@@ -4,20 +4,26 @@ FROM python:3.9-slim
 # Set the working directory in the container
 WORKDIR /app
 
+# Force CPU mode
+ENV CUDA_VISIBLE_DEVICES=""
+ENV TORCH_DEVICE="cpu"
+
 # Install pipenv
 RUN pip install pipenv
 
-COPY Pipfile .
-COPY Pipfile.lock .
+# Install dependencies directly with pip, starting with torch CPU version
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir fastapi[standard] \
+    pydantic \
+    python-dotenv \
+    google-cloud-storage \
+    numpy \
+    pandas \
+    scikit-learn \
+    && rm -rf /root/.cache/pip
 
-# Install dependencies
-RUN pipenv install
-
-# Copy the current directory contents into the container at /app
+# Copy your application code
 COPY . .
 
-# Set the PYTHONPATH to include the virtual environment site-packages
-ENV PYTHONPATH /root/.local/share/virtualenvs/app-*/lib/python3.9/site-packages
-
-# Run preprocess.py when the container launches
+# Run the FastAPI app
 CMD ["pipenv", "run", "fastapi", "run", "app.py", "--port", "$PORT"]
