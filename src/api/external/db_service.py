@@ -40,6 +40,6 @@ df = read_csv_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
 logging.info(f"Data shape: {df.shape}")
 
 # Create dataset
-df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
+df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="mixed")
 player_dfs, feature_cols = preprocess_data(df)
 logging.info("In-memory databse loaded successfully")
