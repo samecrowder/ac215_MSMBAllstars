@@ -4,7 +4,12 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score
+)
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -114,7 +119,19 @@ def create_data_loaders(device, X1, X2, H2H, y, test_size=0.2, batch_size=32):
     return train_loader, test_loader
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs):
+def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs, callback=None):
+    """
+    Train the model with optional wandb callback for logging.
+    
+    Args:
+        model: The PyTorch model to train
+        train_loader: DataLoader for training data
+        val_loader: DataLoader for validation data
+        criterion: Loss function
+        optimizer: Optimizer
+        num_epochs: Number of epochs to train
+        callback: Optional WandbCallback instance for logging metrics
+    """
     for epoch in range(num_epochs):
         model.train()
         train_loss = 0.0
@@ -127,7 +144,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-            train_preds.extend(outputs.squeeze().detach().cpu().numpy())
+            train_preds.extend([1 if p > 0.5 else 0 for p in outputs.squeeze().detach().cpu().numpy()])
             train_true.extend(y.cpu().numpy())
 
         model.eval()
@@ -139,23 +156,51 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 outputs = model(X1, X2, H2H)
                 loss = criterion(outputs, y.unsqueeze(1))
                 val_loss += loss.item()
-                val_preds.extend(outputs.squeeze().detach().cpu().numpy())
+                val_preds.extend([1 if p > 0.5 else 0 for p in outputs.squeeze().detach().cpu().numpy()])
                 val_true.extend(y.cpu().numpy())
 
+        # Calculate average losses and metrics
         train_loss /= len(train_loader)
         val_loss /= len(val_loader)
-        train_auc = roc_auc_score(train_true, train_preds)
-        val_auc = roc_auc_score(val_true, val_preds)
-        train_acc = accuracy_score(
-            train_true, [1 if p > 0.5 else 0 for p in train_preds]
-        )
-        val_acc = accuracy_score(val_true, [1 if p > 0.5 else 0 for p in val_preds])
+        
+        # Calculate training metrics
+        train_acc = accuracy_score(train_true, train_preds)
+        train_precision = precision_score(train_true, train_preds)
+        train_recall = recall_score(train_true, train_preds)
+        train_f1 = f1_score(train_true, train_preds)
+        
+        # Calculate validation metrics
+        val_acc = accuracy_score(val_true, val_preds)
+        val_precision = precision_score(val_true, val_preds)
+        val_recall = recall_score(val_true, val_preds)
+        val_f1 = f1_score(val_true, val_preds)
 
+        # Log metrics using wandb callback if provided
+        if callback is not None:
+            callback.on_epoch_end(
+                epoch=epoch + 1,
+                train_loss=train_loss,
+                val_loss=val_loss,
+                train_acc=train_acc,
+                val_acc=val_acc,
+                train_precision=train_precision,
+                val_precision=val_precision,
+                train_recall=train_recall,
+                val_recall=val_recall,
+                train_f1=train_f1,
+                val_f1=val_f1
+            )
+
+        # Print metrics
         logging.info(f"Epoch {epoch+1}/{num_epochs}")
         logging.info(
-            f"Train Loss: {train_loss:.4f}, Train AUC: {train_auc:.4f}, Train Acc: {train_acc:.4f}"
+            f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, "
+            f"Train Precision: {train_precision:.4f}, Train Recall: {train_recall:.4f}, "
+            f"Train F1: {train_f1:.4f}"
         )
         logging.info(
-            f"Val Loss: {val_loss:.4f}, Val AUC: {val_auc:.4f}, Val Acc: {val_acc:.4f}"
+            f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}, "
+            f"Val Precision: {val_precision:.4f}, Val Recall: {val_recall:.4f}, "
+            f"Val F1: {val_f1:.4f}"
         )
         logging.info("---")

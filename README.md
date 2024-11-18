@@ -121,8 +121,9 @@ Preprocessing for Training Data container
 The processed data from the previous step joins all individual ATP results and removes entries with null values that are used as input data to our ML model. The output from the previous step also generates its file for the purpose of create an in-memory database for the API container below. Hence why there is a separation with this container, which takes the data from the previous preprocessing step and outputs data ready to feed into our LSTM.
 
 **Execute Dockerfile**
-1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data from previous step. Also specify `LOOKBACK` which defines the sequence length of training data.
-2. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the training data as a .pkl file to the same GCS folder where we read the data from.
+1. Head to src/preprocessing_for_training_data.
+2. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data from previous step. Also specify `LOOKBACK` which defines the sequence length of training data.
+3. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the training data as a .pkl file to the same GCS folder where we read the data from.
 
 Train Probability Model container
 ------------
@@ -130,8 +131,9 @@ Train Probability Model container
 We now take the data from the previous container and train our LSTM.
 
 **Execute Dockerfile**
-1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data for training from previous step. Also specify the numeric valus for training.
-2. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the model weights data as a .pt file to the same GCS folder where we read the data from.
+1. Head to src/train_probability_model.
+2. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data for training from previous step. Also specify the numeric valus for training.
+3. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the model weights data as a .pt file to the same GCS folder where we read the data from.
 
 API container
 ------------
@@ -139,8 +141,9 @@ API container
 The API container will route traffic from our front-end to our model servers.
 
 **Execute Dockerfile**
-1. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data (the first preprocessing, not the second one for model training data). This will load an in-memory database to pull historical match data for players to be used before issuing an API request to the Probability Model container.
-2. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8000`.
+1. Head to src/api.
+2. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data (the first preprocessing, not the second one for model training data). This will load an in-memory database to pull historical match data for players to be used before issuing an API request to the Probability Model container.
+3. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8000`.
 
 
 Probability Model container
@@ -149,8 +152,9 @@ Probability Model container
 This container serves the trained LSTM to return inference predictions.
 
 **Execute Dockerfile**
-1. Specify in `docker-shell.sh` the `DATA_FOLDER`, `DATA_FILE` and `WEIGHTS_FILE` of model weights to load into our inference model.
-2. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8001`.
+1. Head to src/probability_model.
+2. Specify in `docker-shell.sh` the `DATA_FOLDER`, `DATA_FILE` and `WEIGHTS_FILE` of model weights to load into our inference model.
+3. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8001`.
 
 
 LLM container
@@ -159,4 +163,5 @@ LLM container
 This container serves a LLM for our chat interface, should we choose to include one in our UI.
 
 **Execute Dockerfile**
-1. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8002`.
+1. Head to src/llm.
+2. Execute `docker-shell.sh` from its directory to build and run the docker container. This should start a FastAPI server at `http://127.0.0.1:8002`.

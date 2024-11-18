@@ -5,11 +5,11 @@ set -e
 
 export IMAGE_NAME="train-probability-model"
 export BASE_DIR=$(pwd)
-export SECRETS_DIR=$(pwd)/../../../secrets/
+export SECRETS_DIR="$BASE_DIR/../../../secrets"
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
 export GCS_BUCKET_NAME="msmballstars-data"
-export DATA_FOLDER="version1"
+export DATA_FOLDER="version2"
 export DATA_FILE="training_data_lookback=10.pkl"
 export TEST_SIZE=.2
 export BATCH_SIZE=32
@@ -17,7 +17,21 @@ export HIDDEN_SIZE=32
 export NUM_LAYERS=2
 export LR=0.001
 export NUM_EPOCHS=10
-export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
+export GOOGLE_APPLICATION_CREDENTIALS=/secrets/model-training-account.json
+
+# Read WANDB_KEY from JSON file
+if [ ! -f "$SECRETS_DIR/wandb-key.json" ]; then
+    echo "wandb-key.json not found at: $SECRETS_DIR/wandb-key.json"
+    exit 1
+fi
+
+export WANDB_KEY=$(cat "$SECRETS_DIR/wandb-key.json" | jq -r '.key')
+
+# Check if WANDB_KEY was successfully read
+if [ -z "$WANDB_KEY" ]; then
+    echo "Failed to read WANDB_KEY from wandb-key.json"
+    exit 1
+fi
 
 # Check to see if path to secrets is correct
 if [ ! -f "$SECRETS_DIR/data-service-account.json" ]; then
@@ -26,7 +40,7 @@ if [ ! -f "$SECRETS_DIR/data-service-account.json" ]; then
 fi
 
 # Build the image based on the Dockerfile
-docker build -t $IMAGE_NAME -f Dockerfile .
+docker build -t $IMAGE_NAME --platform=linux/arm64/v8 -f Dockerfile .
 
 echo "Host GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS"
 
@@ -46,4 +60,6 @@ docker run --rm -it \
 -e NUM_LAYERS=$NUM_LAYERS \
 -e LR=$LR \
 -e NUM_EPOCHS=$NUM_EPOCHS \
+-e WANDB_KEY=$WANDB_KEY \
 -e DEV=1 $IMAGE_NAME
+ 
