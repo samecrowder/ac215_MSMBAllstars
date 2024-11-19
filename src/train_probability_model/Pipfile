@@ -8,6 +8,7 @@ google-cloud-storage = "*"
 numpy = "*"
 torch = "*"
 scikit-learn = "*"
+wandb = "*"
 
 [requires]
 python_version = "3.9"
