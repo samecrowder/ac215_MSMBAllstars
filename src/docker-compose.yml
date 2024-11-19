@@ -14,7 +14,7 @@ services:
       - MODEL_PORT=${MODEL_PORT:-8001}
       - LLM_HOST=llm
       - LLM_PORT=${LLM_PORT:-8002}
-      - ENV=prod
+      - ENV=dev
       - GOOGLE_APPLICATION_CREDENTIALS=/secrets/super-admin-key.json
       - GCP_PROJECT=tennis-match-predictor
       - GCP_ZONE=us-central1-a

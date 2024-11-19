@@ -13,7 +13,6 @@ docker push gcr.io/tennis-match-predictor/api:latest
 docker push gcr.io/tennis-match-predictor/probability-model:latest
 docker push gcr.io/tennis-match-predictor/llm:latest
 
-
 # Get Ollama URL. We assume that ollama is already deployed.
 OLLAMA_URL=$(gcloud run services describe ollama --platform managed --region us-central1 --format 'value(status.url)')
 echo "OLLAMA_URL: $OLLAMA_URL"
