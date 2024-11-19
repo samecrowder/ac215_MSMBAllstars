@@ -1,4 +1,5 @@
 from typing import List
+import os
 
 import ollama
 
@@ -14,7 +15,8 @@ def generate_chat_response(query: str, prior_messages: List[str]) -> str:
         {"role": "user", "content": query},
     ]
 
-    oc = ollama.Client(host="http://ollama:11434")
+    ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
+    oc = ollama.Client(host=ollama_host)
     response = oc.chat(model="llama3.2:1b", messages=messages)
 
-    return response['message']['content'].strip()
+    return response["message"]["content"].strip()

@@ -13,12 +13,17 @@ docker push gcr.io/tennis-match-predictor/api:latest
 docker push gcr.io/tennis-match-predictor/probability-model:latest
 docker push gcr.io/tennis-match-predictor/llm:latest
 
-# Deploy LLM first (since API depends on it)
+
+# Get Ollama URL. We assume that ollama is already deployed.
+OLLAMA_URL=$(gcloud run services describe ollama --platform managed --region us-central1 --format 'value(status.url)')
+echo "OLLAMA_URL: $OLLAMA_URL"
+
+# Deploy LLM with Ollama URL
 gcloud run deploy llm \
     --image gcr.io/tennis-match-predictor/llm:latest \
     --platform managed \
     --region us-central1 \
-    --set-env-vars="$(docker compose config | yq '.services.llm.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS")) | to_entries | map(.key + "=" + .value) | join(",")')" \
+    --set-env-vars="OLLAMA_HOST=${OLLAMA_URL},$(docker compose config | yq '.services.llm.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS")) | to_entries | map(.key + "=" + .value) | join(",")')" \
     --set-secrets="/secrets/super-admin-key.json=super-admin-key:latest"
 
 # Get LLM URL
