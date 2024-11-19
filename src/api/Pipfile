@@ -5,14 +5,19 @@ name = "pypi"
 
 [packages]
 fastapi = {extras = ["standard"], version = "*"}
-pydantic = "*"
+uvicorn = "*"
 requests = "*"
 python-dotenv = "*"
+pydantic = "*"
 numpy = "*"
 pandas = "*"
 google-cloud-storage = "*"
 
+[dev-packages]
+pytest = "*"
+httpx = "*"
+pytest-asyncio = "*"
+
 [requires]
 python_version = "3.9"
 
-[dev-packages]

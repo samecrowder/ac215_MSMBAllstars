@@ -196,6 +196,7 @@ To run tests locally starting in root DIR:
 
    ```bash
    cd src/api
+   pipenv install --dev (only if running for the first time)
    pipenv run python -m pytest tests/unit/ -v
    ```
 
