@@ -1,6 +1,6 @@
 # model routes
 
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 

@@ -1,4 +1,3 @@
-import os
 import requests
 
 from external.db_service import load_data

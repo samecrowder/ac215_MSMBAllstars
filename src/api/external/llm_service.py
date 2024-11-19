@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 import requests
 from config import LLM_BASE_URL
