@@ -5,7 +5,6 @@ from model.router import router as model_router
 from chat.router import router as chat_router
 from external.model_service import initialize_data
 
-print(os.environ.get("ENV"), "THIS IS THE ENV!!!!!!!****************")
 
 if os.environ.get("ENV") != "prod":
     load_dotenv("../.env.dev")

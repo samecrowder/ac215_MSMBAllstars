@@ -14,7 +14,6 @@ player_dfs, feature_cols = None, None
 
 
 def initialize_data():
-    print("Initializing data")
     global player_dfs, feature_cols
     player_dfs, feature_cols = load_data()
 
