@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   api:
@@ -15,7 +15,7 @@ services:
       - LLM_HOST=llm
       - LLM_PORT=${LLM_PORT:-8002}
       - ENV=prod
-      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/super-admin-key.json
       - GCP_PROJECT=tennis-match-predictor
       - GCP_ZONE=us-central1-a
       - GCS_BUCKET_NAME=msmballstars-data
@@ -40,7 +40,7 @@ services:
       - "${MODEL_PORT:-8001}:${MODEL_PORT:-8001}"
     environment:
       - PORT=${MODEL_PORT:-8001}
-      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/super-admin-key.json
       - GCP_PROJECT=tennis-match-predictor
       - GCP_ZONE=us-central1-a
       - GCS_BUCKET_NAME=msmballstars-data
@@ -67,7 +67,7 @@ services:
       - "${LLM_PORT:-8002}:${LLM_PORT:-8002}"
     environment:
       - PORT=${LLM_PORT:-8002}
-      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/super-admin-key.json
       - GCP_PROJECT=tennis-match-predictor
       - GCP_ZONE=us-central1-a
       - GCS_BUCKET_NAME=msmballstars-data
@@ -93,7 +93,6 @@ services:
 
 volumes:
   ollama_data:
-
 
 networks:
   msmballstars-network:
