@@ -4,7 +4,7 @@ import fastapi
 from model.router import router as model_router
 from chat.router import router as chat_router
 from external.model_service import initialize_data
-
+from cors import setup_cors
 
 if os.environ.get("ENV") != "prod":
     load_dotenv("../.env.dev")
@@ -17,6 +17,7 @@ if os.environ.get("ENV") != "test":
 
 def create_app():
     app = fastapi.FastAPI()
+    setup_cors(app)
 
     app.include_router(model_router)
     app.include_router(chat_router)
