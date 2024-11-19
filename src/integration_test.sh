@@ -13,7 +13,7 @@ echo "🚀 Starting services..."
 docker compose up -d
 
 echo "⏳ Waiting for API to be ready..."
-timeout=600  # 10 minutes in seconds
+timeout=300  # 5 minutes in seconds
 interval=5   # Check every 5 seconds
 elapsed=0
 
