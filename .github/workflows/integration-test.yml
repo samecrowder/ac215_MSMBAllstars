@@ -1,0 +1,39 @@
+name: Integration Test
+
+on:
+  push:
+    branches:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Set up environment
+        run: |
+          cp src/.env.dev.example src/.env.dev  # Assuming you have an example env file
+          mkdir -p secrets
+          echo "{}" > secrets/super-admin-key.json  # Create dummy credentials for testing
+
+      - name: Run integration test
+        working-directory: src
+        run: |
+          chmod +x integration_test.sh
+          ./integration_test.sh
+
+      - name: Print container logs on failure
+        if: failure()
+        working-directory: src
+        run: |
+          docker compose logs
+          docker compose down
