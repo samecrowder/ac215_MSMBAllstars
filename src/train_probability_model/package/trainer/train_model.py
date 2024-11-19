@@ -8,8 +8,8 @@ from torch import nn
 from io import BytesIO
 import wandb
 
-from training_pipeline import create_data_loaders, train_model
-from model import TennisLSTM
+from trainer.training_pipeline import create_data_loaders, train_model
+from trainer.model import TennisLSTM
 
 # Set up logging
 logging.basicConfig(
@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 # GCS configs
-BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
+BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 DATA_FOLDER = os.environ.get("DATA_FOLDER")
 DATA_FILE = os.environ.get("DATA_FILE")
@@ -138,6 +138,6 @@ def main():
 
     logging.info("=== Training Pipeline Complete ===")
 
-
 if __name__ == "__main__":
     main()
+

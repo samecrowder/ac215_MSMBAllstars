@@ -16,20 +16,20 @@ export REPLICA_COUNT=1
 # export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.1-13:latest"
 export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/pytorch-xla.2-3.py310:latest"
 export PYTHON_PACKAGE_URI="$GCS_BUCKET_URI/$TRAIN_TAR_DIR/$TRAINER_FILENAME"
-export PYTHON_MODULE="trainer.train_model"
+export PYTHON_MODULE="trainer.task"
 export ACCELERATOR_TYPE="NVIDIA_TESLA_T4"
 export ACCELERATOR_COUNT=1
 export GCP_REGION="us-east1"
 
 # Training-specific environment variables
+export DATA_FOLDER="version2"
+export DATA_FILE="training_data_lookback=10.pkl"
 export TEST_SIZE=0.2
 export BATCH_SIZE=32
 export HIDDEN_SIZE=64
 export NUM_LAYERS=2
 export LR=0.001
 export NUM_EPOCHS=10
-export DATA_FOLDER="data"
-export DATA_FILE="processed_data.pkl"
 
 # Read WANDB_KEY from JSON file
 if [ ! -f "$SECRETS_DIR/wandb-key.json" ]; then
@@ -39,15 +39,27 @@ fi
 
 export WANDB_KEY=$(cat "$SECRETS_DIR/wandb-key.json" | jq -r '.key')
 
-# Submit job to Vertex AI using updated syntax
+echo "WANDB_KEY: $WANDB_KEY"
+
+# Create command line arguments string
+export CMDARGS="--bucket-name=$BUCKET_NAME,\
+--data-folder=$DATA_FOLDER,\
+--data-file=$DATA_FILE,\
+--test-size=$TEST_SIZE,\
+--batch-size=$BATCH_SIZE,\
+--hidden-size=$HIDDEN_SIZE,\
+--num-layers=$NUM_LAYERS,\
+--lr=$LR,\
+--num-epochs=$NUM_EPOCHS,\
+--wandb-key=$WANDB_KEY"
+
+# Submit job to Vertex AI with command line arguments
 gcloud ai custom-jobs create \
     --region=$GCP_REGION \
     --display-name=$DISPLAY_NAME \
     --python-package-uris=$PYTHON_PACKAGE_URI \
-    --worker-pool-spec="machine-type=$MACHINE_TYPE,\
-replica-count=$REPLICA_COUNT,\
-executor-image-uri=$EXECUTOR_IMAGE_URI,\
-python-module=$PYTHON_MODULE"
+    --worker-pool-spec=machine-type=$MACHINE_TYPE,replica-count=$REPLICA_COUNT,executor-image-uri=$EXECUTOR_IMAGE_URI,python-module=$PYTHON_MODULE \
+    --args=$CMDARGS
 
 # python-module=$PYTHON_MODULE,\
 # accelerator-type=$ACCELERATOR_TYPE,\
