@@ -37,4 +37,44 @@ while true; do
     echo "⏳ Still waiting for API... (${elapsed}s elapsed)"
 done
 
-echo "🎉 Integration test setup complete!"
+echo "🎯 Testing prediction endpoint..."
+predict_response=$(curl -s -X POST http://localhost:8000/predict \
+    -H "Content-Type: application/json" \
+    -d '{
+        "player_a_id": "Roger Federer",
+        "player_b_id": "Rafael Nadal",
+        "lookback": 10
+    }')
+predict_status=$?
+
+echo "Prediction Response:"
+echo "$predict_response" | jq '.'
+
+if [ $predict_status -ne 0 ]; then
+    echo "❌ Prediction request failed"
+    docker compose logs api
+    docker compose down
+    exit 1
+fi
+
+echo "💬 Testing chat endpoint..."
+chat_response=$(curl -s -X POST http://localhost:8000/chat \
+    -H "Content-Type: application/json" \
+    -d '{
+        "message": "Who is more likely to win between Federer and Nadal on clay court?",
+        "history": []
+    }')
+chat_status=$?
+
+echo "Chat Response:"
+echo "$chat_response" | jq '.'
+
+if [ $chat_status -ne 0 ]; then
+    echo "❌ Chat request failed"
+    docker compose logs api
+    docker compose down
+    exit 1
+fi
+
+echo "🎉 All integration tests passed successfully!"
+docker compose down
