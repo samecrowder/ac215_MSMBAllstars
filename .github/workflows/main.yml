@@ -3,8 +3,8 @@ name: Deploy to Cloud Run
 on:
   push:
     branches:
-      - main  # or whatever your primary branch is named
-  workflow_dispatch:  # Allows manual triggering
+      - main # or whatever your primary branch is named
+  workflow_dispatch: # Allows manual triggering
 
 env:
   PROJECT_ID: tennis-match-predictor
@@ -15,37 +15,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: ${{ env.PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
 
-    - name: Configure Docker for Artifact Registry
-      run: |
-        gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
-    - name: Grant execute permission to deploy script
-      run: chmod +x src/deploy.sh
+      - name: Grant execute permission to deploy script
+        run: chmod +x src/deploy_script.sh
 
-    - name: Deploy to Cloud Run
-      working-directory: ./src
-      env:
-        GCP_PROJECT: ${{ env.PROJECT_ID }}
-        GCP_REGION: ${{ env.REGION }}
-      run: ./deploy.sh
+      - name: Deploy to Cloud Run
+        working-directory: ./src
+        env:
+          GCP_PROJECT: ${{ env.PROJECT_ID }}
+          GCP_REGION: ${{ env.REGION }}
+        run: ./deploy.sh
 
-    - name: Output Service URLs
-      run: |
-        echo "API URL: https://api-470970511307.us-central1.run.app"
-        echo "Model URL: https://probability-model-470970511307.us-central1.run.app"
-        echo "LLM URL: https://llm-470970511307.us-central1.run.app"
+      - name: Output Service URLs
+        run: |
+          echo "API URL: https://api-470970511307.us-central1.run.app"
+          echo "Model URL: https://probability-model-470970511307.us-central1.run.app"
+          echo "LLM URL: https://llm-470970511307.us-central1.run.app"
