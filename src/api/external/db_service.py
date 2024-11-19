@@ -13,10 +13,10 @@ logging.basicConfig(
 )
 
 # GCS
-BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
+BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "msmballstars-data")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-DATA_FOLDER = os.environ.get("DATA_FOLDER")
-DATA_FILE = os.environ.get("DATA_FILE")
+DATA_FOLDER = os.environ.get("DATA_FOLDER", "version1")
+DATA_FILE = os.environ.get("DATA_FILE", "combined_atp_matches.csv")
 
 
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
