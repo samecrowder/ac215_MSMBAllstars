@@ -44,5 +44,20 @@
     "postcss": "^8.4.49",
     "react-scripts": "^5.0.1",
     "tailwindcss": "^3.4.15"
+  },
+  "jest": {
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "lcov"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 50,
+        "functions": 50,
+        "lines": 50,
+        "statements": 50
+      }
+    }
   }
 }

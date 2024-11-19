@@ -41,3 +41,31 @@ jobs:
         with:
           name: coverage
           path: src/frontend/tennis-app/coverage
+
+      - name: Display Coverage Summary
+        run: |
+          echo "# Frontend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "## Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat src/frontend/tennis-app/coverage/coverage-summary.json | jq -r '
+            "Statement Coverage: \(.total.statements.pct)%\nBranch Coverage: \(.total.branches.pct)%\nFunction Coverage: \(.total.functions.pct)%\nLine Coverage: \(.total.lines.pct)%"
+          ' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Check Coverage Thresholds
+        run: |
+          COVERAGE=$(cat src/frontend/tennis-app/coverage/coverage-summary.json)
+          STATEMENTS=$(echo $COVERAGE | jq -r '.total.statements.pct')
+          BRANCHES=$(echo $COVERAGE | jq -r '.total.branches.pct')
+          FUNCTIONS=$(echo $COVERAGE | jq -r '.total.functions.pct')
+          LINES=$(echo $COVERAGE | jq -r '.total.lines.pct')
+
+          if (( $(echo "$STATEMENTS < 80" | bc -l) )) || \
+             (( $(echo "$BRANCHES < 80" | bc -l) )) || \
+             (( $(echo "$FUNCTIONS < 80" | bc -l) )) || \
+             (( $(echo "$LINES < 80" | bc -l) )); then
+            echo "❌ Coverage is below 80%"
+            exit 1
+          else
+            echo "✅ Coverage is above 80%"
+          fi
