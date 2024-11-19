@@ -10,10 +10,20 @@ from external.helper import (
 )
 from config import MODEL_BASE_URL
 
-player_dfs, feature_cols = load_data()
+
+player_dfs, feature_cols = None, None
+
+
+def initialize_data():
+    print("Initializing data")
+    global player_dfs, feature_cols
+    player_dfs, feature_cols = load_data()
 
 
 def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) -> float:
+    if player_dfs is None or feature_cols is None:
+        raise RuntimeError("Data not initialized. Call initialize_data() first.")
+
     player_a_previous_matches = get_player_last_nplus1_matches(
         player_dfs, player_a_id, lookback
     )
