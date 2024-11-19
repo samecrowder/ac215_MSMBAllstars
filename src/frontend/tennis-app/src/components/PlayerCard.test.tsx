@@ -57,6 +57,7 @@ describe('PlayerCard', () => {
   test('renders with correct CSS classes', () => {
     render(<PlayerCard {...mockPlayerData} />);
     
+    // eslint-disable-next-line testing-library/no-node-access
     const card = screen.getByRole('img').parentElement;
     expect(card).toHaveClass('border', 'p-4', 'rounded-lg', 'w-80');
   });

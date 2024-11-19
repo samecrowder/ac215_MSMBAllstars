@@ -72,11 +72,10 @@ describe('PlayerComparison', () => {
     fireEvent.click(predictButton);
     expect(predictButton).toBeDisabled();
     expect(screen.getByText('Loading...')).toBeInTheDocument();
-
     await waitFor(() => {
       expect(predictButton).not.toBeDisabled();
-      expect(screen.getByText('Predict Winner')).toBeInTheDocument();
     });
+    expect(screen.getByText('Predict Winner')).toBeInTheDocument();
   });
 
   test('displays win probability', () => {
@@ -100,8 +99,8 @@ describe('PlayerComparison', () => {
 
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith('Error fetching prediction:', expect.any(Error));
-      expect(predictButton).not.toBeDisabled();
     });
+    expect(predictButton).not.toBeDisabled();
 
     consoleSpy.mockRestore();
   });
