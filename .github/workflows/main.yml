@@ -3,7 +3,7 @@ name: Deploy to Cloud Run
 on:
   push:
     branches:
-      - main # or whatever your primary branch is named
+      - main # Triggers on any push to main branch
   workflow_dispatch: # Allows manual triggering
 
 env:
