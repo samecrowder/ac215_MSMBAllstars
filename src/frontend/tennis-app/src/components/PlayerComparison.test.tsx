@@ -54,7 +54,7 @@ describe('PlayerComparison', () => {
     expect(screen.getAllByText('Rafael Nadal').length).toBeGreaterThanOrEqual(1);
   });
 
-  test('allows player selection change', async () => {
+  test('allows for player selection change', async () => {
     render(<PlayerComparison players={mockPlayers} onPredictClick={mockOnPredictClick} />);
     const [player1Dropdown, player2Dropdown] = screen.getAllByRole('combobox');
 
