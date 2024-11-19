@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${LLM_PORT}:${LLM_PORT}"  # Use environment variables here
+      - "${LLM_PORT}:${LLM_PORT}"
     depends_on:
       - ollama
     environment:

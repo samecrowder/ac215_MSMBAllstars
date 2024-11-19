@@ -7,18 +7,22 @@ if os.environ.get("ENV") != "prod":
 
     load_dotenv("../.env.dev")
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    print("Development environment detected: Forcing CPU mode")
+
+
 import logging
 from typing import Any, List
-
 import fastapi
 import torch
+
 from google.cloud import storage
 import pandas as pd
 from pydantic import BaseModel
 from sklearn.preprocessing import StandardScaler
 
-
 from .model import TennisLSTM
+
 
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")

@@ -16,7 +16,5 @@ class ChatResponse(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 def chat(query: str, history: Optional[List[ChatResponse]] = None):
     prior_messages = [h.message for h in history or []]
-
     message = get_chat_response(query, prior_messages)
-
     return ChatResponse(message=message)

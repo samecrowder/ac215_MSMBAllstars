@@ -23,14 +23,29 @@ if [ ! -f "$SECRETS_DIR/data-service-account.json" ]; then
     exit 1
 fi
 
+# Build the image based on the Dockerfile
+docker build -t $IMAGE_NAME -f Dockerfile .
+
 echo ""
 echo "======================"
 echo "Starting model service on port $MODEL_PORT"
 echo "======================"
 echo ""
 
-# build with docker compose
-docker-compose build
-
-# Run docker-compose with the environment variables
-docker-compose up --abort-on-container-exit
+# Run the container
+docker run --rm -it \
+--name "$IMAGE_NAME" \
+--mount type=bind,source="$BASE_DIR",target=/app \
+--mount type=bind,source="$SECRETS_DIR",target=/secrets \
+-e GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS \
+-e GCP_PROJECT="$GCP_PROJECT" \
+-e GCP_ZONE=$GCP_ZONE \
+-e GCS_BUCKET_NAME=$GCS_BUCKET_NAME \
+-e DATA_FOLDER=$DATA_FOLDER \
+-e DATA_FILE=$DATA_FILE \
+-e WEIGHTS_FILE=$WEIGHTS_FILE \
+-e HIDDEN_SIZE=$HIDDEN_SIZE \
+-e NUM_LAYERS=$NUM_LAYERS \
+-e PORT=$MODEL_PORT \
+-p $MODEL_PORT:$MODEL_PORT \
+$IMAGE_NAME

@@ -2,23 +2,20 @@ from typing import List
 
 from pydantic import BaseModel
 import requests
+import os
 
-from ..utils import get_and_assert_env_var
-
-service_url = get_and_assert_env_var("LLM_SERVICE_URL")
+LLM_HOST = os.getenv("LLM_HOST", "llm")
+LLM_PORT = os.getenv("LLM_PORT", "8002")
 
 
 class ChatResponse(BaseModel):
     response: str
 
 
-def get_chat_response(query: str, prior_messages: List[str]) -> str:
+def get_chat_response(query, prior_messages):
+    url = f"http://{LLM_HOST}:{LLM_PORT}/chat"
     response = requests.post(
-        service_url + "/chat",
-        json={
-            "query": query,
-            "prior_messages": prior_messages,
-        },
+        url, json={"query": query, "prior_messages": prior_messages}
     )
-
-    return ChatResponse(**response.json()).response
+    response_data = response.json()
+    return response_data["response"]

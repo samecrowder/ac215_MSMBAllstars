@@ -41,8 +41,6 @@ docker run --rm -it \
 -e DATA_FOLDER=$DATA_FOLDER \
 -e DATA_FILE=$DATA_FILE \
 -e ENV=prod \
--e MODEL_SERVICE_URL=http://127.0.0.1:8001 \
--e LLM_SERVICE_URL=http://127.0.0.1:8002 \
 -e PORT=$API_PORT \
 -p $API_PORT:$API_PORT \
 $IMAGE_NAME
