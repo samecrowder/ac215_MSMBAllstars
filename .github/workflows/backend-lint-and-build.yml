@@ -4,17 +4,9 @@ on:
   push:
     branches:
       - "*"
-    paths:
-      - "src/api/**"
-      - "src/probability_model/**"
-      - "src/llm/**"
   pull_request:
     branches:
       - "*"
-    paths:
-      - "src/api/**"
-      - "src/probability_model/**"
-      - "src/llm/**"
   workflow_dispatch:
 
 jobs:

@@ -4,13 +4,9 @@ on:
   push:
     branches:
       - "*"
-    paths:
-      - "src/frontend/tennis-app/**"
   pull_request:
     branches:
       - "*"
-    paths:
-      - "src/frontend/tennis-app/**"
   workflow_dispatch:
 
 jobs:
