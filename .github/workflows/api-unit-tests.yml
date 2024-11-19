@@ -27,6 +27,8 @@ jobs:
           pipenv install --dev
 
       - name: Run API service Unit Tests with Coverage
+        env:
+          ENV: "test"
         run: |
           cd src/api
           pipenv run pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=html --cov-fail-under=50
