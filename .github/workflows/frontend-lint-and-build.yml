@@ -1,0 +1,44 @@
+name: Frontend Lint and Build
+
+on:
+  push:
+    branches:
+      - "*"
+    paths:
+      - "src/frontend/tennis-app/**"
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "src/frontend/tennis-app/**"
+  workflow_dispatch:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: src/frontend/tennis-app/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd src/frontend/tennis-app
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd src/frontend/tennis-app
+          npm run lint
+
+      - name: Build project
+        run: |
+          cd src/frontend/tennis-app
+          npm run build
