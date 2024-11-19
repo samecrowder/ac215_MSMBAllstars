@@ -24,13 +24,13 @@ from sklearn.preprocessing import StandardScaler
 from .model import TennisLSTM
 
 
-BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
-GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-DATA_FOLDER = os.environ.get("DATA_FOLDER")
-DATA_FILE = os.environ.get("DATA_FILE")
-WEIGHTS_FILE = os.environ.get("WEIGHTS_FILE")
-HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE"))
-NUM_LAYERS = int(os.environ.get("NUM_LAYERS"))
+BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "msmballstars-data")
+GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", None)
+DATA_FOLDER = os.environ.get("DATA_FOLDER", "data")
+DATA_FILE = os.environ.get("DATA_FILE", "tennis_data.pkl")
+WEIGHTS_FILE = os.environ.get("WEIGHTS_FILE", "model_weights.pt")
+HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE", "256"))
+NUM_LAYERS = int(os.environ.get("NUM_LAYERS", "2"))
 
 
 def read_pt_file_from_gcs(bucket, file_name):
