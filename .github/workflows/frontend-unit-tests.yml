@@ -5,13 +5,13 @@ on:
     branches:
       - "*"
     paths:
-      - "src/frontend/**" # Only run when frontend files change
+      - "src/frontend/**"
   pull_request:
     branches:
       - "*"
     paths:
       - "src/frontend/**"
-  workflow_dispatch: # Allow manual triggers
+  workflow_dispatch:
 
 jobs:
   test:
