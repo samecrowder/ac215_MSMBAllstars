@@ -22,7 +22,7 @@ jobs:
       - name: Set up environment
         run: |
           mkdir -p secrets
-          echo "{}" > secrets/super-admin-key.json  # Create dummy credentials for testing
+          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > secrets/super-admin-key.json
 
       - name: Run integration test
         working-directory: src
