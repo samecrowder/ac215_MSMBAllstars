@@ -35,7 +35,7 @@ jobs:
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
       - name: Grant execute permission to deploy script
-        run: chmod +x src/deploy_script.sh
+        run: chmod +x src/deploy.sh
 
       - name: Deploy to Cloud Run
         working-directory: ./src
