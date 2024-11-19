@@ -114,8 +114,8 @@ This will start:
 curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{
-    "player_a_id": "roger-federer",
-    "player_b_id": "rafael-nadal",
+    "player_a_id": "Roger Federer",
+    "player_b_id": "Rafael Nadal",
     "lookback": 10
   }'
 
@@ -196,8 +196,8 @@ To run tests locally starting in root DIR:
 
    ```bash
    cd src/api
-   pipenv install --dev (only if running for the first time)
-   pipenv run python -m pytest tests/unit/ -v
+   pipenv install --dev (only when running for the first time)
+   pipenv run python -m pytest tests/ -v
    ```
 
 2. **Frontend Unit Tests**
