@@ -1,0 +1,56 @@
+name: Backend Lint and Build
+
+on:
+  push:
+    branches:
+      - "*"
+    paths:
+      - "src/api/**"
+      - "src/probability_model/**"
+      - "src/llm/**"
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "src/api/**"
+      - "src/probability_model/**"
+      - "src/llm/**"
+  workflow_dispatch:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ["api", "probability_model", "llm"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv flake8 black
+          cd src/${{ matrix.service }}
+          pipenv install --dev
+
+      - name: Run Black
+        run: |
+          cd src/${{ matrix.service }}
+          pipenv run black . --check
+
+      - name: Run Flake8
+        run: |
+          cd src/${{ matrix.service }}
+          pipenv run flake8 . --max-line-length=100 --exclude=.venv
+
+      - name: Test Docker build
+        run: |
+          cd src/${{ matrix.service }}
+          docker build -t ${{ matrix.service }}:test .
