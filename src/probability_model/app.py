@@ -4,6 +4,15 @@ import pickle
 from typing import List
 import logging
 
+import fastapi
+import torch
+
+from google.cloud import storage
+from pydantic import BaseModel
+from sklearn.preprocessing import StandardScaler
+
+from .model import TennisLSTM
+
 if os.environ.get("ENV") != "prod":
     from dotenv import load_dotenv
 
@@ -18,16 +27,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     force=True,
 )
-
-import fastapi
-import torch
-
-from google.cloud import storage
-import pandas as pd
-from pydantic import BaseModel
-from sklearn.preprocessing import StandardScaler
-
-from .model import TennisLSTM
 
 
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "msmballstars-data")
