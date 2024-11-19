@@ -5,8 +5,15 @@ from model.router import router as model_router
 from chat.router import router as chat_router
 from external.model_service import initialize_data
 
+print(os.environ.get("ENV"), "THIS IS THE ENV!!!!!!!****************")
+
 if os.environ.get("ENV") != "prod":
     load_dotenv("../.env.dev")
+
+# This is a bit of a hack, but it was the best way I could find to make sure we don't try to make a
+# call to GCS during unit/integration tests
+if os.environ.get("ENV") != "test":
+    initialize_data()
 
 
 def create_app():
@@ -21,10 +28,5 @@ def create_app():
 
     return app
 
-
-# This is a bit of a hack, but it was the best way I could find to make sure we don't try to make a
-# call to GCS during unit/integration tests
-if os.environ.get("ENV") != "test":
-    initialize_data()
 
 app = create_app()
