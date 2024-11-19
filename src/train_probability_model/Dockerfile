@@ -13,11 +13,14 @@ COPY Pipfile .
 # Install dependencies
 RUN pipenv install
 
-# Copy the current directory contents into the container at /app
-COPY . .
+# Copy the package directory into the container
+COPY package /app/package
+
+# Install the local package in development mode
+RUN pipenv run pip install -e /app/package
 
 # Set the PYTHONPATH to include the virtual environment site-packages
 ENV PYTHONPATH /root/.local/share/virtualenvs/app-*/lib/python3.9/site-packages
 
-# Run preprocess.py when the container launches
-CMD ["pipenv", "run", "python", "train_model.py"]
+# Run train_model.py when the container launches
+CMD ["pipenv", "run", "python", "package/trainer/train_model.py"]

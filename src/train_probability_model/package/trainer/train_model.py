@@ -16,7 +16,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# GCS
+# GCS configs
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 DATA_FOLDER = os.environ.get("DATA_FOLDER")
@@ -28,7 +28,6 @@ NUM_LAYERS = int(os.environ.get("NUM_LAYERS"))
 LR = float(os.environ.get("LR"))
 NUM_EPOCHS = int(os.environ.get("NUM_EPOCHS"))
 WANDB_KEY = os.environ.get("WANDB_KEY")
-
 
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
 logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
@@ -73,7 +72,7 @@ class WandbCallback:
 
 
 def main():
-    logging.info("Starting preprocessing script")
+    logging.info("Starting training script")
 
     # Initialize wandb
     wandb.login(key=WANDB_KEY)
