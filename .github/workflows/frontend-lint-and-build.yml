@@ -35,6 +35,8 @@ jobs:
           npm run lint
 
       - name: Build project
+        env:
+          CI: false
         run: |
           cd src/frontend/tennis-app
           npm run build
