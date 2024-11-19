@@ -107,7 +107,7 @@ This will start:
 - LLM service on port 8002
 - Ollama service (internal use only)
 
-3. Test the services:
+3. Call the services via curl:
 
 ```bash
 # Test prediction endpoint
@@ -161,17 +161,20 @@ The script will output the public URLs for each service when complete.
 
 Our project uses GitHub Actions for continuous integration and continuous deployment:
 
-1. **Unit Test Pipeline** (`unit-tests.yml`)
+1. **API Unit Test Pipeline** (`api-unit-tests.yml`)
 
    - Triggers on commits to any branch
    - Runs unit tests
 
-2. **Integration Test Pipeline** (`integration-tests.yml`)
+2. **Frontend Unit Test Pipeline** (`frontend-unit-tests.yml`)
 
-   - Triggers on commits to any branch
-   - Runs integration tests
+   - TODO write these
 
-3. **Deployment Pipeline** (`main.yml`)
+3. **Integration Test Pipeline** (`integration-tests.yml`)
+
+   - TODO write these
+
+4. **Deployment Pipeline** (`main.yml`)
    - Triggers on commits to `main` branch
    - Also can be triggered manually via GitHub UI
    - Deploys application to GCP Cloud Run
@@ -186,3 +189,23 @@ To manually trigger a deployment:
 4. Click "Run workflow"
 
 The deployment status and logs can be monitored in the GitHub Actions tab.
+
+To run tests locally starting in root DIR:
+
+1. **API Unit Tests**
+
+   ```bash
+   cd src/api
+   pipenv run python -m pytest tests/unit/ -v
+   ```
+
+2. **Frontend Unit Tests**
+
+   ```bash
+   cd src/frontend/tennis-app
+   npm test -- --watchAll=false --ci --coverage
+   ```
+
+3. **Integration Tests**
+
+   - TODO fill this out

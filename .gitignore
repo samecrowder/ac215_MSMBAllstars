@@ -163,3 +163,4 @@ cython_debug/
 .DS_Store
 
 src/frontend/tennis-app/node_modules/*
+src/frontend/tennis-app/coverage/*
