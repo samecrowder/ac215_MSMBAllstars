@@ -159,6 +159,8 @@ The script will output the public URLs for each service when complete.
 
 ## Testing / CICD
 
+# TODO(sam) Rewrite most of this so it applies.....probably just point user to the github pipeline files idk....
+
 Our project uses GitHub Actions for continuous integration and continuous deployment:
 
 1. **API Unit Test Pipeline** (`api-unit-tests.yml`)
