@@ -1,14 +1,17 @@
 #!/bin/bash
 
-# Build the trainer package
-cd package
-python setup.py sdist bdist_wheel
+# Define GCS bucket URI
+export GCS_BUCKET_URI="gs://msmballstars-data/train_tar"
 
-# Create the trainer archive
-cd ..
-rm -rf dist
-mkdir -p dist
-tar -zcvf dist/tennis-trainer.tar.gz package/
+# Clean up any existing archives
+rm -f trainer.tar trainer.tar.gz
 
-# Upload to GCS
-gsutil cp dist/tennis-trainer.tar.gz gs://msmballstars-data/train_tar/
+# Create a new tar archive of the package directory
+tar cvf trainer.tar package
+
+# Compress the tar file
+gzip trainer.tar
+
+# Copy to GCS
+gsutil cp trainer.tar.gz $GCS_BUCKET_URI/tennis-trainer.tar.gz
+echo "Trainer package uploaded to $GCS_BUCKET_URI/tennis-trainer.tar.gz"
