@@ -20,9 +20,11 @@ jobs:
           sudo apt-get install -y jq curl
 
       - name: Set up environment
+        working-directory: src
         run: |
-          mkdir -p secrets
-          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > secrets/super-admin-key.json
+          mkdir -p ../../secrets
+          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > ../../secrets/super-admin-key.json
+          ls -la ../../secrets
 
       - name: Run integration test
         working-directory: src
