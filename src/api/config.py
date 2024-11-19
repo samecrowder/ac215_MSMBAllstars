@@ -14,6 +14,6 @@ if ENV == "dev":
     MODEL_BASE_URL = f"http://{MODEL_HOST}:{MODEL_PORT}"
     LLM_BASE_URL = f"http://{LLM_HOST}:{LLM_PORT}"
 else:
-    # Cloud Run environment - these will be set during deployment
-    MODEL_BASE_URL = os.getenv("MODEL_URL", "http://probability-model:8001")
-    LLM_BASE_URL = os.getenv("LLM_URL", "http://llm:8002")
+    # Cloud Run environment - full URLs including protocol
+    MODEL_BASE_URL = os.getenv("MODEL_BASE_URL", "http://probability-model:8001")
+    LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://llm:8002")

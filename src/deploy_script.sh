@@ -13,13 +13,17 @@ docker push gcr.io/tennis-match-predictor/api:latest
 docker push gcr.io/tennis-match-predictor/probability-model:latest
 docker push gcr.io/tennis-match-predictor/llm:latest
 
-# Deploy API
-gcloud run deploy api \
-    --image gcr.io/tennis-match-predictor/api:latest \
+# Deploy LLM first (since API depends on it)
+gcloud run deploy llm \
+    --image gcr.io/tennis-match-predictor/llm:latest \
     --platform managed \
     --region us-central1 \
-    --set-env-vars="$(docker compose config | yq '.services.api.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS")) | to_entries | map(.key + "=" + .value) | join(",")')" \
+    --set-env-vars="$(docker compose config | yq '.services.llm.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS")) | to_entries | map(.key + "=" + .value) | join(",")')" \
     --set-secrets="/secrets/super-admin-key.json=super-admin-key:latest"
+
+# Get LLM URL
+LLM_URL=$(gcloud run services describe llm --platform managed --region us-central1 --format 'value(status.url)')
+echo "LLM_URL: $LLM_URL"
 
 # Deploy Probability Model
 gcloud run deploy probability-model \
@@ -29,10 +33,14 @@ gcloud run deploy probability-model \
     --set-env-vars="$(docker compose config | yq '.services.probability_model.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS")) | to_entries | map(.key + "=" + .value) | join(",")')" \
     --set-secrets="/secrets/super-admin-key.json=super-admin-key:latest"
 
-# Deploy LLM
-gcloud run deploy llm \
-    --image gcr.io/tennis-match-predictor/llm:latest \
+# Get Probability Model URL
+PROB_MODEL_URL=$(gcloud run services describe probability-model --platform managed --region us-central1 --format 'value(status.url)')
+echo "PROB_MODEL_URL: $PROB_MODEL_URL"
+
+# Deploy API with updated service URLs
+gcloud run deploy api \
+    --image gcr.io/tennis-match-predictor/api:latest \
     --platform managed \
     --region us-central1 \
-    --set-env-vars="$(docker compose config | yq '.services.llm.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS")) | to_entries | map(.key + "=" + .value) | join(",")')" \
+    --set-env-vars="ENV=prod,MODEL_BASE_URL=${PROB_MODEL_URL},LLM_BASE_URL=${LLM_URL},$(docker compose config | yq '.services.api.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS" and .key != "MODEL_HOST" and .key != "LLM_HOST" and .key != "ENV")) | to_entries | map(.key + "=" + .value) | join(",")')" \
     --set-secrets="/secrets/super-admin-key.json=super-admin-key:latest"
