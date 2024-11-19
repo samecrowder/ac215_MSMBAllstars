@@ -12,8 +12,8 @@ from .chat.router import router as chat_router
 
 app = fastapi.FastAPI()
 
-app.include_router(model_router, prefix="/model")
-app.include_router(chat_router, prefix="/chat")
+app.include_router(model_router)
+app.include_router(chat_router)
 
 
 @app.get("/health")

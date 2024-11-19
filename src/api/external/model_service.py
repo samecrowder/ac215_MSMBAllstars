@@ -8,10 +8,7 @@ from ..external.helper import (
     get_h2h_stats,
     get_player_last_nplus1_matches,
 )
-
-
-MODEL_HOST = os.getenv("MODEL_HOST", "model")
-MODEL_PORT = os.getenv("MODEL_PORT", "8001")
+from ..config import MODEL_BASE_URL
 
 
 def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) -> float:
@@ -29,7 +26,7 @@ def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) ->
     )
 
     response = requests.post(
-        "http://{MODEL_HOST}:{MODEL_PORT}",
+        f"{MODEL_BASE_URL}/predict",
         json={
             "X1": player_a_features,
             "X2": player_b_features,

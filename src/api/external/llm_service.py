@@ -2,10 +2,7 @@ from typing import List
 
 from pydantic import BaseModel
 import requests
-import os
-
-LLM_HOST = os.getenv("LLM_HOST", "llm")
-LLM_PORT = os.getenv("LLM_PORT", "8002")
+from ..config import LLM_BASE_URL
 
 
 class ChatResponse(BaseModel):
@@ -13,7 +10,7 @@ class ChatResponse(BaseModel):
 
 
 def get_chat_response(query, prior_messages):
-    url = f"http://{LLM_HOST}:{LLM_PORT}/chat"
+    url = f"{LLM_BASE_URL}/chat"
     response = requests.post(
         url, json={"query": query, "prior_messages": prior_messages}
     )
