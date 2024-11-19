@@ -17,6 +17,7 @@ google-cloud-storage = "*"
 pytest = "*"
 httpx = "*"
 pytest-asyncio = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.9"
