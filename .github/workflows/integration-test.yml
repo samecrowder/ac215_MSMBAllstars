@@ -21,7 +21,6 @@ jobs:
 
       - name: Set up environment
         run: |
-          cp src/.env.dev.example src/.env.dev  # Assuming you have an example env file
           mkdir -p secrets
           echo "{}" > secrets/super-admin-key.json  # Create dummy credentials for testing
 
