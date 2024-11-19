@@ -20,7 +20,15 @@ elapsed=0
 while true; do
     if [ $elapsed -ge $timeout ]; then
         echo "❌ Timeout waiting for API to be ready"
-        docker compose logs api  # Print API logs for debugging
+        echo "📝 Last API response:"
+        curl -s http://localhost:8000/health || echo "Failed to get response"
+        echo -e "\n📋 Last 10 lines of container logs:"
+        echo -e "\n🔍 API logs:"
+        docker compose logs --tail=10 api
+        echo -e "\n🔍 LLM logs:"
+        docker compose logs --tail=10 llm
+        echo -e "\n🔍 Probability Model logs:"
+        docker compose logs --tail=10 probability_model
         exit 1
     fi
 
@@ -31,9 +39,21 @@ while true; do
         break
     fi
 
+    echo "⏳ Still waiting for API... (${elapsed}s elapsed)"
+    if [ "$status_code" != "failed" ]; then
+        echo "📝 API Response (Status: $status_code):"
+        curl -s http://localhost:8000/health || echo "Failed to get response"
+        echo -e "\n📋 Last 10 lines of container logs:"
+        echo -e "\n🔍 API logs:"
+        docker compose logs --tail=10 api
+        echo -e "\n🔍 LLM logs:"
+        docker compose logs --tail=10 llm
+        echo -e "\n🔍 Probability Model logs:"
+        docker compose logs --tail=10 probability_model
+    fi
+    
     sleep $interval
     elapsed=$((elapsed + interval))
-    echo "⏳ Still waiting for API... (${elapsed}s elapsed)"
 done
 
 echo "🎯 Testing prediction endpoint..."
