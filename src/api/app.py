@@ -22,6 +22,8 @@ def create_app():
     return app
 
 
+# This is a bit of a hack, but it was the best way I could find to make sure we don't try to make a
+# call to GCS during unit/integration tests
 if os.environ.get("ENV") != "test":
     initialize_data()
 
