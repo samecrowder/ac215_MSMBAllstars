@@ -21,7 +21,6 @@ while true; do
     if [ $elapsed -ge $timeout ]; then
         echo "❌ Timeout waiting for API to be ready"
         docker compose logs api  # Print API logs for debugging
-        docker compose down
         exit 1
     fi
 
@@ -38,43 +37,43 @@ while true; do
 done
 
 echo "🎯 Testing prediction endpoint..."
-predict_response=$(curl -s -X POST http://localhost:8000/predict \
+predict_status_code=$(curl -s -o predict_response.json -w "%{http_code}" \
+    -X POST http://localhost:8000/predict \
     -H "Content-Type: application/json" \
     -d '{
         "player_a_id": "Roger Federer",
         "player_b_id": "Rafael Nadal",
         "lookback": 10
     }')
-predict_status=$?
 
-echo "Prediction Response:"
-echo "$predict_response" | jq '.'
+echo "Prediction Response (Status Code: $predict_status_code):"
+cat predict_response.json | jq '.'
 
-if [ $predict_status -ne 0 ]; then
-    echo "❌ Prediction request failed"
+if [ "$predict_status_code" != "200" ]; then
+    echo "❌ Prediction request failed with status code $predict_status_code"
     docker compose logs api
-    docker compose down
+    rm predict_response.json
     exit 1
 fi
 
 echo "💬 Testing chat endpoint..."
-chat_response=$(curl -s -X POST http://localhost:8000/chat \
+chat_status_code=$(curl -s -o chat_response.json -w "%{http_code}" \
+    -X POST http://localhost:8000/chat \
     -H "Content-Type: application/json" \
     -d '{
-        "message": "Who is more likely to win between Federer and Nadal on clay court?",
+        "query": "Who is more likely to win between Federer and Nadal on clay court?",
         "history": []
     }')
-chat_status=$?
 
-echo "Chat Response:"
-echo "$chat_response" | jq '.'
+echo "Chat Response (Status Code: $chat_status_code):"
+cat chat_response.json | jq '.'
 
-if [ $chat_status -ne 0 ]; then
-    echo "❌ Chat request failed"
+if [ "$chat_status_code" != "200" ]; then
+    echo "❌ Chat request failed with status code $chat_status_code"
     docker compose logs api
-    docker compose down
+    rm predict_response.json chat_response.json
     exit 1
 fi
 
 echo "🎉 All integration tests passed successfully!"
-docker compose down
+rm predict_response.json chat_response.json
