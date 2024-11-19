@@ -26,8 +26,8 @@ from .model import TennisLSTM
 
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "msmballstars-data")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", None)
-DATA_FOLDER = os.environ.get("DATA_FOLDER", "data")
-DATA_FILE = os.environ.get("DATA_FILE", "tennis_data.pkl")
+DATA_FOLDER = os.environ.get("DATA_FOLDER", "version1")
+DATA_FILE = os.environ.get("DATA_FILE", "prob_model.pt ")
 WEIGHTS_FILE = os.environ.get("WEIGHTS_FILE", "model_weights.pt")
 HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE", "256"))
 NUM_LAYERS = int(os.environ.get("NUM_LAYERS", "2"))
