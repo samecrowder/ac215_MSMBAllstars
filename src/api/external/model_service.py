@@ -10,7 +10,6 @@ from external.helper import (
 )
 from config import MODEL_BASE_URL
 
-
 player_dfs, feature_cols = None, None
 
 
