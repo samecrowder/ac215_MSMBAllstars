@@ -30,7 +30,7 @@ def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) ->
         json={
             "X1": player_a_features,
             "X2": player_b_features,
-            "H2H": h2h_features,
+            "H2H": [float(x) for x in h2h_features],
         },
     )
     return response.json()["player_a_win_probability"]

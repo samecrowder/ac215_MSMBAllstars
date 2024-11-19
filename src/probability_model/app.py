@@ -1,6 +1,8 @@
 from io import BytesIO
 import os
 import pickle
+from typing import List
+import logging
 
 if os.environ.get("ENV") != "prod":
     from dotenv import load_dotenv
@@ -11,8 +13,12 @@ if os.environ.get("ENV") != "prod":
     print("Development environment detected: Forcing CPU mode")
 
 
-import logging
-from typing import Any, List
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
+)
+
 import fastapi
 import torch
 
@@ -102,18 +108,41 @@ class PredictionResponse(BaseModel):
 
 
 class PredictionRequest(BaseModel):
-    X1: List[float]
-    X2: List[float]
+    X1: List[List[float]]
+    X2: List[List[float]]
     H2H: List[float]
 
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(request: PredictionRequest):
-    X1 = request.X1
-    X2 = request.X2
-    H2H = request.H2H
-    output = model(X1, X2, H2H)
-    return {"player_a_win_probability": float(output.item())}
+    try:
+        logging.info(f"Received prediction request: {request}")
+        
+        # Convert inputs to tensors
+        X1 = torch.tensor(request.X1, dtype=torch.float32)
+        X2 = torch.tensor(request.X2, dtype=torch.float32)
+        H2H = torch.tensor(request.H2H, dtype=torch.float32).unsqueeze(0).to(device)
+        
+        logging.info(f"Input tensor shapes - X1: {X1.shape}, X2: {X2.shape}, H2H: {H2H.shape}")
+        
+        # Scale the inputs and add batch dimension
+        X1_scaled = torch.tensor(scaler_X1.transform(X1.cpu().numpy()), dtype=torch.float32).unsqueeze(0).to(device)
+        X2_scaled = torch.tensor(scaler_X2.transform(X2.cpu().numpy()), dtype=torch.float32).unsqueeze(0).to(device)
+        # Ensure model is in eval mode
+        model.eval()
+        
+        with torch.no_grad():
+            output = model(X1_scaled, X2_scaled, H2H)
+        
+        logging.info(f"Model output: {output}")
+        
+        result = {"player_a_win_probability": float(output.item())}
+        logging.info(f"Returning prediction: {result}")
+        
+        return result
+    except Exception as e:
+        logging.error(f"Error during prediction: {str(e)}", exc_info=True)
+        raise fastapi.HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 
 @app.get("/health")
