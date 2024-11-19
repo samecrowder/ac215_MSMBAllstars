@@ -12,6 +12,7 @@ pydantic = "*"
 numpy = "*"
 pandas = "*"
 google-cloud-storage = "*"
+api = {file = ".", editable = true}
 
 [dev-packages]
 pytest = "*"
@@ -20,4 +21,3 @@ pytest-asyncio = "*"
 
 [requires]
 python_version = "3.9"
-

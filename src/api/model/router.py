@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from ..external.model_service import get_victory_prediction
+from external.model_service import get_victory_prediction
 
 # Configure logging
 logger = logging.getLogger(__name__)

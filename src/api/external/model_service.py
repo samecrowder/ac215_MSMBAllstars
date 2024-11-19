@@ -1,14 +1,14 @@
 import os
 import requests
 
-from ..external.db_service import player_dfs, feature_cols
-from ..external.helper import (
+from external.db_service import player_dfs, feature_cols
+from external.helper import (
     create_matchup_data,
     get_h2h_match_history,
     get_h2h_stats,
     get_player_last_nplus1_matches,
 )
-from ..config import MODEL_BASE_URL
+from config import MODEL_BASE_URL
 
 
 def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) -> float:

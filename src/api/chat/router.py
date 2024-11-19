@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from ..external.llm_service import get_chat_response
+from external.llm_service import get_chat_response
 
 router = APIRouter()
 

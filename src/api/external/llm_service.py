@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel
 import requests
-from ..config import LLM_BASE_URL
+from config import LLM_BASE_URL
 
 
 class ChatResponse(BaseModel):
