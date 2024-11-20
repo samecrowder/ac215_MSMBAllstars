@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List
 
@@ -20,5 +21,5 @@ def generate_chat_stream(query: str, prior_messages: List[str]):
                 content = chunk["message"]["content"]
                 yield content
     except Exception as e:
-        logger.error(f"Error in generate_chat_stream: {str(e)}", exc_info=True)
+        logging.error(f"Error in generate_chat_stream: {str(e)}", exc_info=True)
         raise
