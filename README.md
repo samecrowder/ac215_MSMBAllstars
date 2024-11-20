@@ -159,55 +159,125 @@ The script will output the public URLs for each service when complete.
 
 ## Testing / CICD
 
-# TODO(sam) Rewrite most of this so it applies.....probably just point user to the github pipeline files idk....
+Our project uses GitHub Actions for comprehensive testing across all components. The testing infrastructure is split into several pipelines:
 
-Our project uses GitHub Actions for continuous integration and continuous deployment:
+### GitHub Actions Pipelines
 
-1. **API Unit Test Pipeline** (`api-unit-tests.yml`)
+1. **Frontend Testing** (`frontend-unit-tests.yml`)
+   - Triggers on all branch pushes
+   - Runs React component unit tests
+   - Enforces 50% minimum coverage for:
+     - Statements
+     - Branches
+     - Functions
+     - Lines
+   - Uploads coverage reports as artifacts
 
-   - Triggers on commits to any branch
-   - Runs unit tests
+2. **Backend Testing** (`backend-unit-tests.yml`)
+   - Triggers on pushes affecting backend code
+   - Tests the following services:
+     - preprocessing
+     - preprocessing_for_training_data
+     - train_probability_model
+     - probability_model
+   - Enforces 50% minimum coverage
 
-2. **Frontend Unit Test Pipeline** (`frontend-unit-tests.yml`)
+3. **API Testing** (`api-unit-tests.yml`)
+   - Triggers on all branch pushes
+   - Runs FastAPI endpoint tests
+   - Enforces 50% minimum coverage
 
-   - TODO write these
+4. **Integration Testing** (`integration-test.yml`)
+   - Triggers on all branch pushes
+   - Spins up all services via Docker Compose
+   - Tests API endpoints and inter-service communication
+   - Verifies end-to-end functionality
 
-3. **Integration Test Pipeline** (`integration-tests.yml`)
+5. **System Testing** (`system-test.yml`)
+   - Triggers on all branch pushes
+   - Runs full E2E tests using Playwright
+   - Tests complete user flows through the frontend
+   - Verifies integration with backend services
 
-   - TODO write these
+6. **Deployment Pipeline** (`deploy.yml`)
+   - Triggers on:
+     - Pushes to `main` branch
+     - Manual workflow dispatch
+   - Authenticates with GCP using Workload Identity Federation
+   - Builds and pushes Docker images to Container Registry
+   - Deploys services to Cloud Run:
+     - API service
+     - Probability Model service
+     - LLM service
+   - Configures service URLs and environment variables
 
-4. **Deployment Pipeline** (`main.yml`)
-   - Triggers on commits to `main` branch
-   - Also can be triggered manually via GitHub UI
-   - Deploys application to GCP Cloud Run
-   - Uses Workload Identity Federation for secure authentication
-   - Automatically updates all services with latest changes
+### Running Tests Locally
 
-To manually trigger a deployment:
-
-1. Go to GitHub repository
-2. Click "Actions"
-3. Select "Deploy to Cloud Run"
-4. Click "Run workflow"
-
-The deployment status and logs can be monitored in the GitHub Actions tab.
-
-To run tests locally starting in root DIR:
-
-1. **API Unit Tests**
-
-   ```bash
-   cd src/api
-   pipenv run python -m pytest tests/ -v
-   ```
-
-2. **Frontend Unit Tests**
-
+1. **Frontend Tests**
    ```bash
    cd src/frontend/tennis-app
-   npm test -- --watchAll=false --ci --coverage
+   
+   # Install dependencies
+   npm install
+   npx playwright install --with-deps chromium
+   
+   # Run unit tests
+   npm test
+   
+   # Run unit tests with coverage
+   npm test -- --coverage
+   
+   # Run E2E tests
+   npm run test:e2e
    ```
 
-3. **Integration Tests**
+2. **Backend Service Tests**
+   ```bash
+   # Replace SERVICE_NAME with:
+   # - preprocessing
+   # - preprocessing_for_training_data
+   # - train_probability_model
+   # - probability_model
+   
+   cd src/SERVICE_NAME
+   pipenv install --dev
+   pipenv run pytest tests/ -v --cov=. --cov-report=term-missing --cov-fail-under=50
+   ```
 
-   - TODO fill this out
+3. **API Tests**
+   ```bash
+   cd src/api
+   pipenv install --dev
+   pipenv run pytest tests/ -v --cov=. --cov-report=term-missing --cov-fail-under=50
+   ```
+
+4. **Integration Tests**
+   ```bash
+   cd src
+   chmod +x integration_test.sh
+   ./integration_test.sh
+   ```
+
+5. **System Tests**
+   ```bash
+   cd src
+   chmod +x system_test.sh
+   ./system_test.sh
+   ```
+
+### Test Files Location
+
+- Frontend Tests: `src/frontend/tennis-app/src/**/*.test.tsx`
+- Backend Tests: `src/*/tests/`
+- E2E Tests: `src/frontend/tennis-app/e2e/`
+- Integration Test Script: `src/integration_test.sh`
+- System Test Script: `src/system_test.sh`
+
+### Coverage Requirements
+
+All components must maintain minimum 50% test coverage. Coverage reports are generated automatically:
+
+- Frontend: Available in `src/frontend/tennis-app/coverage/`
+- Backend: Generated during test runs with `--cov-report=term-missing`
+
+Coverage checks are enforced in CI/CD pipelines and must pass for PRs to be merged.
