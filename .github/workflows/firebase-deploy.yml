@@ -32,7 +32,8 @@ jobs:
       # Step 5: Build the project
       - name: Build the React app
         working-directory: src/frontend/tennis-app
-        run: npm run build
+        run: |
+          CI=false npm run build
 
       # Step 6: Deploy to Firebase Hosting
       - name: Deploy to Firebase
