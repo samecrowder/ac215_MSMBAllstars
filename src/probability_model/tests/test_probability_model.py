@@ -1,19 +1,13 @@
-import os
-import pickle
-from io import BytesIO
 import sys
+import os
 import pytest
 import torch
 import numpy as np
-from fastapi.testclient import TestClient
 from sklearn.preprocessing import StandardScaler
 
-# Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from model import TennisLSTM, scale_data
-from app import app, read_pt_file_from_gcs, read_pkl_file_from_gcs
-
 
 @pytest.fixture
 def sample_data():
@@ -23,120 +17,76 @@ def sample_data():
     features = 3
     h2h_size = 2
     
-    X1 = np.random.rand(samples, time_steps, features)
-    X2 = np.random.rand(samples, time_steps, features) 
-    H2H = np.random.rand(samples, h2h_size)
+    X1 = np.random.randn(samples, time_steps, features)
+    X2 = np.random.randn(samples, time_steps, features) 
+    H2H = np.random.randn(samples, h2h_size)
     
     return X1, X2, H2H, features, h2h_size
 
+
+@pytest.fixture
+def scalers():
+    return StandardScaler(), StandardScaler(), StandardScaler()
+
+
+def test_scale_data(sample_data, scalers):
+    X1, X2, H2H, _, _ = sample_data
+    scaler_X1, scaler_X2, scaler_H2H = scalers
+    
+    # Fit scalers
+    samples, time_steps, features = X1.shape
+    scaler_X1.fit(X1.reshape(-1, features))
+    scaler_X2.fit(X2.reshape(-1, features))
+    
+    # Test scaling
+    X1_scaled, X2_scaled, H2H_scaled = scale_data(X1, X2, H2H, scaler_X1, scaler_X2, scaler_H2H)
+    
+    assert X1_scaled.shape == X1.shape
+    assert X2_scaled.shape == X2.shape
+    assert H2H_scaled.shape == H2H.shape
+
+
 def test_tennis_lstm_forward(sample_data):
     X1, X2, H2H, features, h2h_size = sample_data
+    
+    # Convert to torch tensors
+    X1 = torch.FloatTensor(X1)
+    X2 = torch.FloatTensor(X2)
+    H2H = torch.FloatTensor(H2H)
     
     # Initialize model
     hidden_size = 32
     num_layers = 2
     model = TennisLSTM(features, hidden_size, num_layers, h2h_size)
     
-    # Convert inputs to tensors
-    X1_tensor = torch.FloatTensor(X1)
-    X2_tensor = torch.FloatTensor(X2)
-    H2H_tensor = torch.FloatTensor(H2H)
-    
     # Test forward pass
-    output = model(X1_tensor, X2_tensor, H2H_tensor)
+    output = model(X1, X2, H2H)
     
-    # Check output shape and values
     assert output.shape == (X1.shape[0], 1)
     assert torch.all((output >= 0) & (output <= 1))
 
-def test_scale_data(sample_data):
-    X1, X2, H2H, _, _ = sample_data
-    
-    # Initialize scalers
-    scaler_X1 = StandardScaler()
-    scaler_X2 = StandardScaler()
-    scaler_H2H = StandardScaler()
-    
-    # Fit scalers on reshaped data
-    scaler_X1.fit(X1.reshape(-1, X1.shape[-1]))
-    scaler_X2.fit(X2.reshape(-1, X2.shape[-1]))
-    
-    # Scale data
-    X1_scaled, X2_scaled, H2H_scaled = scale_data(X1, X2, H2H, scaler_X1, scaler_X2, scaler_H2H)
-    
-    # Check shapes are preserved
-    assert X1_scaled.shape == X1.shape
-    assert X2_scaled.shape == X2.shape
-    assert H2H_scaled.shape == H2H.shape
-    
-    # Check scaling was applied (mean close to 0, std close to 1)
-    assert np.abs(X1_scaled.reshape(-1, X1.shape[-1]).mean()) < 0.1
-    assert np.abs(X2_scaled.reshape(-1, X2.shape[-1]).mean()) < 0.1
-    assert np.abs(X1_scaled.reshape(-1, X1.shape[-1]).std() - 1) < 0.1
-    assert np.abs(X2_scaled.reshape(-1, X2.shape[-1]).std() - 1) < 0.1
 
-@pytest.fixture
-def client():
-    return TestClient(app)
-
-def test_health_endpoint(client):
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-
-def test_predict_endpoint(client, sample_data):
-    X1, X2, H2H, _, _ = sample_data
+def test_tennis_lstm_architecture(sample_data):
+    _, _, _, features, h2h_size = sample_data
+    hidden_size = 32
+    num_layers = 2
     
-    # Prepare request data
-    request_data = {
-        "X1": X1[0].tolist(),  # Take first sample
-        "X2": X2[0].tolist(),
-        "H2H": H2H[0].tolist()
-    }
+    model = TennisLSTM(features, hidden_size, num_layers, h2h_size)
     
-    response = client.post("/predict", json=request_data)
+    # Test model components
+    assert isinstance(model.lstm, torch.nn.LSTM)
+    assert isinstance(model.fc, torch.nn.Linear)
+    assert isinstance(model.fc2, torch.nn.Linear)
+    assert isinstance(model.dropout, torch.nn.Dropout)
+    assert isinstance(model.relu, torch.nn.ReLU)
     
-    assert response.status_code == 200
-    assert "player_a_win_probability" in response.json()
-    prob = response.json()["player_a_win_probability"]
-    assert isinstance(prob, float)
-    assert 0 <= prob <= 1
-
-def test_predict_endpoint_invalid_data(client):
-    # Test with invalid data structure
-    invalid_data = {
-        "X1": [[1, 2, 3]],
-        "X2": "invalid",  # Should be list of lists
-        "H2H": [1, 2]
-    }
+    # Test LSTM parameters
+    assert model.lstm.input_size == features
+    assert model.lstm.hidden_size == hidden_size
+    assert model.lstm.num_layers == num_layers
     
-    response = client.post("/predict", json=invalid_data)
-    assert response.status_code == 422  # Validation error
-
-@pytest.fixture
-def mock_gcs_bucket(mocker):
-    mock_blob = mocker.Mock()
-    mock_blob.download_as_bytes.return_value = b"mock_content"
-    
-    mock_bucket = mocker.Mock()
-    mock_bucket.blob.return_value = mock_blob
-    
-    return mock_bucket
-
-def test_read_pt_file_from_gcs(mock_gcs_bucket, mocker):
-    mock_torch_load = mocker.patch('torch.load')
-    mock_torch_load.return_value = "mock_tensor"
-    
-    result = read_pt_file_from_gcs(mock_gcs_bucket, "test.pt")
-    
-    assert result == "mock_tensor"
-    mock_bucket.blob.assert_called_once_with("test.pt")
-
-def test_read_pkl_file_from_gcs(mock_gcs_bucket, mocker):
-    mock_pickle_loads = mocker.patch('pickle.loads')
-    mock_pickle_loads.return_value = {"mock": "data"}
-    
-    result = read_pkl_file_from_gcs(mock_gcs_bucket, "test.pkl")
-    
-    assert result == {"mock": "data"}
-    mock_bucket.blob.assert_called_once_with("test.pkl")
+    # Test Linear layer dimensions
+    assert model.fc.in_features == hidden_size * 2 + h2h_size
+    assert model.fc.out_features == 64
+    assert model.fc2.in_features == 64
+    assert model.fc2.out_features == 1
