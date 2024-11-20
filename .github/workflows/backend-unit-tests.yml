@@ -32,11 +32,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           cd src/${{ matrix.service }}
+          if [ "${{ matrix.service }}" = "probability_model" ] || [ "${{ matrix.service }}" = "train_probability_model" ]; then
+            pipenv run pip install torch --index-url https://download.pytorch.org/whl/cpu
+          fi
           pipenv install --dev
 
       - name: Run tests
         env:
           PYTHONPATH: src/${{ matrix.service }}
+          CUDA_VISIBLE_DEVICES: ""
+          TORCH_DEVICE: "cpu"
         run: |
           cd src/${{ matrix.service }}
           pipenv run python -m pytest tests/ -v --cov=. --cov-report=term-missing --cov-fail-under=50
