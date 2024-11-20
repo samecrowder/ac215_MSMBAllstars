@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main # Triggers on any push to main branch
+    paths:
+      - "src/**"
   workflow_dispatch: # Allows manual triggering
 
 env:
