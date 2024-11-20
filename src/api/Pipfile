@@ -18,6 +18,8 @@ pytest = "*"
 httpx = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
+black = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.9"
