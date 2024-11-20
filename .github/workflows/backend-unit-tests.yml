@@ -8,6 +8,7 @@ on:
       - "src/preprocessing_for_training_data/**"
       - "src/train_probability_model/**"
       - "src/probability_model/**"
+      - "src/probability_model/**"
   workflow_dispatch:
 
 jobs:
