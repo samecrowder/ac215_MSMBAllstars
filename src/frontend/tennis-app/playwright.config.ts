@@ -11,7 +11,7 @@ const config: PlaywrightTestConfig = {
     command: 'npm start',
     port: 3000,
     timeout: 120000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
   retries: process.env.CI ? 2 : 0,
 };
