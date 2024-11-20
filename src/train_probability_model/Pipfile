@@ -9,6 +9,7 @@ torch = "*"
 scikit-learn = "*"
 wandb = "*"
 numpy = "==2.0.2"
+pandas = "*"
 
 [requires]
 python_version = "3.9"
