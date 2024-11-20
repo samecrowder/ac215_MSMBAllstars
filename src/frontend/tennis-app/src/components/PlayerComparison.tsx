@@ -5,21 +5,15 @@ interface PlayerComparisonProps {
   players: Array<{
     id: string;
     name: string;
-    age: number;
+    age: string;
     country: string;
     height: string;
     weight: string;
     imageUrl: string;
-    gradientFrom: string;
-    gradientTo: string;
   }>;
-  onPredictClick: () => void;
 }
 
-export function PlayerComparison({
-  players,
-  onPredictClick,
-}: PlayerComparisonProps) {
+export function PlayerComparison({ players }: PlayerComparisonProps) {
   const [player1, setPlayer1] = useState(players[0]);
   const [player2, setPlayer2] = useState(players[1]);
   const [player1WinProbability, setPlayer1WinProbability] = useState(0.7);
@@ -28,25 +22,27 @@ export function PlayerComparison({
   const handlePredictClick = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/predict", {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      console.log(apiUrl);
+      const response = await fetch(apiUrl + "/predict", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          player1Id: player1.id,
-          player2Id: player2.id,
+          player_a_id: player1.id,
+          player_b_id: player2.id,
+          lookback: 10,
         }),
       });
 
-      setPlayer1WinProbability(Math.random());
-
       if (!response.ok) {
+        console.log(apiUrl, response);
         throw new Error("Network response was not ok");
       }
 
       const data = await response.json();
-      setPlayer1WinProbability(data.winProbability);
+      setPlayer1WinProbability(data.player_a_win_probability);
     } catch (error) {
       console.error("Error fetching prediction:", error);
     } finally {
@@ -72,7 +68,11 @@ export function PlayerComparison({
               </option>
             ))}
           </select>
-          <PlayerCard {...player1} />
+          <PlayerCard
+            {...player1}
+            gradientFrom="#4D38C1"
+            gradientTo="#271A5B"
+          />
         </div>
 
         <span className="text-4xl font-bold">VS</span>
@@ -91,7 +91,11 @@ export function PlayerComparison({
               </option>
             ))}
           </select>
-          <PlayerCard {...player2} />
+          <PlayerCard
+            {...player2}
+            gradientFrom="#41C138"
+            gradientTo="#325B1A"
+          />
         </div>
       </div>
 
@@ -112,9 +116,9 @@ export function PlayerComparison({
             className="h-full rounded"
             style={{
               width: "100%",
-              background: `linear-gradient(to right, red ${
+              background: `linear-gradient(to right, #4D38C1 ${
                 player1WinProbability * 100
-              }%, blue ${player1WinProbability * 100}%)`,
+              }%, #41C138 ${player1WinProbability * 100}%)`,
             }}
           />
         </div>

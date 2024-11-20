@@ -1,7 +1,7 @@
 interface PlayerCardProps {
   id: string;
   name: string;
-  age: number;
+  age: string;
   country: string;
   height: string;
   weight: string;

@@ -11,6 +11,7 @@ router = APIRouter()
 
 class ChatMessage(BaseModel):
     message: str
+    sender: str
 
 
 class ChatRequest(BaseModel):
