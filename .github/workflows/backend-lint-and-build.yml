@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ["api", "probability_model", "llm"]
+        service: ["api", "probability_model", "llm", "preprocessing", "preprocessing_for_training_data", "train_probability_model"]
 
     steps:
       - name: Checkout code
