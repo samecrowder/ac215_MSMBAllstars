@@ -7,36 +7,43 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+
 def parse_args():
     """Parse command line arguments and set environment variables"""
-    parser = argparse.ArgumentParser(description='Tennis Match Prediction Training')
-    
+    parser = argparse.ArgumentParser(description="Tennis Match Prediction Training")
+
     # GCS configs
-    parser.add_argument('--bucket-name', type=str, required=True,
-                      help='GCS bucket name')
-    parser.add_argument('--data-folder', type=str, required=True,
-                      help='Data folder path in GCS')
-    parser.add_argument('--data-file', type=str, required=True,
-                      help='Data file name')
-    
+    parser.add_argument(
+        "--bucket-name", type=str, required=True, help="GCS bucket name"
+    )
+    parser.add_argument(
+        "--data-folder", type=str, required=True, help="Data folder path in GCS"
+    )
+    parser.add_argument("--data-file", type=str, required=True, help="Data file name")
+
     # Model configs
-    parser.add_argument('--test-size', type=float, required=True,
-                      help='Test set size ratio')
-    parser.add_argument('--batch-size', type=int, required=True,
-                      help='Training batch size')
-    parser.add_argument('--hidden-size', type=int, required=True,
-                      help='LSTM hidden size')
-    parser.add_argument('--num-layers', type=int, required=True,
-                      help='Number of LSTM layers')
-    parser.add_argument('--lr', type=float, required=True,
-                      help='Learning rate')
-    parser.add_argument('--num-epochs', type=int, required=True,
-                      help='Number of training epochs')
-    parser.add_argument('--wandb-key', type=str, required=True,
-                      help='Weights & Biases API key')
-    
+    parser.add_argument(
+        "--test-size", type=float, required=True, help="Test set size ratio"
+    )
+    parser.add_argument(
+        "--batch-size", type=int, required=True, help="Training batch size"
+    )
+    parser.add_argument(
+        "--hidden-size", type=int, required=True, help="LSTM hidden size"
+    )
+    parser.add_argument(
+        "--num-layers", type=int, required=True, help="Number of LSTM layers"
+    )
+    parser.add_argument("--lr", type=float, required=True, help="Learning rate")
+    parser.add_argument(
+        "--num-epochs", type=int, required=True, help="Number of training epochs"
+    )
+    parser.add_argument(
+        "--wandb-key", type=str, required=True, help="Weights & Biases API key"
+    )
+
     args = parser.parse_args()
-    
+
     # Set environment variables from arguments
     os.environ["GCS_BUCKET_NAME"] = args.bucket_name
     os.environ["DATA_FOLDER"] = args.data_folder
@@ -48,7 +55,7 @@ def parse_args():
     os.environ["LR"] = str(args.lr)
     os.environ["NUM_EPOCHS"] = str(args.num_epochs)
     os.environ["WANDB_KEY"] = args.wandb_key
-    
+
     # Log all settings
     logging.info("=== Training Configuration ===")
     logging.info(f"GCS Bucket: {args.bucket_name}")
@@ -61,15 +68,18 @@ def parse_args():
     logging.info(f"Learning Rate: {args.lr}")
     logging.info(f"Number of Epochs: {args.num_epochs}")
     logging.info("===========================")
-    
+
     return args
+
 
 def main():
     """Main entry point for the training task"""
     parse_args()
-        
+
     from trainer.train_model import main as train_main
+
     train_main()
+
 
 if __name__ == "__main__":
     main()
