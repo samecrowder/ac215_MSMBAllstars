@@ -13,6 +13,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [messagesState, setMessages] = useState<Message[]>(messages);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,6 +34,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
       },
     ]);
     setIsLoading(true);
+    setError(null);
 
     try {
       // Call the /chat endpoint with the current messages
@@ -62,6 +64,9 @@ export function ChatPanel({ messages }: ChatPanelProps) {
       ]);
     } catch (error) {
       console.error("Error sending message:", error);
+      setError(error instanceof Error ? error : new Error("Unknown error"));
+      // remove the last message
+      setMessages((prevMessages) => prevMessages.slice(0, -1));
     }
     setIsLoading(false);
   };
@@ -116,6 +121,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
             Send
           </button>
         </div>
+        {error && <div className="text-red-500">{error.message}</div>}
       </form>
     </div>
   );

@@ -18,9 +18,11 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
   const [player2, setPlayer2] = useState(players[1]);
   const [player1WinProbability, setPlayer1WinProbability] = useState(0.7);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const handlePredictClick = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
       console.log(apiUrl);
@@ -44,6 +46,7 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
       const data = await response.json();
       setPlayer1WinProbability(data.player_a_win_probability);
     } catch (error) {
+      setError(error instanceof Error ? error : new Error("Unknown error"));
       console.error("Error fetching prediction:", error);
     } finally {
       setIsLoading(false);
@@ -106,6 +109,8 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
       >
         {isLoading ? "Loading..." : "Predict Winner"}
       </button>
+
+      {error && <div className="text-red-500">{error.message}</div>}
 
       <div className="flex items-center w-[calc(2*320px+4rem)] mt-4">
         <span className="text-lg font-bold">
