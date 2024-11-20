@@ -59,6 +59,7 @@ services:
       - ../../secrets:/secrets
 
   llm:
+    platform: linux/amd64
     build:
       context: ./llm
       dockerfile: Dockerfile
