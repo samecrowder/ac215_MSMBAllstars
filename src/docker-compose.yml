@@ -15,7 +15,7 @@ services:
     networks:
       - msmballstars-network
     volumes:
-      - ./api:/app
+      - ./frontend/tennis-app:/app
       - ./.env.dev:/app/.env.dev
       - ../../secrets:/secrets
   api:
