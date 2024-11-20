@@ -13,16 +13,9 @@ interface PlayerComparisonProps {
   }>;
 }
 
-const firstPlayerId = "Carlos Alcaraz";
-const secondPlayerId = "Grigor Dimitrov";
-
 export function PlayerComparison({ players }: PlayerComparisonProps) {
-  const [player1, setPlayer1] = useState(
-    players.find((p) => p.name === firstPlayerId)!,
-  );
-  const [player2, setPlayer2] = useState(
-    players.find((p) => p.name === secondPlayerId)!,
-  );
+  const [player1, setPlayer1] = useState(players[0]);
+  const [player2, setPlayer2] = useState(players[1]);
   const [player1WinProbability, setPlayer1WinProbability] = useState<
     number | null
   >(null);
@@ -142,7 +135,9 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
           </span>
         </div>
       ) : (
-        <div>Please select two players then click above to predict the winner.</div>
+        <div>
+          Please select two players then click above to predict the winner.
+        </div>
       )}
     </div>
   );

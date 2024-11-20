@@ -10,6 +10,8 @@ test.describe('Tennis App E2E Tests', () => {
     await page.selectOption('select >> nth=0', 'Roger Federer');
     await page.selectOption('select >> nth=1', 'Rafael Nadal');
 
+    await expect(page.locator('text=/\\d+%/')).not.toBeVisible();
+
     // Click predict button and wait for response
     await page.click('text=Predict Winner');
     
