@@ -1,23 +1,6 @@
 version: "3.8"
 
 services:
-  web:
-    build:
-      context: ./frontend/tennis-app
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/super-admin-key.json
-      - GCP_PROJECT=tennis-match-predictor
-      - GCP_ZONE=us-central1-a
-      - GCS_BUCKET_NAME=msmballstars-data
-    networks:
-      - msmballstars-network
-    volumes:
-      - ./frontend/tennis-app:/app
-      - ./.env.dev:/app/.env.dev
-      - ../../secrets:/secrets
   api:
     build:
       context: ./api
