@@ -15,7 +15,7 @@ echo "✅ Authentication check passed"
 echo "🔑 Deploying with account: $CURRENT_ACCOUNT"
 
 # Build and tag images
-docker compose build
+DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build
 
 # Tag images for Google Container Registry
 docker tag src-api:latest gcr.io/tennis-match-predictor/api:latest
