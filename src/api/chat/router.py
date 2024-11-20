@@ -30,7 +30,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept(
         # if in prod, we should add headers for wss
         headers=(
-            {"Sec-WebSocket-Protocol": "wss"} if os.getenv("ENV") == "prod" else None
+            [("Sec-WebSocket-Protocol", "wss")] if os.getenv("ENV") == "prod" else []
         )
     )
     logging.info("WebSocket connection accepted")
