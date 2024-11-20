@@ -157,6 +157,17 @@ This will:
 
 The script will output the public URLs for each service when complete.
 
+### Manual Deployment via GitHub Actions
+
+To manually trigger a deployment:
+
+1. Go to GitHub repository
+2. Click "Actions"
+3. Select "Deploy to Cloud Run"
+4. Click "Run workflow"
+
+The deployment status and logs can be monitored in the GitHub Actions tab.
+
 ## Testing / CICD
 
 Our project uses GitHub Actions for comprehensive testing across all components. The testing infrastructure is split into several pipelines:
