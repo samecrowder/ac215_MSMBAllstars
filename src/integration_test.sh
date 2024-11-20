@@ -77,6 +77,9 @@ if [ "$predict_status_code" != "200" ]; then
     exit 1
 fi
 
+# TODO add streaming chat test here, consider converting to python so 
+# we can load all the messages while streaming
+
 echo "💬 Testing chat endpoint..."
 chat_status_code=$(curl -s -o chat_response.json -w "%{http_code}" \
     -X POST http://localhost:8000/chat \

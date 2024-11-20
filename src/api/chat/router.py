@@ -51,3 +51,18 @@ async def websocket_endpoint(websocket: WebSocket):
         raise
     finally:
         await websocket.close()
+
+
+class ChatResponse(BaseModel):
+    message: str
+
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    # run chat stream and append to a string, then return the string
+    response = ""
+    async for chunk in stream_chat_response(
+        request.query, [h.message for h in request.history]
+    ):
+        response += chunk
+    return ChatResponse(message=response)
