@@ -73,6 +73,11 @@ There are 193337 records in total for ATP Men's Singles matches in this dataset.
             ├── train_model.py
             └── model.py
 
+## System Architecture
+![System Overview](deliverables/diagrams/solution_architecture.png)
+![Data Flow](deliverables/diagrams/solution_architecture2.png) 
+![Container Architecture](deliverables/diagrams/technical_architecture.png)
+
 ## Preprocess container
 
 - Required inputs: GCS Project Name and GCS Bucket Name.

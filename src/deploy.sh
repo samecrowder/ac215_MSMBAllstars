@@ -21,13 +21,11 @@ docker compose build
 docker tag src-api:latest gcr.io/tennis-match-predictor/api:latest
 docker tag src-probability_model:latest gcr.io/tennis-match-predictor/probability-model:latest
 docker tag src-llm:latest gcr.io/tennis-match-predictor/llm:latest
-docker tag src-web:latest gcr.io/tennis-match-predictor/web:latest
 
 # Push to GCR
 docker push gcr.io/tennis-match-predictor/api:latest
 docker push gcr.io/tennis-match-predictor/probability-model:latest
 docker push gcr.io/tennis-match-predictor/llm:latest
-docker push gcr.io/tennis-match-predictor/web:latest
 
 # Get Ollama URL. We assume that ollama is already deployed.
 OLLAMA_URL=$(gcloud run services describe ollama --platform managed --region us-central1 --format 'value(status.url)')

@@ -32,6 +32,7 @@ services:
       - llm
 
   probability_model:
+    platform: linux/amd64
     build:
       context: ./probability_model
       dockerfile: Dockerfile
@@ -59,6 +60,7 @@ services:
       - ../../secrets:/secrets
 
   llm:
+    platform: linux/amd64
     build:
       context: ./llm
       dockerfile: Dockerfile
