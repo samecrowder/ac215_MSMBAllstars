@@ -83,8 +83,10 @@ def test_get_h2h_stats(sample_df):
     h2h = get_h2h_match_history(player_dfs, "Player1", "Player2")
     stats = get_h2h_stats(h2h)
     assert len(stats) == 2
-    assert 0 <= stats[0] <= 1  # Win percentage between 0 and 1
-    assert isinstance(stats[1], int)  # Total matches is integer
+    # Win percentage between 0 and 1
+    assert 0 <= stats[0] <= 1
+    # Total matches is integer
+    assert isinstance(stats[1], int)
 
 
 def test_create_matchup_data(sample_df):
