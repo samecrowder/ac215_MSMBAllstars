@@ -1,22 +1,24 @@
-from typing import List
 import os
+from typing import List
 
 import ollama
 
+ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
+oc = ollama.Client(host=ollama_host)
 
-def generate_chat_response(query: str, prior_messages: List[str]) -> str:
-    messages: List[ollama.Message] = [
+
+def generate_chat_stream(query: str, prior_messages: List[str]):
+    messages = [
         {"role": "system", "content": "You are a helpful assistant."},
-        *[
-            # TODO change prior_messages to be a list of dicts with role and content
-            {"role": "user", "content": message}
-            for message in prior_messages
-        ],
+        *[{"role": "user", "content": message} for message in (prior_messages or [])],
         {"role": "user", "content": query},
     ]
 
-    ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
-    oc = ollama.Client(host=ollama_host)
-    response = oc.chat(model="llama3.2:1b", messages=messages)
-
-    return response["message"]["content"].strip()
+    try:
+        for chunk in oc.chat(model="llama3.2:1b", messages=messages, stream=True):
+            if chunk and chunk.get("message", {}).get("content"):
+                content = chunk["message"]["content"]
+                yield content
+    except Exception as e:
+        logger.error(f"Error in generate_chat_stream: {str(e)}", exc_info=True)
+        raise

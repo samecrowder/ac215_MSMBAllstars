@@ -5,6 +5,7 @@ const END_MARKER = "**|||END|||**";
 interface Message {
   message: string;
   sender: "user" | "ai";
+  pending?: boolean;
 }
 
 interface ChatPanelProps {
@@ -21,31 +22,37 @@ export function ChatPanel({ messages }: ChatPanelProps) {
 
   useEffect(() => {
     // init ws connection
-    const apiUrl = process.env.REACT_APP_API_URL;
-    if (!apiUrl) {
-      throw new Error("REACT_APP_API_URL is not set");
-    }
+    const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
     const wsUrl = apiUrl.startsWith("https://")
       ? apiUrl.replace("https://", "wss://")
       : apiUrl.replace("http://", "ws://");
     const ws = new WebSocket(`${wsUrl}/chat`);
     ws.onmessage = (event) => {
-      console.log(event.data);
       if (event.data === END_MARKER) {
+        // set the last message to not pending
+        setMessages((prevMessages) => {
+          if (prevMessages.length > 0) {
+            return [...prevMessages.slice(0, -1), { ...prevMessages[prevMessages.length - 1], pending: false }];
+          }
+          return prevMessages;
+        });
         setIsLoading(false);
       } else {
         setMessages((prevMessages) => {
           if (prevMessages[prevMessages.length - 1]?.sender === "ai") {
             return [
+              // remove the last pending message
               ...prevMessages.slice(0, -1),
+              // add the new message
               {
                 message:
                   prevMessages[prevMessages.length - 1].message + event.data,
                 sender: "ai",
+                pending: true,
               },
             ];
           } else {
-            return [...prevMessages, { message: event.data, sender: "ai" }];
+            return [...prevMessages, { message: event.data, sender: "ai", pending: true }];
           }
         });
       }
@@ -124,6 +131,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
           <div
             key={index}
             data-testid={`${message.sender}-message`}
+            data-pending={message.pending}
             className={`p-3 max-w-[80%] rounded-lg relative ${
               message.sender === "user"
                 ? "bg-blue-500 text-white ml-auto"

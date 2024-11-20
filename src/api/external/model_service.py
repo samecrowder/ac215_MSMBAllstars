@@ -19,7 +19,7 @@ def initialize_data():
 
 def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) -> float:
     if player_dfs is None or feature_cols is None:
-        raise RuntimeError("Data not initialized. Call initialize_data() first.")
+        initialize_data()
 
     player_a_previous_matches = get_player_last_nplus1_matches(
         player_dfs, player_a_id, lookback

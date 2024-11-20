@@ -41,7 +41,11 @@ test.describe('Tennis App E2E Tests', () => {
           await page.click('text=Send');
 
           // Wait for and verify AI response with a longer timeout
-          const aiResponse = await page.locator('[data-testid="ai-message"]').first().textContent({ timeout: 30000 });
+          // we want to wait for a non-pending AI message
+          const aiResponse = await page
+            .locator('[data-testid="ai-message"]:not([data-pending="true"])')
+            .first()
+            .textContent({ timeout: 30000 });
           expect(aiResponse).toBeTruthy();
           expect(aiResponse?.toLowerCase()).toContain('nadal');
           
@@ -51,6 +55,7 @@ test.describe('Tennis App E2E Tests', () => {
           
           success = true;
         } catch (error) {
+          console.log(error);
           if (attempt === 2) throw error; // Rethrow on last attempt
           console.log(`Attempt ${attempt + 1} failed, retrying...`);
         }
