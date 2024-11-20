@@ -33,7 +33,8 @@ jobs:
           pip install pipenv
           cd src/${{ matrix.service }}
           if [ "${{ matrix.service }}" = "probability_model" ] || [ "${{ matrix.service }}" = "train_probability_model" ]; then
-            pipenv run pip install torch --index-url https://download.pytorch.org/whl/cpu
+            pipenv run pip uninstall torch -y
+            pipenv run pip install torch==2.5.0 --index-url https://download.pytorch.org/whl/cpu
           fi
           pipenv install --dev
 
