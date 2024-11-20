@@ -23,10 +23,11 @@ export function ChatPanel({ messages }: ChatPanelProps) {
   useEffect(() => {
     // init ws connection
     const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
-    const wsUrl = apiUrl.startsWith("https://")
+    const isOnSecureUrl = apiUrl.startsWith("https://");
+    const wsUrl = isOnSecureUrl
       ? apiUrl.replace("https://", "wss://")
       : apiUrl.replace("http://", "ws://");
-    const ws = new WebSocket(`${wsUrl}/chat`);
+    const ws = new WebSocket(`${wsUrl}/chat`, isOnSecureUrl ? ["wss"] : []);
     ws.onmessage = (event) => {
       if (event.data === END_MARKER) {
         // set the last message to not pending
@@ -101,7 +102,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
         JSON.stringify({
           query: txt,
           history: messagesState,
-        })
+        }),
       );
     } catch (error) {
       setError(error instanceof Error ? error : new Error("Unknown error"));
@@ -153,7 +154,11 @@ export function ChatPanel({ messages }: ChatPanelProps) {
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className={`px-4 py-2  text-white rounded-lg  transition-colors ${
+              isLoading
+                ? "animate-pulse bg-gray-400 cursor-default"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
             disabled={isLoading}
           >
             {isLoading ? "..." : "Send"}

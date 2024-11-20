@@ -27,12 +27,11 @@ END_MARKER = "**|||END|||**"
 
 @router.websocket("/chat")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept(
-        # if in prod, we should add headers for wss
-        headers=(
-            [(b"Sec-WebSocket-Protocol", b"wss")] if os.getenv("ENV") == "prod" else []
-        )
-    )
+    if os.getenv("ENV") == "prod":
+        await websocket.accept(subprotocol="wss")
+    else:
+        await websocket.accept()
+
     logging.info("WebSocket connection accepted")
     try:
         while True:
