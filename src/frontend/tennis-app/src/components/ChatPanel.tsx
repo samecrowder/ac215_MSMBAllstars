@@ -100,20 +100,6 @@ export function ChatPanel({ messages }: ChatPanelProps) {
     } catch (error) {
       console.error("Error sending message:", error);
       setError(error instanceof Error ? error : new Error("Unknown error"));
-      setMessages((prevMessages) => {
-        // remove the last user message and the error message
-        let lastUserMessageIndex = -1;
-        for (let i = prevMessages.length - 1; i >= 0; i--) {
-          if (prevMessages[i].sender === "user") {
-            lastUserMessageIndex = i;
-            break;
-          }
-        }
-        if (lastUserMessageIndex === -1) {
-          return prevMessages;
-        }
-        return prevMessages.slice(0, lastUserMessageIndex);
-      });
       setIsLoading(false);
     }
   };
