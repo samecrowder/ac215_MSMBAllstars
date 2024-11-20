@@ -5,9 +5,9 @@ on:
     branches:
       - "*"
     paths:
-      - "src/preprocessing_for_training_data/**"
+      - "src/preprocessing/**"
+      - "src/preprocessing_for_training_data/**" 
       - "src/train_probability_model/**"
-      - "src/probability_model/**"
       - "src/probability_model/**"
   workflow_dispatch:
 
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ["preprocessing_for_training_data", "train_probability_model", "probability_model"]
+        service: ["preprocessing", "preprocessing_for_training_data", "train_probability_model", "probability_model"]
 
     steps:
       - name: Checkout code
