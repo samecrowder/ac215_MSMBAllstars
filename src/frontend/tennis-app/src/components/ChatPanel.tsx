@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
+const END_MARKER = "**|||END|||**";
+
 interface Message {
   message: string;
   sender: "user" | "ai";
@@ -15,6 +17,48 @@ export function ChatPanel({ messages }: ChatPanelProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    // init ws connection
+    const apiUrl = process.env.REACT_APP_API_URL;
+    if (!apiUrl) {
+      throw new Error("REACT_APP_API_URL is not set");
+    }
+    const wsUrl = apiUrl.startsWith("https://")
+      ? apiUrl.replace("https://", "wss://")
+      : apiUrl.replace("http://", "ws://");
+    const ws = new WebSocket(`${wsUrl}/chat`);
+    ws.onmessage = (event) => {
+      console.log(event.data);
+      if (event.data === END_MARKER) {
+        setIsLoading(false);
+      } else {
+        setMessages((prevMessages) => {
+          if (prevMessages[prevMessages.length - 1]?.sender === "ai") {
+            return [
+              ...prevMessages.slice(0, -1),
+              {
+                message:
+                  prevMessages[prevMessages.length - 1].message + event.data,
+                sender: "ai",
+              },
+            ];
+          } else {
+            return [...prevMessages, { message: event.data, sender: "ai" }];
+          }
+        });
+      }
+    };
+    wsRef.current = ws;
+
+    return () => {
+      // Cleanup WebSocket connection on component unmount
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +69,6 @@ export function ChatPanel({ messages }: ChatPanelProps) {
   };
 
   const handleSendMessage = async (txt: string) => {
-    // Update the messages state with the user's message
     setMessages((prevMessages) => [
       ...prevMessages,
       {
@@ -37,41 +80,37 @@ export function ChatPanel({ messages }: ChatPanelProps) {
     setError(null);
 
     try {
-      // Call the /chat endpoint with the current messages
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(apiUrl + "/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: txt,
-          history: messages,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+      if (!wsRef.current) {
+        throw new Error("WebSocket connection not established");
       }
 
-      const data = await response.json();
-      console.log(data);
-
-      // Update the messages state with the response from the chat endpoint
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { message: data.message, sender: "ai" },
-      ]);
+      wsRef.current?.send(
+        JSON.stringify({
+          query: txt,
+          history: messagesState,
+        }),
+      );
     } catch (error) {
       console.error("Error sending message:", error);
       setError(error instanceof Error ? error : new Error("Unknown error"));
-      // remove the last message
-      setMessages((prevMessages) => prevMessages.slice(0, -1));
+      setMessages((prevMessages) => {
+        // remove the last user message and the error message
+        let lastUserMessageIndex = -1;
+        for (let i = prevMessages.length - 1; i >= 0; i--) {
+          if (prevMessages[i].sender === "user") {
+            lastUserMessageIndex = i;
+            break;
+          }
+        }
+        if (lastUserMessageIndex === -1) {
+          return prevMessages;
+        }
+        return prevMessages.slice(0, lastUserMessageIndex);
+      });
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  // Scroll to the bottom whenever messagesState changes
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -100,7 +139,6 @@ export function ChatPanel({ messages }: ChatPanelProps) {
             )}
           </div>
         ))}
-        {/* This div will act as the scroll target */}
         <div ref={messagesEndRef} />
       </div>
 
@@ -119,7 +157,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             disabled={isLoading}
           >
-            Send
+            {isLoading ? "..." : "Send"}
           </button>
         </div>
         {error && <div className="text-red-500">{error.message}</div>}
