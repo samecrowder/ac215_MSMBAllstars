@@ -47,6 +47,7 @@ jobs:
         env:
           GCP_PROJECT: ${{ env.PROJECT_ID }}
           GCP_REGION: ${{ env.REGION }}
+          RUNNING_FROM_CI: "true"
         run: ./deploy.sh
 
       - name: Output Service URLs

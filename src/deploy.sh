@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Exit on any error
+set -e
+
+# Check if running in CI or with correct service account
+CURRENT_ACCOUNT=$(gcloud config get-value account)
+if [ "$RUNNING_FROM_CI" != "true" ] && [ "$CURRENT_ACCOUNT" != "super-admin-account@tennis-match-predictor.iam.gserviceaccount.com" ]; then
+    echo "❌ Error: Must be running in CI or authenticated as super-admin-account@tennis-match-predictor.iam.gserviceaccount.com"
+    echo "Current account: $CURRENT_ACCOUNT"
+    exit 1
+fi
+
+echo "✅ Authentication check passed"
+echo "🔑 Deploying with account: $CURRENT_ACCOUNT"
+
 # Build and tag images
 docker compose build
 
