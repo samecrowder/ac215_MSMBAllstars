@@ -10,8 +10,7 @@ echo "🏗️ Building containers..."
 docker compose build
 
 echo "🚀 Starting services..."
-# Disable web service for integration tests
-docker compose up -d --scale web=0
+docker compose up -d
 
 echo "⏳ Waiting for API to be ready..."
 timeout=300  # 5 minutes in seconds
