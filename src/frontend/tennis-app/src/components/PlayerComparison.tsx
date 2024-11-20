@@ -13,10 +13,19 @@ interface PlayerComparisonProps {
   }>;
 }
 
+const firstPlayerId = "Carlos Alcaraz";
+const secondPlayerId = "Grigor Dimitrov";
+
 export function PlayerComparison({ players }: PlayerComparisonProps) {
-  const [player1, setPlayer1] = useState(players[0]);
-  const [player2, setPlayer2] = useState(players[1]);
-  const [player1WinProbability, setPlayer1WinProbability] = useState(0.7);
+  const [player1, setPlayer1] = useState(
+    players.find((p) => p.name === firstPlayerId)!,
+  );
+  const [player2, setPlayer2] = useState(
+    players.find((p) => p.name === secondPlayerId)!,
+  );
+  const [player1WinProbability, setPlayer1WinProbability] = useState<
+    number | null
+  >(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -112,25 +121,29 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
 
       {error && <div className="text-red-500">{error.message}</div>}
 
-      <div className="flex items-center w-[calc(2*320px+4rem)] mt-4">
-        <span className="text-lg font-bold">
-          {(player1WinProbability * 100).toFixed(0)}%
-        </span>
-        <div className="flex-1 h-4 mx-2 rounded">
-          <div
-            className="h-full rounded"
-            style={{
-              width: "100%",
-              background: `linear-gradient(to right, #4D38C1 ${
-                player1WinProbability * 100
-              }%, #41C138 ${player1WinProbability * 100}%)`,
-            }}
-          />
+      {player1WinProbability != null ? (
+        <div className="flex items-center w-[calc(2*320px+4rem)] mt-4">
+          <span className="text-lg font-bold">
+            {(player1WinProbability * 100).toFixed(0)}%
+          </span>
+          <div className="flex-1 h-4 mx-2 rounded">
+            <div
+              className="h-full rounded"
+              style={{
+                width: "100%",
+                background: `linear-gradient(to right, #4D38C1 ${
+                  player1WinProbability * 100
+                }%, #41C138 ${player1WinProbability * 100}%)`,
+              }}
+            />
+          </div>
+          <span className="text-lg font-bold">
+            {((1 - player1WinProbability) * 100).toFixed(0)}%
+          </span>
         </div>
-        <span className="text-lg font-bold">
-          {((1 - player1WinProbability) * 100).toFixed(0)}%
-        </span>
-      </div>
+      ) : (
+        <div>Please select two players then click above to predict the winner.</div>
+      )}
     </div>
   );
 }
