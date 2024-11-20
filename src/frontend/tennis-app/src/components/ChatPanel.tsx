@@ -32,7 +32,10 @@ export function ChatPanel({ messages }: ChatPanelProps) {
         // set the last message to not pending
         setMessages((prevMessages) => {
           if (prevMessages.length > 0) {
-            return [...prevMessages.slice(0, -1), { ...prevMessages[prevMessages.length - 1], pending: false }];
+            return [
+              ...prevMessages.slice(0, -1),
+              { ...prevMessages[prevMessages.length - 1], pending: false },
+            ];
           }
           return prevMessages;
         });
@@ -52,7 +55,10 @@ export function ChatPanel({ messages }: ChatPanelProps) {
               },
             ];
           } else {
-            return [...prevMessages, { message: event.data, sender: "ai", pending: true }];
+            return [
+              ...prevMessages,
+              { message: event.data, sender: "ai", pending: true },
+            ];
           }
         });
       }
@@ -95,10 +101,9 @@ export function ChatPanel({ messages }: ChatPanelProps) {
         JSON.stringify({
           query: txt,
           history: messagesState,
-        }),
+        })
       );
     } catch (error) {
-      console.error("Error sending message:", error);
       setError(error instanceof Error ? error : new Error("Unknown error"));
       setIsLoading(false);
     }

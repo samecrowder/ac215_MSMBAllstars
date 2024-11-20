@@ -27,7 +27,6 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
     setError(null);
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-      console.log(apiUrl);
       const response = await fetch(apiUrl + "/predict", {
         method: "POST",
         headers: {
@@ -41,7 +40,6 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
       });
 
       if (!response.ok) {
-        console.log(apiUrl, response);
         throw new Error("Network response was not ok");
       }
 
@@ -49,7 +47,6 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
       setPlayer1WinProbability(data.player_a_win_probability);
     } catch (error) {
       setError(error instanceof Error ? error : new Error("Unknown error"));
-      console.error("Error fetching prediction:", error);
     } finally {
       setIsLoading(false);
     }

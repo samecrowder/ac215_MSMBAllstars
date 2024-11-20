@@ -4,7 +4,7 @@ import { ChatPanel } from "./components/ChatPanel";
 import { players } from "./players";
 
 function App() {
-  const [messages, setMessages] = useState<
+  const [messages] = useState<
     Array<{ message: string; sender: "user" | "ai" }>
   >([]);
 
