@@ -69,6 +69,7 @@ def get_h2h_match_history_since_date(
         & (player_dfs[player_a_id]["tourney_date"] < date)
     ]
 
+
 def get_h2h_stats(h2h_df: pd.DataFrame) -> List[float]:
     h2h_wins = h2h_df["is_winner"].sum()
     h2h_total = len(h2h_df)

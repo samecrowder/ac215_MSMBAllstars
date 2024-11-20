@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from model import TennisLSTM, scale_data
+from model import TennisLSTM, scale_data  # noqa: E402
 
 
 @pytest.fixture
