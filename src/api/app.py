@@ -9,7 +9,7 @@ from cors import setup_cors
 if os.environ.get("ENV") != "prod":
     load_dotenv("../.env.dev")
 
-# This is a bit of a hack, but it was the best way I could find to make sure we don't try to make a
+# This is slightly hacky, but it was the best way I could find to make sure we don't try to make a
 # call to GCS during unit/integration tests
 if os.environ.get("ENV") != "test":
     initialize_data()
