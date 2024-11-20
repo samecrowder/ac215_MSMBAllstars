@@ -10,8 +10,7 @@ echo "🏗️ Building containers..."
 docker compose build
 
 echo "🚀 Starting services..."
-# Disable web service for integration tests
-docker compose up -d --scale web=0
+docker compose up -d
 
 echo "⏳ Waiting for API to be ready..."
 timeout=300  # 5 minutes in seconds
@@ -76,6 +75,9 @@ if [ "$predict_status_code" != "200" ]; then
     rm predict_response.json
     exit 1
 fi
+
+# TODO add streaming chat test here, consider converting to python so 
+# we can load all the messages while streaming
 
 echo "💬 Testing chat endpoint..."
 chat_status_code=$(curl -s -o chat_response.json -w "%{http_code}" \

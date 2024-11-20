@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { ChatPanel } from "./ChatPanel";
 
 describe("ChatPanel", () => {
+  let mockWebSocket: any;
+
   const mockMessages = [
     { message: "Hello", sender: "user" as const },
     { message: "Hi there!", sender: "ai" as const },
@@ -11,6 +13,15 @@ describe("ChatPanel", () => {
   beforeEach(() => {
     // Mock scrollIntoView
     Element.prototype.scrollIntoView = jest.fn();
+    
+    // Mock WebSocket
+    mockWebSocket = {
+      send: jest.fn(),
+      close: jest.fn(),
+      onmessage: jest.fn(),
+    };
+    // @ts-ignore
+    global.WebSocket = jest.fn().mockImplementation(() => mockWebSocket);
   });
 
   test("renders chat messages", () => {
@@ -60,5 +71,18 @@ describe("ChatPanel", () => {
     fireEvent.click(sendButton);
 
     expect(input).toBeDisabled();
+  });
+
+  test("sends message through WebSocket", async () => {
+    render(<ChatPanel messages={[]} />);
+    const input = screen.getByPlaceholderText("Type your message...") as HTMLInputElement;
+    const sendButton = screen.getByText("Send");
+
+    await userEvent.type(input, "New message");
+    fireEvent.click(sendButton);
+
+    expect(mockWebSocket.send).toHaveBeenCalledWith(
+      expect.stringContaining("New message")
+    );
   });
 });
