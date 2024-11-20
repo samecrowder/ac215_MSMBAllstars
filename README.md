@@ -69,7 +69,9 @@ There are 193337 records in total for ATP Men's Singles matches in this dataset.
         └── train_probability_model [containerized pipeline for training the model]
             ├── Dockerfile
             ├── Pipfile
+            ├── cli.sh
             ├── docker-shell.sh
+            ├── package-trainer.sh
             ├── train_model.py
             └── model.py
 
@@ -78,8 +80,8 @@ There are 193337 records in total for ATP Men's Singles matches in this dataset.
 ![Data Flow](deliverables/diagrams/solution_architecture2.png) 
 ![Container Architecture](deliverables/diagrams/technical_architecture.png)
 
-## Preprocess container
-
+Preprocess container
+------------
 - Required inputs: GCS Project Name and GCS Bucket Name.
 - Output: Processed data stored in the GCS Bucket.
 
@@ -88,6 +90,57 @@ There are 193337 records in total for ATP Men's Singles matches in this dataset.
 (2) `src/preprocessing/Pipfile`: Lists the Python packages essential for image preprocessing.
 
 (3) `src/preprocessing/Dockerfile`: The Dockerfile is configured to use `python:3.9-slim-buster`. It sets up volumes and uses secret keys (which should not be uploaded to GitHub) for connecting to the GCS Bucket.
+
+### Running the preprocessing container
+**Setup GCP Service Account**
+1. Create a secrets folder that is on the same level as the project folder.
+2. Head to [GCP Console](https://console.cloud.google.com/home/dashboard).
+3. Search for "Service Accounts" from the top search box OR go to: "IAM & Admins" > "Service Accounts" and create a new service account called "MSMBAllstars".
+4. For "Grant this service account access to project", and give the account the following three permissions:
+      - "Cloud Storage" > "Storage Object Viewer"
+      - "Cloud Storage" > "Storage Object User"
+      - "Cloud Storage" > "Storage Object Creator"
+5. Click done. This will create a service account.
+6. Click on the "..." under the "Actions" column and select "Manage keys".
+7. Click on "ADD KEY" > "Create new key" with "Key type" as JSON.
+8. Copy this JSON file into the secrets folder created in step 1 and rename it as "data-service-account.json".
+
+**Setup GCS Bucket**
+1. Head to [GCP Console](https://console.cloud.google.com/home/dashboard).
+2. Search for "Buckets" from the top search box OR go to: "Cloud Storage" > "Buckets" and create a new bucket with an appropriate bucket name e.g. "msmballstars-test".
+3. Click done. This will create a new GCS Bucket.
+
+**Add Raw Data to GCS Bucket**
+1. In the new GCS Bucket, create a folder called "raw_data".
+2. Upload all of the atp_matches_<year>.csv files from https://github.com/JeffSackmann/tennis_atp/tree/master into the "raw_data" folder.
+
+**Set GCP Credentials**
+1. Head to src/preprocessing/docker-shell.sh.
+2. Replace `GCS_BUCKET_NAME` and `GCP_PROJECT` with corresponding GCS Bucket Name that you have chosen above and GCP Project Name.
+
+**Execute Dockerfile**
+1. Execute `docker-shell.sh` from its directory to build and run the docker container.
+2. Upon completion, your GCS Bucket should display the processed data as shown under the default folder name "version1".
+
+Preprocessing for Training Data container
+------------
+
+The processed data from the previous step joins all individual ATP results and removes entries with null values that are used as input data to our ML model. The output from the previous step also generates its file for the purpose of create an in-memory database for the API container below. Hence why there is a separation with this container, which takes the data from the previous preprocessing step and outputs data ready to feed into our LSTM.
+
+**Execute Dockerfile**
+1. Head to src/preprocessing_for_training_data.
+2. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data from previous step. Also specify `LOOKBACK` which defines the sequence length of training data.
+3. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the training data as a .pkl file to the same GCS folder where we read the data from.
+
+Train Probability Model container
+------------
+
+We now take the data from the previous container and train our LSTM.
+
+**Execute Dockerfile**
+1. Head to src/train_probability_model.
+2. Specify in `docker-shell.sh` the `DATA_FOLDER`, and `DATA_FILE` of preprocessed data for training from previous step. Also specify the numeric valus for training. Make sure you have WANDB_API_KEY set in the secrets folder.
+3. Execute `docker-shell.sh` from its directory to build and run the docker container. This will write the model weights data as a .pt file to the same GCS folder where we read the data from. Alternatively to run on Vertex AI, first run `package-trainer.sh` and then `cli.sh`.
 
 ## Deploy Locally
 
