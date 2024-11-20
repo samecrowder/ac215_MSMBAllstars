@@ -7,11 +7,13 @@ docker compose build
 docker tag src-api:latest gcr.io/tennis-match-predictor/api:latest
 docker tag src-probability_model:latest gcr.io/tennis-match-predictor/probability-model:latest
 docker tag src-llm:latest gcr.io/tennis-match-predictor/llm:latest
+docker tag src-web:latest gcr.io/tennis-match-predictor/web:latest
 
 # Push to GCR
 docker push gcr.io/tennis-match-predictor/api:latest
 docker push gcr.io/tennis-match-predictor/probability-model:latest
 docker push gcr.io/tennis-match-predictor/llm:latest
+docker push gcr.io/tennis-match-predictor/web:latest
 
 # Get Ollama URL. We assume that ollama is already deployed.
 OLLAMA_URL=$(gcloud run services describe ollama --platform managed --region us-central1 --format 'value(status.url)')
@@ -47,4 +49,16 @@ gcloud run deploy api \
     --platform managed \
     --region us-central1 \
     --set-env-vars="ENV=prod,MODEL_BASE_URL=${PROB_MODEL_URL},LLM_BASE_URL=${LLM_URL},$(docker compose config | yq '.services.api.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS" and .key != "MODEL_HOST" and .key != "LLM_HOST" and .key != "ENV")) | to_entries | map(.key + "=" + .value) | join(",")')" \
+    --set-secrets="/secrets/super-admin-key.json=super-admin-key:latest"
+
+# Get web
+WEB_URL=$(gcloud run services describe web --platform managed --region us-central1 --format 'value(status.url)')
+echo "WEB_URL: $WEB_URL"
+
+# Deploy API with updated service URLs
+gcloud run deploy web \
+    --image gcr.io/tennis-match-predictor/web:latest \
+    --platform managed \
+    --region us-central1 \
+    --set-env-vars="ENV=prod,MODEL_BASE_URL=${WEB_URL},LLM_BASE_URL=${WEB_URL},$(docker compose config | yq '.services.api.environment | with_entries(select(.key != "PORT" and .key != "GOOGLE_APPLICATION_CREDENTIALS" and .key != "MODEL_HOST" and .key != "LLM_HOST" and .key != "ENV")) | to_entries | map(.key + "=" + .value) | join(",")')" \
     --set-secrets="/secrets/super-admin-key.json=super-admin-key:latest"
