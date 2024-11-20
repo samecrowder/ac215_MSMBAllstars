@@ -12,3 +12,6 @@ numpy = "*"
 python_version = "3.9"
 
 [dev-packages]
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"

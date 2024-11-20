@@ -83,7 +83,8 @@ def main():
         if col.startswith("h_") or col.startswith("l_"):
             df = df.dropna(subset=[col])
 
-    # For consistency, convert following to features, which are preceeded by winner_ or loser_ but need to be represented as w_ or l_
+    # For consistency, convert following to features, which are
+    # preceeded by winner_ or loser_ but need to be represented as w_ or l_
     cols_to_convert = ["rank", "ht", "age"]
     for col in cols_to_convert:
         df[f"w_{col}"] = pd.to_numeric(df[f"winner_{col}"], errors="coerce")

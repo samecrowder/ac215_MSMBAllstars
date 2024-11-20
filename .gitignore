@@ -166,3 +166,4 @@ cython_debug/
 
 src/frontend/tennis-app/node_modules/*
 src/frontend/tennis-app/coverage/*
+src/frontend/tennis-app/test-results/*

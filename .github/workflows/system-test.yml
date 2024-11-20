@@ -1,4 +1,4 @@
-name: Integration Test
+name: System (E2E) Test
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  integration-test:
+  system-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,6 +21,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq curl
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+
       - name: Set up environment
         working-directory: src
         run: |
@@ -28,15 +33,20 @@ jobs:
           echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > ../../secrets/super-admin-key.json
           ls -la ../../secrets
 
-      - name: Run integration test
+      - name: Install Playwright
+        working-directory: src/frontend/tennis-app
+        run: |
+          npm install
+
+      - name: Run system test
         working-directory: src
         run: |
-          chmod +x integration_test.sh
-          ./integration_test.sh
+          chmod +x system_test.sh
+          ./system_test.sh
 
       - name: Print container logs on failure
         if: failure()
         working-directory: src
         run: |
           docker compose logs
-          docker compose down
+          docker compose down 

@@ -1,5 +1,4 @@
 import os
-import json
 import pickle
 import logging
 from google.cloud import storage
@@ -46,25 +45,38 @@ def count_trainable_parameters(model):
 
 class WandbCallback:
     def __init__(self):
-        self.best_val_f1 = float('-inf')
-        
-    def on_epoch_end(self, epoch, train_loss, val_loss, train_acc, val_acc,
-                     train_precision, val_precision, train_recall, val_recall,
-                     train_f1, val_f1):
-        wandb.log({
-            "epoch": epoch,
-            "train_loss": train_loss,
-            "val_loss": val_loss,
-            "train_accuracy": train_acc,
-            "val_accuracy": val_acc,
-            "train_precision": train_precision,
-            "val_precision": val_precision,
-            "train_recall": train_recall,
-            "val_recall": val_recall,
-            "train_f1": train_f1,
-            "val_f1": val_f1
-        })
-        
+        self.best_val_f1 = float("-inf")
+
+    def on_epoch_end(
+        self,
+        epoch,
+        train_loss,
+        val_loss,
+        train_acc,
+        val_acc,
+        train_precision,
+        val_precision,
+        train_recall,
+        val_recall,
+        train_f1,
+        val_f1,
+    ):
+        wandb.log(
+            {
+                "epoch": epoch,
+                "train_loss": train_loss,
+                "val_loss": val_loss,
+                "train_accuracy": train_acc,
+                "val_accuracy": val_acc,
+                "train_precision": train_precision,
+                "val_precision": val_precision,
+                "train_recall": train_recall,
+                "val_recall": val_recall,
+                "train_f1": train_f1,
+                "val_f1": val_f1,
+            }
+        )
+
         # Track best F1 score instead of loss
         if val_f1 > self.best_val_f1:
             self.best_val_f1 = val_f1
@@ -84,8 +96,8 @@ def main():
             "hidden_size": HIDDEN_SIZE,
             "num_layers": NUM_LAYERS,
             "learning_rate": LR,
-            "num_epochs": NUM_EPOCHS
-        }
+            "num_epochs": NUM_EPOCHS,
+        },
     )
 
     # Check if GPU is available
@@ -122,22 +134,32 @@ def main():
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     wandb.watch(model)
-    train_model(model, train_loader, test_loader, criterion, optimizer, num_epochs=NUM_EPOCHS, callback=WandbCallback())
+    train_model(
+        model,
+        train_loader,
+        test_loader,
+        criterion,
+        optimizer,
+        num_epochs=NUM_EPOCHS,
+        callback=WandbCallback(),
+    )
 
     # Save model directly to GCS using BytesIO
     gcs_output_path = f"{DATA_FOLDER}/prob_model.pt"
     buffer = BytesIO()
     torch.save(model.state_dict(), buffer)
     buffer.seek(0)
-    
+
     logging.info(f"Uploading model to Google Cloud Storage at: {gcs_output_path}")
-    bucket.blob(gcs_output_path).upload_from_file(buffer, content_type="application/octet-stream")
+    bucket.blob(gcs_output_path).upload_from_file(
+        buffer, content_type="application/octet-stream"
+    )
     logging.info("Successfully uploaded model to Google Cloud Storage")
-    
+
     wandb.finish()
 
     logging.info("=== Training Pipeline Complete ===")
 
+
 if __name__ == "__main__":
     main()
-

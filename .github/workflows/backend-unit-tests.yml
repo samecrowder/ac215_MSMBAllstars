@@ -1,0 +1,48 @@
+name: Backend Unit Tests
+
+on:
+  push:
+    branches:
+      - "*"
+    paths:
+      - "src/preprocessing/**"
+      - "src/preprocessing_for_training_data/**" 
+      - "src/train_probability_model/**"
+      - "src/probability_model/**"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ["preprocessing", "preprocessing_for_training_data", "train_probability_model", "probability_model"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          cd src/${{ matrix.service }}
+          if [ "${{ matrix.service }}" = "probability_model" ] || [ "${{ matrix.service }}" = "train_probability_model" ]; then
+            pipenv run pip uninstall torch -y
+            pipenv run pip install torch==2.5.0 --index-url https://download.pytorch.org/whl/cpu
+          fi
+          pipenv install --dev
+
+      - name: Run tests
+        env:
+          PYTHONPATH: src/${{ matrix.service }}
+          CUDA_VISIBLE_DEVICES: ""
+          TORCH_DEVICE: "cpu"
+        run: |
+          cd src/${{ matrix.service }}
+          pipenv run python -m pytest tests/ -v --cov=. --cov-report=term-missing --cov-fail-under=50

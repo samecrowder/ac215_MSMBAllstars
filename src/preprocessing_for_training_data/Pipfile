@@ -8,8 +8,11 @@ pandas = "*"
 google-cloud-storage = "*"
 tqdm = "*"
 numpy = "==2.0.2"
+python-dotenv = "*"
 
 [requires]
 python_version = "3.9"
 
 [dev-packages]
+pytest = "*"
+pytest-cov = "*"

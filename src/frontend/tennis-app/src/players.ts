@@ -9,6 +9,15 @@ export const players = [
     imageUrl: "/images/roger_federer.png",
   },
   {
+    id: "Carlos Alcaraz",
+    name: "Carlos Alcaraz",
+    age: "21 (2003/05/05)",
+    country: "Spain",
+    height: "6'0\" (183cm)",
+    weight: "163 lbs (74kg)",
+    imageUrl: "/images/carlos_alcaraz.png",
+  },
+  {
     id: "Rafael Nadal",
     name: "Rafael Nadal",
     age: "38 (1986/06/03)",
@@ -34,15 +43,6 @@ export const players = [
     height: "5'11\" (180cm)",
     weight: "173 lbs (78kg)",
     imageUrl: "/images/pablo_cuevas.png",
-  },
-  {
-    id: "Carlos Alcaraz",
-    name: "Carlos Alcaraz",
-    age: "21 (2003/05/05)",
-    country: "Spain",
-    height: "6'0\" (183cm)",
-    weight: "163 lbs (74kg)",
-    imageUrl: "/images/carlos_alcaraz.png",
   },
   {
     id: "Taylor Fritz",

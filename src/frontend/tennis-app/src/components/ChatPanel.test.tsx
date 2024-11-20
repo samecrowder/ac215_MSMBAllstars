@@ -8,6 +8,11 @@ describe("ChatPanel", () => {
     { message: "Hi there!", sender: "ai" as const },
   ];
 
+  beforeEach(() => {
+    // Mock scrollIntoView
+    Element.prototype.scrollIntoView = jest.fn();
+  });
+
   test("renders chat messages", () => {
     render(<ChatPanel messages={mockMessages} />);
     expect(screen.getByText("Hello")).toBeInTheDocument();

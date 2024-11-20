@@ -70,7 +70,7 @@ def main():
             player_dfs, winner, loser, date
         )
         winner_h2h_features = get_h2h_stats(winner_h2h_history)
-        loser_h2h_features = [1- winner_h2h_features[0], winner_h2h_features[1]]
+        loser_h2h_features = [1 - winner_h2h_features[0], winner_h2h_features[1]]
 
         # Add winning match
         winner_features, loser_features = create_matchup_data(

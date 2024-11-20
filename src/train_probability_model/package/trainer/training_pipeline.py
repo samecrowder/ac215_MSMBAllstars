@@ -4,12 +4,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score
-)
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -87,7 +82,7 @@ def create_data_loaders(device, X1, X2, H2H, y, test_size=0.2, batch_size=32):
     logging.info(f"Testing samples: {len(X1_test)}")
 
     # Avoid uneven batches
-    logging.info(f"Trimming to have even batch sizes")
+    logging.info("Trimming to have even batch sizes")
     X1_train = adjust_to_batch_size(X1_train, batch_size)
     X2_train = adjust_to_batch_size(X2_train, batch_size)
     H2H_train = adjust_to_batch_size(H2H_train, batch_size)
@@ -119,10 +114,12 @@ def create_data_loaders(device, X1, X2, H2H, y, test_size=0.2, batch_size=32):
     return train_loader, test_loader
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs, callback=None):
+def train_model(
+    model, train_loader, val_loader, criterion, optimizer, num_epochs, callback=None
+):
     """
     Train the model with optional wandb callback for logging.
-    
+
     Args:
         model: The PyTorch model to train
         train_loader: DataLoader for training data
@@ -144,7 +141,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-            train_preds.extend([1 if p > 0.5 else 0 for p in outputs.squeeze().detach().cpu().numpy()])
+            train_preds.extend(
+                [1 if p > 0.5 else 0 for p in outputs.squeeze().detach().cpu().numpy()]
+            )
             train_true.extend(y.cpu().numpy())
 
         model.eval()
@@ -156,19 +155,24 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 outputs = model(X1, X2, H2H)
                 loss = criterion(outputs, y.unsqueeze(1))
                 val_loss += loss.item()
-                val_preds.extend([1 if p > 0.5 else 0 for p in outputs.squeeze().detach().cpu().numpy()])
+                val_preds.extend(
+                    [
+                        1 if p > 0.5 else 0
+                        for p in outputs.squeeze().detach().cpu().numpy()
+                    ]
+                )
                 val_true.extend(y.cpu().numpy())
 
         # Calculate average losses and metrics
         train_loss /= len(train_loader)
         val_loss /= len(val_loader)
-        
+
         # Calculate training metrics
         train_acc = accuracy_score(train_true, train_preds)
         train_precision = precision_score(train_true, train_preds)
         train_recall = recall_score(train_true, train_preds)
         train_f1 = f1_score(train_true, train_preds)
-        
+
         # Calculate validation metrics
         val_acc = accuracy_score(val_true, val_preds)
         val_precision = precision_score(val_true, val_preds)
@@ -188,7 +192,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 train_recall=train_recall,
                 val_recall=val_recall,
                 train_f1=train_f1,
-                val_f1=val_f1
+                val_f1=val_f1,
             )
 
         # Print metrics

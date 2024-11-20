@@ -84,6 +84,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
         {messagesState.map((message, index) => (
           <div
             key={index}
+            data-testid={`${message.sender}-message`}
             className={`p-3 max-w-[80%] rounded-lg relative ${
               message.sender === "user"
                 ? "bg-blue-500 text-white ml-auto"
