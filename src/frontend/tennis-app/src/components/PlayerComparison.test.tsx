@@ -117,6 +117,7 @@ describe("PlayerComparison", () => {
       render(<TestWrapper />);
       const predictButton = screen.getByText("Predict Winner");
 
+      // eslint-disable-next-line testing-library/no-unnecessary-act
       await act(async () => {
         fireEvent.click(predictButton);
         // Wait for state updates to complete
@@ -136,6 +137,7 @@ describe("PlayerComparison", () => {
       render(<TestWrapper />);
       const predictButton = screen.getByText("Predict Winner");
 
+      // eslint-disable-next-line testing-library/no-unnecessary-act
       await act(async () => {
         fireEvent.click(predictButton);
         // Wait for state updates to complete

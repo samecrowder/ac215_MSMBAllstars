@@ -66,7 +66,9 @@ def make_rag_system_message_from_match_data(
                 f"| Round: {match['round']}\n"
             )
     else:
-        h2h_stats += f"No head-to-head matches found for {player_a_name} and {player_b_name}.\n"
+        h2h_stats += (
+            f"No head-to-head matches found for {player_a_name} and {player_b_name}.\n"
+        )
 
     # Combine all information
     return f"""Selected Matchup: {player_a_name} vs {player_b_name}.
