@@ -84,7 +84,9 @@ chat_status_code=$(curl -s -o chat_response.json -w "%{http_code}" \
     -X POST http://localhost:8000/chat \
     -H "Content-Type: application/json" \
     -d '{
-        "query": "Who is more likely to win between Federer and Nadal on clay court?",
+        "query": "Who is more likely to win between Federer and Nadal on clay court? Please just respond with a name and a single reason.",
+        "player_a_id": "Roger Federer",
+        "player_b_id": "Rafael Nadal",
         "history": []
     }')
 
