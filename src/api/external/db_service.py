@@ -1,6 +1,7 @@
 from io import StringIO
 import logging
 import os
+from typing import Union
 
 from google.cloud import storage
 import pandas as pd
@@ -39,10 +40,10 @@ def read_csv_from_gcs(bucket, file_name):
     return pd.read_csv(StringIO(content))
 
 
-def load_data():
+def load_data() -> tuple[dict[str, pd.DataFrame], list[str]]:
     """Load data from GCS and preprocess it."""
     if os.environ.get("ENV") == "test":
-        return None, None
+        return {}, []
 
     client = get_gcs_client()
     bucket = client.bucket(BUCKET_NAME)
@@ -58,19 +59,23 @@ def load_data():
     return player_dfs, feature_cols
 
 
-player_dfs, feature_cols = None, None
+global_player_dfs: Union[dict[str, pd.DataFrame], None] = None
+global_feature_cols: Union[list[str], None] = None
 
 
-def initialize_data():
-    global player_dfs, feature_cols
-    player_dfs, feature_cols = load_data()
+def initialize_data() -> tuple[dict[str, pd.DataFrame], list[str]]:
+    global global_player_dfs, global_feature_cols
+    if global_player_dfs is None or global_feature_cols is None:
+        logging.info("Loading model data from GCS")
+        global_player_dfs, global_feature_cols = load_data()
+
+    return global_player_dfs, global_feature_cols
 
 
 def get_match_data(
     player_a_id: str, player_b_id: str, lookback: int
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
-    if player_dfs is None or feature_cols is None:
-        initialize_data()
+    player_dfs, feature_cols = initialize_data()
 
     player_a_previous_matches = get_player_last_nplus1_matches(
         player_dfs, player_a_id, lookback
