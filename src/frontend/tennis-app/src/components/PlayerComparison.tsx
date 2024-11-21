@@ -50,6 +50,7 @@ export function PlayerComparison({
         setPlayer1WinProbability(data.player_a_win_probability);
       } catch (error) {
         // log to help test
+        // eslint-disable-next-line no-console
         console.error("Error fetching prediction:", error);
         setError(error instanceof Error ? error : new Error("Unknown error"));
       } finally {
