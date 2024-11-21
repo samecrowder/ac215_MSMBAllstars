@@ -83,7 +83,7 @@ There are 193337 records in total for ATP Men's Singles matches in this dataset.
 ## API Server Spec
 ![API Server Spec](deliverables/diagrams/apispec.png)
 
-## API Server Spec
+## App Screenshot
 ![API Server Spec](deliverables/images/app-screenshot.png)
 
 Preprocess container
