@@ -1,20 +1,25 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { Player } from "../players";
 
 const END_MARKER = "**|||END|||**";
 
 interface Message {
   message: string;
-  sender: "user" | "ai";
+  sender: "user" | "assistant";
   pending?: boolean;
 }
 
 interface ChatPanelProps {
-  messages: Message[];
+  initialMessages: Message[];
+  matchup: {
+    player1: Player;
+    player2: Player;
+  };
 }
 
-export function ChatPanel({ messages }: ChatPanelProps) {
+export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
   const [input, setInput] = useState("");
-  const [messagesState, setMessages] = useState<Message[]>(messages);
+  const [messagesState, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -43,7 +48,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
         setIsLoading(false);
       } else {
         setMessages((prevMessages) => {
-          if (prevMessages[prevMessages.length - 1]?.sender === "ai") {
+          if (prevMessages[prevMessages.length - 1]?.sender === "assistant") {
             return [
               // remove the last pending message
               ...prevMessages.slice(0, -1),
@@ -51,14 +56,14 @@ export function ChatPanel({ messages }: ChatPanelProps) {
               {
                 message:
                   prevMessages[prevMessages.length - 1].message + event.data,
-                sender: "ai",
+                sender: "assistant",
                 pending: true,
               },
             ];
           } else {
             return [
               ...prevMessages,
-              { message: event.data, sender: "ai", pending: true },
+              { message: event.data, sender: "assistant", pending: true },
             ];
           }
         });
@@ -102,6 +107,8 @@ export function ChatPanel({ messages }: ChatPanelProps) {
         JSON.stringify({
           query: txt,
           history: messagesState,
+          player_a_id: matchup.player1.id,
+          player_b_id: matchup.player2.id,
         }),
       );
     } catch (error) {
@@ -119,6 +126,12 @@ export function ChatPanel({ messages }: ChatPanelProps) {
   return (
     <div className="w-96 h-[calc(100vh-4rem)] flex flex-col bg-white rounded-lg border border-gray-300">
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        {/* tell user to ask a question */}
+        {messagesState.length === 0 && (
+          <div className="text-center text-gray-500">
+            Ask a question about the match!
+          </div>
+        )}
         {messagesState.map((message, index) => (
           <div
             key={index}
@@ -134,7 +147,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
             {message.sender === "user" && (
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-0 h-0 border-l-8 border-l-blue-500 border-t-8 border-t-transparent border-b-8 border-b-transparent"></div>
             )}
-            {message.sender === "ai" && (
+            {message.sender === "assistant" && (
               <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0 h-0 border-r-8 border-r-gray-200 border-t-8 border-t-transparent border-b-8 border-b-transparent"></div>
             )}
           </div>

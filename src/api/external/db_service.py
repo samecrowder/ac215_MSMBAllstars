@@ -5,7 +5,11 @@ import os
 from google.cloud import storage
 import pandas as pd
 
-from .helper import preprocess_data
+from .helper import (
+    get_h2h_match_history,
+    get_player_last_nplus1_matches,
+    preprocess_data,
+)
 
 # Set up logging
 logging.basicConfig(
@@ -52,3 +56,33 @@ def load_data():
     logging.info("In-memory database loaded successfully")
 
     return player_dfs, feature_cols
+
+
+player_dfs, feature_cols = None, None
+
+
+def initialize_data():
+    global player_dfs, feature_cols
+    player_dfs, feature_cols = load_data()
+
+
+def get_match_data(
+    player_a_id: str, player_b_id: str, lookback: int
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
+    if player_dfs is None or feature_cols is None:
+        initialize_data()
+
+    player_a_previous_matches = get_player_last_nplus1_matches(
+        player_dfs, player_a_id, lookback
+    )
+    player_b_previous_matches = get_player_last_nplus1_matches(
+        player_dfs, player_b_id, lookback
+    )
+    h2h_match_history = get_h2h_match_history(player_dfs, player_a_id, player_b_id)
+
+    return (
+        player_a_previous_matches,
+        player_b_previous_matches,
+        h2h_match_history,
+        feature_cols,
+    )

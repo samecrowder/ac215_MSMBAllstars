@@ -3,23 +3,12 @@
 import json
 import logging
 import os
-from typing import List
 
-from external.llm_service import stream_chat_response
+from external.llm_service import ChatRequest, stream_chat_response
 from fastapi import APIRouter, WebSocket
 from pydantic import BaseModel
 
 router = APIRouter()
-
-
-class ChatMessage(BaseModel):
-    message: str
-    sender: str
-
-
-class ChatRequest(BaseModel):
-    query: str
-    history: List[ChatMessage] = []  # Default to empty list if not provided
 
 
 END_MARKER = "**|||END|||**"
@@ -39,9 +28,7 @@ async def websocket_endpoint(websocket: WebSocket):
             logging.info(f"Received WebSocket message: {text_data}")
             request = ChatRequest(**json.loads(text_data))
 
-            async for chunk in stream_chat_response(
-                request.query, [h.message for h in request.history]
-            ):
+            async for chunk in stream_chat_response(request):
                 await websocket.send_text(chunk)
 
             await websocket.send_text(END_MARKER)
@@ -60,8 +47,6 @@ class ChatResponse(BaseModel):
 async def chat(request: ChatRequest):
     # run chat stream and append to a string, then return the string
     response = ""
-    async for chunk in stream_chat_response(
-        request.query, [h.message for h in request.history]
-    ):
+    async for chunk in stream_chat_response(request):
         response += chunk
     return ChatResponse(message=response)

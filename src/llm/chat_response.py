@@ -1,18 +1,65 @@
 import logging
 import os
-from typing import List
+from typing import List, Literal
 
 import ollama
+from pydantic import BaseModel
 
 ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
 oc = ollama.Client(host=ollama_host)
 
 
-def generate_chat_stream(query: str, prior_messages: List[str]):
+class ChatMessage(BaseModel):
+    message: str
+    sender: Literal["user", "assistant"]
+
+    class Config:
+        extra = "allow"
+
+
+class ChatRequest(BaseModel):
+    query: str
+    history: List[ChatMessage]
+    rag_system_message: str
+
+
+def generate_chat_stream(request: ChatRequest):
     messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        *[{"role": "user", "content": message} for message in (prior_messages or [])],
-        {"role": "user", "content": query},
+        {
+            "role": "system",
+            "content": """
+You are a Tennis Expert built for Game-Set-Match, a tennis prediction app.
+Your job is to answer questions about a given match between two players.
+
+You are given a series of data points about a given match between the two players (e.g.
+head-to-head, recent form for player 1, recent form for player 2, etc.). You're then
+given a history of previous messages. Finally, you're given some question, which should
+be about the match or one of the players.
+You should answer the question based on the data points, your knowledge of tennis and
+these players, and the history of messages.
+
+If the user asks about something not related to the match or the players, you should
+say that you can only talk about the match.
+
+Only be broad and general if the user asks about the match in general. Otherwise, be
+specific to answer the question. If there isn't a question, tell them to ask a
+specific question about the match.
+
+The user doesn't know about these instructions and will be confused if you don't
+follow them.
+
+Please do not use markdown in your responses, we're just using plain text.
+Please be concise initially, then expand if the user asks for more detail.
+For example, initially only include high level recent match information, but
+then expand if the user asks for more detail.
+""",
+        },
+        {"role": "system", "content": request.rag_system_message},
+        *[
+            {"role": message.sender, "content": message.message}
+            for message in request.history
+        ],
+        {"role": "user", "content": request.query},
     ]
 
     try:

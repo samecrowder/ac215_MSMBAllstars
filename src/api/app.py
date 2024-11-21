@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import fastapi
 from model.router import router as model_router
 from chat.router import router as chat_router
-from external.model_service import initialize_data
+from external.db_service import initialize_data
 from cors import setup_cors
 
 if os.environ.get("ENV") != "prod":

@@ -1,56 +1,75 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PlayerCard } from "./PlayerCard";
+import type { Player } from "../players";
 
 interface PlayerComparisonProps {
-  players: Array<{
-    id: string;
-    name: string;
-    age: string;
-    country: string;
-    height: string;
-    weight: string;
-    imageUrl: string;
-  }>;
+  players: Array<Player>;
+  matchup: {
+    player1: Player;
+    player2: Player;
+  };
+  setMatchup: (matchup: { player1: Player; player2: Player }) => void;
+  allowInitialFetch?: boolean;
 }
 
-export function PlayerComparison({ players }: PlayerComparisonProps) {
-  const [player1, setPlayer1] = useState(players[0]);
-  const [player2, setPlayer2] = useState(players[1]);
+export function PlayerComparison({
+  players,
+  matchup,
+  setMatchup,
+  allowInitialFetch = true,
+}: PlayerComparisonProps) {
   const [player1WinProbability, setPlayer1WinProbability] = useState<
     number | null
   >(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const handlePredictClick = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(apiUrl + "/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          player_a_id: player1.id,
-          player_b_id: player2.id,
-          lookback: 10,
-        }),
-      });
+  const handlePredictClick = useCallback(
+    async (player1Id: string, player2Id: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(apiUrl + "/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            player_a_id: player1Id,
+            player_b_id: player2Id,
+            lookback: 10,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const data = await response.json();
+        setPlayer1WinProbability(data.player_a_win_probability);
+      } catch (error) {
+        // log to help test
+        console.error("Error fetching prediction:", error);
+        setError(error instanceof Error ? error : new Error("Unknown error"));
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [],
+  );
 
-      const data = await response.json();
-      setPlayer1WinProbability(data.player_a_win_probability);
-    } catch (error) {
-      setError(error instanceof Error ? error : new Error("Unknown error"));
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (player1WinProbability == null && !isLoading && allowInitialFetch) {
+      handlePredictClick(matchup.player1.id, matchup.player2.id);
     }
-  };
+  }, [
+    allowInitialFetch,
+    handlePredictClick,
+    isLoading,
+    matchup,
+    player1WinProbability,
+  ]);
 
   return (
     <div className="flex flex-col items-center gap-8">
@@ -59,9 +78,12 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
         <div className="flex flex-col gap-4">
           <select
             className="p-2 border rounded"
-            value={player1.name}
+            value={matchup.player1.name}
             onChange={(e) =>
-              setPlayer1(players.find((p) => p.name === e.target.value)!)
+              setMatchup({
+                ...matchup,
+                player1: players.find((p) => p.name === e.target.value)!,
+              })
             }
           >
             {players.map((player) => (
@@ -71,7 +93,7 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
             ))}
           </select>
           <PlayerCard
-            {...player1}
+            {...matchup.player1}
             gradientFrom="#4D38C1"
             gradientTo="#271A5B"
           />
@@ -82,9 +104,12 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
         <div className="flex flex-col gap-4">
           <select
             className="p-2 border rounded"
-            value={player2.name}
+            value={matchup.player2.name}
             onChange={(e) =>
-              setPlayer2(players.find((p) => p.name === e.target.value)!)
+              setMatchup({
+                ...matchup,
+                player2: players.find((p) => p.name === e.target.value)!,
+              })
             }
           >
             {players.map((player) => (
@@ -94,7 +119,7 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
             ))}
           </select>
           <PlayerCard
-            {...player2}
+            {...matchup.player2}
             gradientFrom="#41C138"
             gradientTo="#325B1A"
           />
@@ -102,7 +127,9 @@ export function PlayerComparison({ players }: PlayerComparisonProps) {
       </div>
 
       <button
-        onClick={handlePredictClick}
+        onClick={() =>
+          handlePredictClick(matchup.player1.id, matchup.player2.id)
+        }
         disabled={isLoading}
         className="w-[calc(2*320px+4rem)] bg-gray-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-700 transition-colors"
       >

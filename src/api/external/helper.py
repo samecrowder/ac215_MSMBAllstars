@@ -4,18 +4,18 @@ import numpy as np
 import pandas as pd
 
 
-def preprocess_data(df):
+def preprocess_data(df: pd.DataFrame) -> tuple[dict[str, pd.DataFrame], list[str]]:
 
     # Sort by date
     df = df.sort_values("tourney_date")
 
     # Select relevant features
-    feature_cols = [
+    feature_cols: list[str] = [
         col for col in df.columns if col.startswith("w_") or col.startswith("l_")
     ]
 
     # Create player-specific dataframes
-    player_dfs = {}
+    player_dfs: dict[str, pd.DataFrame] = {}
     for player in set(df["winner_name"].unique()) | set(df["loser_name"].unique()):
         player_matches = df[
             (df["winner_name"] == player) | (df["loser_name"] == player)
@@ -40,7 +40,7 @@ def calculate_percentage_difference(val1, val2):
 
 
 def get_player_last_nplus1_matches(
-    player_dfs: Dict[str, Any], player_id: str, n: int
+    player_dfs: Dict[str, pd.DataFrame], player_id: str, n: int
 ) -> pd.DataFrame:
     return player_dfs[player_id].tail(n + 1).reset_index()
 
@@ -78,10 +78,10 @@ def get_h2h_stats(h2h_df: pd.DataFrame) -> List[float]:
 
 
 def create_matchup_data(
-    p1_history,
-    p2_history,
-    feature_cols,
-    history_len=10,
+    p1_history: pd.DataFrame,
+    p2_history: pd.DataFrame,
+    feature_cols: list[str],
+    history_len: int = 10,
 ):
     # Includes the 3 features below that are not stats both players have in a match
     num_features = len(feature_cols) + 3

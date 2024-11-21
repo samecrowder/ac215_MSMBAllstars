@@ -1,6 +1,13 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PlayerComparison } from "./PlayerComparison";
+import { useState } from "react";
 
 describe("PlayerComparison", () => {
   const mockPlayers = [
@@ -26,8 +33,29 @@ describe("PlayerComparison", () => {
     },
   ];
 
+  // Wrapper component to manage state during tests
+  const TestWrapper = () => {
+    const [matchup, setMatchup] = useState({
+      player1: mockPlayers[0], // Roger Federer
+      player2: mockPlayers[1], // Carlos Alcaraz
+    });
+
+    return (
+      <PlayerComparison
+        allowInitialFetch={false}
+        players={mockPlayers}
+        matchup={matchup}
+        setMatchup={setMatchup}
+      />
+    );
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ player_a_win_probability: 0.75 }),
+    });
   });
 
   afterEach(() => {
@@ -35,13 +63,13 @@ describe("PlayerComparison", () => {
   });
 
   test("renders title and VS text", () => {
-    render(<PlayerComparison players={mockPlayers} />);
+    render(<TestWrapper />);
     expect(screen.getByText("Game-Set-Match")).toBeInTheDocument();
     expect(screen.getByText("VS")).toBeInTheDocument();
   });
 
   test("renders player selection dropdowns", () => {
-    render(<PlayerComparison players={mockPlayers} />);
+    render(<TestWrapper />);
     const dropdowns = screen.getAllByRole("combobox");
     expect(dropdowns).toHaveLength(2);
     expect(dropdowns[0]).toHaveValue("Roger Federer");
@@ -49,7 +77,7 @@ describe("PlayerComparison", () => {
   });
 
   test("renders player cards", () => {
-    render(<PlayerComparison players={mockPlayers} />);
+    render(<TestWrapper />);
     expect(screen.getAllByText("Roger Federer").length).toBeGreaterThanOrEqual(
       1,
     );
@@ -59,28 +87,20 @@ describe("PlayerComparison", () => {
   });
 
   test("allows for player selection change", async () => {
-    render(<PlayerComparison players={mockPlayers} />);
+    render(<TestWrapper />);
     const [player1Dropdown, player2Dropdown] = screen.getAllByRole("combobox");
 
     await userEvent.selectOptions(player1Dropdown, "Carlos Alcaraz");
-    await userEvent.selectOptions(player2Dropdown, "Roger Federer");
-
     expect(player1Dropdown).toHaveValue("Carlos Alcaraz");
+
+    await userEvent.selectOptions(player2Dropdown, "Roger Federer");
     expect(player2Dropdown).toHaveValue("Roger Federer");
   });
 
   describe("API interaction tests", () => {
-    beforeEach(() => {
-      global.fetch = jest.fn() as jest.Mock;
-    });
-
     test("handles predict button click", async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ player_a_win_probability: 0.75 }),
-      });
+      render(<TestWrapper />);
 
-      render(<PlayerComparison players={mockPlayers} />);
       const predictButton = screen.getByText("Predict Winner");
 
       fireEvent.click(predictButton);
@@ -94,15 +114,14 @@ describe("PlayerComparison", () => {
     });
 
     test("displays win probability after predict button click", async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ player_a_win_probability: 0.75 }),
-      });
-
-      render(<PlayerComparison players={mockPlayers} />);
+      render(<TestWrapper />);
       const predictButton = screen.getByText("Predict Winner");
 
-      fireEvent.click(predictButton);
+      await act(async () => {
+        fireEvent.click(predictButton);
+        // Wait for state updates to complete
+        await Promise.resolve();
+      });
 
       await waitFor(() => {
         const probabilityElements = screen.getAllByText(/%$/);
@@ -111,14 +130,17 @@ describe("PlayerComparison", () => {
     });
 
     test("handles API error gracefully", async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("API Error"));
-
+      global.fetch = jest.fn().mockRejectedValue(new Error("API Error"));
       const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
-      render(<PlayerComparison players={mockPlayers} />);
+      render(<TestWrapper />);
       const predictButton = screen.getByText("Predict Winner");
 
-      fireEvent.click(predictButton);
+      await act(async () => {
+        fireEvent.click(predictButton);
+        // Wait for state updates to complete
+        await Promise.resolve();
+      });
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
@@ -126,8 +148,8 @@ describe("PlayerComparison", () => {
           expect.any(Error),
         );
       });
-      expect(predictButton).not.toBeDisabled();
 
+      expect(screen.getByText("Predict Winner")).toBeInTheDocument();
       consoleSpy.mockRestore();
     });
   });

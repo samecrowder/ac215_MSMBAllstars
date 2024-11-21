@@ -1,4 +1,14 @@
-export const players = [
+export interface Player { 
+  id: string;
+  name: string;
+  age: string;
+  country: string;
+  height: string;
+  weight: string;
+  imageUrl: string;
+}
+
+export const players: Player[] = [
   {
     id: "Roger Federer",
     name: "Roger Federer",
