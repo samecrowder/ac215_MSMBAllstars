@@ -2,6 +2,8 @@ import pytest
 import pandas as pd
 import sys
 import os
+from unittest.mock import MagicMock
+from io import StringIO
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -99,3 +101,24 @@ def test_create_matchup_data(sample_df):
     assert len(p1_features) == 1  # Matches history_len
     assert len(p2_features) == 1
     assert len(p1_features[0]) == len(p2_features[0])  # Same number of features
+
+
+def test_read_csv_from_gcs(monkeypatch):
+    # Mock the bucket and blob
+    mock_bucket = MagicMock()
+    mock_blob = MagicMock()
+    mock_bucket.blob.return_value = mock_blob
+
+    # Sample CSV content
+    csv_content = "tourney_date,winner_name,loser_name,w_stat1,l_stat1,draw_size\n2023-01-01,Player1,Player2,100,90,32"
+    mock_blob.download_as_text.return_value = csv_content
+
+    # Use absolute import for read_csv_from_gcs
+    from src.preprocessing_for_training_data.preprocess import read_csv_from_gcs
+
+    df = read_csv_from_gcs(mock_bucket, "dummy_file.csv")
+
+    # Assertions
+    assert isinstance(df, pd.DataFrame)
+    assert df.shape == (1, 6)
+    assert df.iloc[0]["winner_name"] == "Player1"
