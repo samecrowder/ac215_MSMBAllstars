@@ -2,8 +2,6 @@ import pytest
 import pandas as pd
 import sys
 import os
-from unittest.mock import MagicMock
-from io import StringIO
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
