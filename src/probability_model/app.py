@@ -11,7 +11,26 @@ from google.cloud import storage
 from pydantic import BaseModel
 from sklearn.preprocessing import StandardScaler
 
-from .model import TennisLSTM
+if os.environ.get("ENV") == "prod":
+    from .model import TennisLSTM
+else:
+    # Mock TennisLSTM for non-prod environments
+    class TennisLSTM:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def to(self, *args, **kwargs):
+            return self
+
+        def load_state_dict(self, *args, **kwargs):
+            pass
+
+        def eval(self):
+            pass
+
+        def __call__(self, *args, **kwargs):
+            return torch.tensor([0.5])
+
 
 if os.environ.get("ENV") != "prod":
     from dotenv import load_dotenv
@@ -55,48 +74,49 @@ def read_pkl_file_from_gcs(bucket, file_name):
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
 logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
 
-# Check if GPU is available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-logging.info(f"Using device: {device}")
+if os.environ.get("ENV") == "prod":
+    # Check if GPU is available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logging.info(f"Using device: {device}")
 
-# Initialize GCS client
-client = storage.Client()
-bucket = client.bucket(BUCKET_NAME)
+    # Initialize GCS client
+    client = storage.Client()
+    bucket = client.bucket(BUCKET_NAME)
 
-# Read data file
-data = read_pkl_file_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
-X1 = data["X1"]
-X2 = data["X2"]
-H2H = data["H2H"]
+    # Read data file
+    data = read_pkl_file_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
+    X1 = data["X1"]
+    X2 = data["X2"]
+    H2H = data["H2H"]
 
-# Assuming X1 and X2 are 3D arrays with shape (samples, time_steps, features)
-samples, time_steps, features = X1.shape
+    # Assuming X1 and X2 are 3D arrays with shape (samples, time_steps, features)
+    samples, time_steps, features = X1.shape
 
-# Reshape X1 and X2 to 2D
-X1_reshaped = X1.reshape(-1, features)
-X2_reshaped = X2.reshape(-1, features)
+    # Reshape X1 and X2 to 2D
+    X1_reshaped = X1.reshape(-1, features)
+    X2_reshaped = X2.reshape(-1, features)
 
-# TODO: save scaler objects during training time and fetch from GCS
+    # TODO: save scaler objects during training time and fetch from GCS
 
-# Initialize scalers
-scaler_X1 = StandardScaler()
-scaler_X2 = StandardScaler()
-# scaler_H2H = StandardScaler()
+    # Initialize scalers
+    scaler_X1 = StandardScaler()
+    scaler_X2 = StandardScaler()
+    # scaler_H2H = StandardScaler()
 
-# Fit and transform X1 and X2
-scaler_X1.fit(X1_reshaped)
-scaler_X2.fit(X2_reshaped)
-# H2H_scaled = scaler_H2H.fit(H2H_reshaped)
+    # Fit and transform X1 and X2
+    scaler_X1.fit(X1_reshaped)
+    scaler_X2.fit(X2_reshaped)
+    # H2H_scaled = scaler_H2H.fit(H2H_reshaped)
 
-# Initialize model
-input_size = X1.shape[-1]
-h2h_size = H2H.shape[-1]
+    # Initialize model
+    input_size = X1.shape[-1]
+    h2h_size = H2H.shape[-1]
 
-# Load the model weights from GCS
-weights = read_pt_file_from_gcs(bucket, os.path.join(DATA_FOLDER, WEIGHTS_FILE))
-model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS, h2h_size)
-model.load_state_dict(weights)
-model.to(device)
+    # Load the model weights from GCS
+    weights = read_pt_file_from_gcs(bucket, os.path.join(DATA_FOLDER, WEIGHTS_FILE))
+    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS, h2h_size)
+    model.load_state_dict(weights)
+    model.to(device)
 
 
 app = fastapi.FastAPI()
