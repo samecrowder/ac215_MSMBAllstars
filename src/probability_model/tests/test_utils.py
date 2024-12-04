@@ -1,6 +1,7 @@
 import os
 import pytest
 from unittest.mock import patch
+from utils import get_and_assert_env_var
 import sys
 import random
 import string
@@ -15,8 +16,6 @@ import math
 import tempfile
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from utils import get_and_assert_env_var
 
 
 def generate_random_string(length=10):
