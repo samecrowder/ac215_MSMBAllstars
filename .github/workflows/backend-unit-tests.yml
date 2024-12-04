@@ -54,4 +54,4 @@ jobs:
           ENV: "test"
         run: |
           cd src/${{ matrix.service }}
-          PYTHONPATH=$PYTHONPATH:$(pwd) pipenv run pytest tests/ -v --cov=. --cov-report=term-missing --cov-fail-under=50
+          PYTHONPATH=$PYTHONPATH:$(pwd) pipenv run pytest tests/ -v --cov=. --cov-report=term-missing --cov-fail-under=70
