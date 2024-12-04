@@ -1,0 +1,205 @@
+# Save this as tennis-predictor.yaml
+
+# ConfigMap for environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tennis-env
+data:
+  PORT: "8000"
+  API_PORT: "8000"
+  MODEL_PORT: "8001"
+  LLM_PORT: "8002"
+  ENV: "dev"
+  GCP_PROJECT: "tennis-match-predictor"
+  GCP_ZONE: "us-central1-a"
+  GCS_BUCKET_NAME: "msmballstars-data"
+  DATA_FOLDER: "version1"
+  DATA_FILE: "combined_atp_matches.csv"
+  MODEL_HOST: "probability-model"
+  LLM_HOST: "llm"
+---
+# API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  selector:
+    app: api
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: LoadBalancer
+---
+# API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: gcr.io/tennis-match-predictor/api
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: tennis-env
+          volumeMounts:
+            - name: gcp-key
+              mountPath: "/secrets"
+              readOnly: true
+          env:
+            - name: PORT
+              value: "8000"
+      volumes:
+        - name: gcp-key
+          secret:
+            secretName: gcp-credentials
+---
+# Probability Model Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: probability-model
+spec:
+  selector:
+    app: probability-model
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+---
+# Probability Model Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probability-model
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: probability-model
+  template:
+    metadata:
+      labels:
+        app: probability-model
+    spec:
+      containers:
+        - name: probability-model
+          image: gcr.io/tennis-match-predictor/probability-model
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - configMapRef:
+                name: tennis-env
+          volumeMounts:
+            - name: gcp-key
+              mountPath: "/secrets"
+              readOnly: true
+          env:
+            - name: PORT
+              value: "8001"
+      volumes:
+        - name: gcp-key
+          secret:
+            secretName: gcp-credentials
+---
+# LLM Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm
+spec:
+  selector:
+    app: llm
+  ports:
+    - protocol: TCP
+      port: 8002
+      targetPort: 8002
+---
+# LLM Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm
+  template:
+    metadata:
+      labels:
+        app: llm
+    spec:
+      containers:
+        - name: llm
+          image: gcr.io/tennis-match-predictor/llm
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - configMapRef:
+                name: tennis-env
+          volumeMounts:
+            - name: gcp-key
+              mountPath: "/secrets"
+              readOnly: true
+          env:
+            - name: PORT
+              value: "8002"
+      volumes:
+        - name: gcp-key
+          secret:
+            secretName: gcp-credentials
+---
+# Ollama Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+spec:
+  selector:
+    app: ollama
+  ports:
+    - protocol: TCP
+      port: 11434
+      targetPort: 11434
+---
+# Ollama Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+        - name: ollama
+          image: gcr.io/tennis-match-predictor/ollama
+          ports:
+            - containerPort: 11434
+          volumeMounts:
+            - name: ollama-storage
+              mountPath: /root/.ollama
+      volumes:
+        - name: ollama-storage
+          emptyDir: {}
