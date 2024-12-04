@@ -1,6 +1,6 @@
 import os
 
-if os.environ.get("ENV") == "prod":
+if os.environ.get("ENV") != "test":
     import torch
     import torch.nn as nn
 else:

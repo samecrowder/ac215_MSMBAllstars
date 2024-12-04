@@ -11,7 +11,7 @@ from google.cloud import storage
 from pydantic import BaseModel
 from sklearn.preprocessing import StandardScaler
 
-if os.environ.get("ENV") == "prod":
+if os.environ.get("ENV") != "test":
     from .model import TennisLSTM
 else:
     # Mock TennisLSTM for non-prod environments
@@ -74,7 +74,7 @@ def read_pkl_file_from_gcs(bucket, file_name):
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
 logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
 
-if os.environ.get("ENV") == "prod":
+if os.environ.get("ENV") != "test":
     # Check if GPU is available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
