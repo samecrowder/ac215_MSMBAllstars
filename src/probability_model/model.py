@@ -1,5 +1,20 @@
-import torch
-from torch import nn
+import os
+
+if os.environ.get("ENV") == "prod":
+    import torch
+    import torch.nn as nn
+else:
+    # Mock torch for development/testing
+    class nn:
+        class Module:
+            def __init__(self):
+                pass
+
+            def to(self, device):
+                return self
+
+            def eval(self):
+                return self
 
 
 def scale_data(X1, X2, H2H, scaler_X1, scaler_X2, scaler_H2H):
