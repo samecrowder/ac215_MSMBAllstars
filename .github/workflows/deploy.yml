@@ -40,6 +40,11 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
+      - name: Install GKE Auth Plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+          gcloud components update
+
       - name: Install Ansible and dependencies
         run: |
           python -m pip install --upgrade pip
@@ -49,6 +54,7 @@ jobs:
       - name: Run Ansible Playbook
         env:
           CI: "true"
+          USE_GKE_GCLOUD_AUTH_PLUGIN: True
         run: |
           cd src/ansible
           ansible-playbook site.yml
