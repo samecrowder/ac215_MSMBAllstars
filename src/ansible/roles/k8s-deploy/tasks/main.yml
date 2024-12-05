@@ -1,12 +1,23 @@
 ---
+- name: Create default namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: default
+
 - name: Apply k8s configurations
   kubernetes.core.k8s:
     state: present
     src: ../../src/k8s-config.yaml
+    namespace: default
 
 - name: Deploy API
   kubernetes.core.k8s:
     state: present
+    namespace: default
     definition:
       apiVersion: apps/v1
       kind: Deployment
