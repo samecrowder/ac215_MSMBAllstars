@@ -47,6 +47,8 @@ jobs:
           ansible-galaxy collection install google.cloud kubernetes.core
 
       - name: Run Ansible Playbook
+        env:
+          CI: "true"
         run: |
           cd src/ansible
           ansible-playbook site.yml
