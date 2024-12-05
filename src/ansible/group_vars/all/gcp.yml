@@ -1,0 +1,6 @@
+---
+gcp_project: tennis-match-predictor
+gcp_cred_file: ../../../secrets/super-admin-key.json
+gcp_auth_kind: serviceaccount
+gcp_scopes:
+  - https://www.googleapis.com/auth/cloud-platform

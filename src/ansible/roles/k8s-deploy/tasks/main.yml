@@ -1,8 +1,8 @@
 ---
-- name: Create ConfigMap
+- name: Apply k8s configurations
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('file', '../../../src/k8s-config.yaml') | from_yaml }}"
+    src: ../../src/k8s-config.yaml
 
 - name: Deploy API
   kubernetes.core.k8s:
