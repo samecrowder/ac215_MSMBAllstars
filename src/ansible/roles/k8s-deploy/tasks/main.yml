@@ -54,6 +54,12 @@
                 image: "gcr.io/tennis-match-predictor/api:{{ lookup('env', 'IMAGE_TAG') }}"
                 ports:
                   - containerPort: 8000
+                env:
+                  - name: PORT
+                    valueFrom:
+                      configMapKeyRef:
+                        name: tennis-env
+                        key: API_PORT
                 envFrom:
                   - configMapRef:
                       name: tennis-env
@@ -66,3 +72,148 @@
               - name: gcp-key
                 secret:
                   secretName: gcp-credentials
+
+- name: Deploy Probability Model
+  kubernetes.core.k8s:
+    state: present
+    force: true
+    namespace: default
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: probability-model
+        annotations:
+          kubernetes.io/change-cause: "Deploy {{ lookup('env', 'IMAGE_TAG') }}"
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: probability-model
+        template:
+          metadata:
+            labels:
+              app: probability-model
+            annotations:
+              rollme: "{{ lookup('env', 'IMAGE_TAG') }}"
+          spec:
+            containers:
+              - name: probability-model
+                image: "gcr.io/tennis-match-predictor/probability-model:{{ lookup('env', 'IMAGE_TAG') }}"
+                ports:
+                  - containerPort: 8001
+                env:
+                  - name: PORT
+                    valueFrom:
+                      configMapKeyRef:
+                        name: tennis-env
+                        key: MODEL_PORT
+                  - name: DATA_FILE
+                    value: "training_data_lookback=10.pkl"
+                  - name: WEIGHTS_FILE
+                    value: "prob_model.pt"
+                  - name: HIDDEN_SIZE
+                    value: "32"
+                  - name: NUM_LAYERS
+                    value: "2"
+                  - name: CUDA_VISIBLE_DEVICES
+                    value: ""
+                  - name: TORCH_DEVICE
+                    value: "cpu"
+                envFrom:
+                  - configMapRef:
+                      name: tennis-env
+                volumeMounts:
+                  - mountPath: /secrets
+                    name: gcp-key
+                    readOnly: true
+                imagePullPolicy: Always
+            volumes:
+              - name: gcp-key
+                secret:
+                  secretName: gcp-credentials
+
+- name: Deploy LLM Service
+  kubernetes.core.k8s:
+    state: present
+    force: true
+    namespace: default
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: llm
+        annotations:
+          kubernetes.io/change-cause: "Deploy {{ lookup('env', 'IMAGE_TAG') }}"
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: llm
+        template:
+          metadata:
+            labels:
+              app: llm
+            annotations:
+              rollme: "{{ lookup('env', 'IMAGE_TAG') }}"
+          spec:
+            containers:
+              - name: llm
+                image: "gcr.io/tennis-match-predictor/llm:{{ lookup('env', 'IMAGE_TAG') }}"
+                ports:
+                  - containerPort: 8002
+                env:
+                  - name: PORT
+                    valueFrom:
+                      configMapKeyRef:
+                        name: tennis-env
+                        key: LLM_PORT
+                envFrom:
+                  - configMapRef:
+                      name: tennis-env
+                volumeMounts:
+                  - mountPath: /secrets
+                    name: gcp-key
+                    readOnly: true
+                imagePullPolicy: Always
+            volumes:
+              - name: gcp-key
+                secret:
+                  secretName: gcp-credentials
+
+- name: Deploy Ollama
+  kubernetes.core.k8s:
+    state: present
+    force: true
+    namespace: default
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: ollama
+        annotations:
+          kubernetes.io/change-cause: "Deploy {{ lookup('env', 'IMAGE_TAG') }}"
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: ollama
+        template:
+          metadata:
+            labels:
+              app: ollama
+            annotations:
+              rollme: "{{ lookup('env', 'IMAGE_TAG') }}"
+          spec:
+            containers:
+              - name: ollama
+                image: "gcr.io/tennis-match-predictor/ollama:{{ lookup('env', 'IMAGE_TAG') }}"
+                ports:
+                  - containerPort: 11434
+                volumeMounts:
+                  - mountPath: /root/.ollama
+                    name: ollama-storage
+                imagePullPolicy: Always
+            volumes:
+              - name: ollama-storage
+                emptyDir: {}
