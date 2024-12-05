@@ -1,0 +1,42 @@
+---
+- name: Debug auth info
+  debug:
+    msg:
+      - "Auth kind: {{ gcp_auth_kind }}"
+      - "Project: {{ gcp_project }}"
+      - "Service account: {{ lookup('env', 'GOOGLE_APPLICATION_CREDENTIALS') }}"
+
+- name: Get current identity
+  shell: gcloud config list account --format "value(core.account)"
+  register: gcloud_identity
+
+- name: Show current identity
+  debug:
+    msg: "Current gcloud identity: {{ gcloud_identity.stdout }}"
+
+- name: Create GKE cluster
+  google.cloud.gcp_container_cluster:
+    name: tennis-predictor-cluster
+    location: us-central1-a
+    project: "{{ gcp_project }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_cred_file if gcp_auth_kind == 'serviceaccount' else omit }}"
+    scopes: "{{ gcp_scopes }}"
+    initial_node_count: 3
+    node_config:
+      machine_type: e2-medium
+      disk_size_gb: 100
+      oauth_scopes:
+        - https://www.googleapis.com/auth/devstorage.read_only
+        - https://www.googleapis.com/auth/logging.write
+        - https://www.googleapis.com/auth/monitoring
+        - https://www.googleapis.com/auth/servicecontrol
+        - https://www.googleapis.com/auth/service.management.readonly
+        - https://www.googleapis.com/auth/trace.append
+    state: present
+
+- name: Get cluster credentials
+  shell: >
+    gcloud container clusters get-credentials tennis-predictor-cluster
+    --zone us-central1-a
+    --project {{ gcp_project }}

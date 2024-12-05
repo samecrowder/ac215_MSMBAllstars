@@ -99,3 +99,55 @@ def test_create_matchup_data(sample_df):
     assert len(p1_features) == 1  # Matches history_len
     assert len(p2_features) == 1
     assert len(p1_features[0]) == len(p2_features[0])  # Same number of features
+
+
+def test_data_preprocessing_pipeline(sample_df):
+    """Test the core data processing pipeline without GCS dependencies"""
+    from preprocess import LOOKBACK
+    from helper import (
+        create_matchup_data,
+        get_h2h_match_history_since_date,
+        get_h2h_stats,
+        get_player_last_nplus1_matches_since_date,
+        preprocess_data,
+    )
+
+    # Convert date column to datetime
+    sample_df["tourney_date"] = pd.to_datetime(sample_df["tourney_date"])
+
+    # Process the sample data
+    player_dfs, feature_cols = preprocess_data(sample_df)
+
+    # Test data transformation for one matchup
+    matchup = sample_df.iloc[0]
+    winner = matchup["winner_name"]
+    loser = matchup["loser_name"]
+    date = matchup["tourney_date"]
+
+    # Get player histories
+    winner_history = get_player_last_nplus1_matches_since_date(
+        player_dfs, winner, LOOKBACK, date
+    )
+    loser_history = get_player_last_nplus1_matches_since_date(
+        player_dfs, loser, LOOKBACK, date
+    )
+
+    # Get H2H history
+    winner_h2h_history = get_h2h_match_history_since_date(
+        player_dfs, winner, loser, date
+    )
+    winner_h2h_features = get_h2h_stats(winner_h2h_history)
+
+    # Create matchup features
+    winner_features, loser_features = create_matchup_data(
+        winner_history, loser_history, feature_cols, LOOKBACK
+    )
+
+    # Assertions
+    assert isinstance(winner_features, list)
+    assert isinstance(loser_features, list)
+    assert len(winner_features) == LOOKBACK
+    assert len(loser_features) == LOOKBACK
+    assert isinstance(winner_h2h_features, list)
+    assert len(winner_h2h_features) == 2
+    assert 0 <= winner_h2h_features[0] <= 1  # Win percentage should be between 0 and 1

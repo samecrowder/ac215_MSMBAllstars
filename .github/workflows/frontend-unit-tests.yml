@@ -55,12 +55,12 @@ jobs:
           FUNCTIONS=$(echo $COVERAGE | jq -r '.total.functions.pct')
           LINES=$(echo $COVERAGE | jq -r '.total.lines.pct')
 
-          if (( $(echo "$STATEMENTS < 50" | bc -l) )) || \
-             (( $(echo "$BRANCHES < 50" | bc -l) )) || \
-             (( $(echo "$FUNCTIONS < 50" | bc -l) )) || \
-             (( $(echo "$LINES < 50" | bc -l) )); then
-            echo "❌ Coverage is below 50%"
+          if (( $(echo "$STATEMENTS < 70" | bc -l) )) || \
+             (( $(echo "$BRANCHES < 70" | bc -l) )) || \
+             (( $(echo "$FUNCTIONS < 70" | bc -l) )) || \
+             (( $(echo "$LINES < 70" | bc -l) )); then
+            echo "❌ Coverage is below 70%"
             exit 1
           else
-            echo "✅ Coverage is above 50%"
+            echo "✅ Coverage is above 70%"
           fi
