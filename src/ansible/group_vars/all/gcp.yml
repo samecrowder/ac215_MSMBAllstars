@@ -2,6 +2,6 @@
 gcp_project: tennis-match-predictor
 # Use service account file if it exists, otherwise use Workload Identity
 gcp_cred_file: "{{ lookup('env', 'GOOGLE_APPLICATION_CREDENTIALS', default='../../../secrets/super-admin-key.json') }}"
-gcp_auth_kind: "{{ 'serviceaccount' if lookup('env', 'CI', default='false') == 'false' else 'external_account' }}"
+gcp_auth_kind: "{{ 'serviceaccount' if lookup('env', 'CI', default='false') == 'false' else 'application' }}"
 gcp_scopes:
   - https://www.googleapis.com/auth/cloud-platform
