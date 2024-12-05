@@ -1,0 +1,24 @@
+---
+- name: Create GKE cluster
+  google.cloud.gcp_container_cluster:
+    name: tennis-predictor-cluster
+    location: us-central1-a
+    project: tennis-match-predictor
+    initial_node_count: 3
+    node_config:
+      machine_type: e2-medium
+      disk_size_gb: 100
+      oauth_scopes:
+        - https://www.googleapis.com/auth/devstorage.read_only
+        - https://www.googleapis.com/auth/logging.write
+        - https://www.googleapis.com/auth/monitoring
+        - https://www.googleapis.com/auth/servicecontrol
+        - https://www.googleapis.com/auth/service.management.readonly
+        - https://www.googleapis.com/auth/trace.append
+    state: present
+
+- name: Get cluster credentials
+  shell: >
+    gcloud container clusters get-credentials tennis-predictor-cluster
+    --zone us-central1-a
+    --project tennis-match-predictor

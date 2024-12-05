@@ -1,0 +1,33 @@
+---
+- name: Create ConfigMap
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', '../../../src/k8s-config.yaml') | from_yaml }}"
+
+- name: Deploy API
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: api
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: api
+        template:
+          metadata:
+            labels:
+              app: api
+          spec:
+            containers:
+              - name: api
+                image: gcr.io/tennis-match-predictor/api
+                ports:
+                  - containerPort: 8000
+                envFrom:
+                  - configMapRef:
+                      name: tennis-env
+# Add similar tasks for probability-model, llm, and ollama deployments

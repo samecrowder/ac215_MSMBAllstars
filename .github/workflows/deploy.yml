@@ -1,12 +1,12 @@
-name: Deploy to Cloud Run
+name: Deploy to GKE
 
 on:
   push:
     branches:
-      - main # Triggers on any push to main branch
+      - main
     paths:
       - "src/**"
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch:
 
 env:
   PROJECT_ID: tennis-match-predictor
@@ -35,23 +35,14 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Authorize Docker push
+      - name: Install Ansible
         run: |
-          gcloud auth configure-docker
+          sudo apt-add-repository ppa:ansible/ansible
+          sudo apt-get update
+          sudo apt-get install ansible
+          ansible-galaxy collection install google.cloud kubernetes.core
 
-      - name: Grant execute permission to deploy script
-        run: chmod +x src/deploy.sh
-
-      - name: Deploy to Cloud Run
-        working-directory: ./src
-        env:
-          GCP_PROJECT: ${{ env.PROJECT_ID }}
-          GCP_REGION: ${{ env.REGION }}
-          RUNNING_FROM_CI: "true"
-        run: ./deploy.sh
-
-      - name: Output Service URLs
+      - name: Run Ansible Playbook
         run: |
-          echo "API URL: https://api-470970511307.us-central1.run.app"
-          echo "Model URL: https://probability-model-470970511307.us-central1.run.app"
-          echo "LLM URL: https://llm-470970511307.us-central1.run.app"
+          cd ansible
+          ansible-playbook site.yml
