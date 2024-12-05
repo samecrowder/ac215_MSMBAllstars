@@ -1,4 +1,15 @@
 ---
+- name: Debug variables
+  debug:
+    msg:
+      - "IMAGE_TAG env var: '{{ lookup('env', 'IMAGE_TAG') }}'"
+      - "Git SHA: '{{ lookup('pipe', 'git rev-parse HEAD') }}'"
+      - "Current working directory: '{{ lookup('pipe', 'pwd') }}'"
+
+- name: Show what image we're about to deploy
+  debug:
+    msg: "About to deploy image: gcr.io/tennis-match-predictor/api:{{ lookup('env', 'IMAGE_TAG') }}"
+
 - name: Create default namespace
   kubernetes.core.k8s:
     state: present
@@ -17,12 +28,15 @@
 - name: Deploy API
   kubernetes.core.k8s:
     state: present
+    force: true
     namespace: default
     definition:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
         name: api
+        annotations:
+          kubernetes.io/change-cause: "Deploy {{ lookup('env', 'IMAGE_TAG') }}"
       spec:
         replicas: 1
         selector:
@@ -32,13 +46,23 @@
           metadata:
             labels:
               app: api
+            annotations:
+              rollme: "{{ lookup('env', 'IMAGE_TAG') }}"
           spec:
             containers:
               - name: api
-                image: gcr.io/tennis-match-predictor/api
+                image: "gcr.io/tennis-match-predictor/api:{{ lookup('env', 'IMAGE_TAG') }}"
                 ports:
                   - containerPort: 8000
                 envFrom:
                   - configMapRef:
                       name: tennis-env
-# todo(sam) Add similar tasks for probability-model, llm, and ollama deployments
+                volumeMounts:
+                  - mountPath: /secrets
+                    name: gcp-key
+                    readOnly: true
+                imagePullPolicy: Always
+            volumes:
+              - name: gcp-key
+                secret:
+                  secretName: gcp-credentials
