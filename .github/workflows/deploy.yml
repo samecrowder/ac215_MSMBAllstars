@@ -40,6 +40,45 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker
+
+      - name: Build and Push API Container
+        run: |
+          cd src/api
+          docker build -t gcr.io/$PROJECT_ID/api:${{ github.sha }} .
+          docker push gcr.io/$PROJECT_ID/api:${{ github.sha }}
+          # Also tag as latest
+          docker tag gcr.io/$PROJECT_ID/api:${{ github.sha }} gcr.io/$PROJECT_ID/api:latest
+          docker push gcr.io/$PROJECT_ID/api:latest
+
+      - name: Build and Push Probability Model Container
+        run: |
+          cd src/probability_model
+          docker build -t gcr.io/$PROJECT_ID/probability-model:${{ github.sha }} .
+          docker push gcr.io/$PROJECT_ID/probability-model:${{ github.sha }}
+          # Also tag as latest
+          docker tag gcr.io/$PROJECT_ID/probability-model:${{ github.sha }} gcr.io/$PROJECT_ID/probability-model:latest
+          docker push gcr.io/$PROJECT_ID/probability-model:latest
+
+      - name: Build and Push LLM Container
+        run: |
+          cd src/llm
+          docker build -t gcr.io/$PROJECT_ID/llm:${{ github.sha }} .
+          docker push gcr.io/$PROJECT_ID/llm:${{ github.sha }}
+          # Also tag as latest
+          docker tag gcr.io/$PROJECT_ID/llm:${{ github.sha }} gcr.io/$PROJECT_ID/llm:latest
+          docker push gcr.io/$PROJECT_ID/llm:latest
+
+      - name: Build and Push Ollama Container
+        run: |
+          cd src/llm
+          docker build -f ollama.Dockerfile -t gcr.io/$PROJECT_ID/ollama:${{ github.sha }} .
+          docker push gcr.io/$PROJECT_ID/ollama:${{ github.sha }}
+          # Also tag as latest
+          docker tag gcr.io/$PROJECT_ID/ollama:${{ github.sha }} gcr.io/$PROJECT_ID/ollama:latest
+          docker push gcr.io/$PROJECT_ID/ollama:latest
+
       - name: Install GKE Auth Plugin
         run: |
           gcloud components install gke-gcloud-auth-plugin
@@ -55,6 +94,7 @@ jobs:
         env:
           CI: "true"
           USE_GKE_GCLOUD_AUTH_PLUGIN: True
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           cd src/ansible
           ansible-playbook site.yml
