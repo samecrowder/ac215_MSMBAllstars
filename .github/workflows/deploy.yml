@@ -44,5 +44,5 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          cd ansible
+          cd src/ansible
           ansible-playbook site.yml
