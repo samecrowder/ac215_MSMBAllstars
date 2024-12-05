@@ -41,4 +41,4 @@
                 envFrom:
                   - configMapRef:
                       name: tennis-env
-# Add similar tasks for probability-model, llm, and ollama deployments
+# todo(sam) Add similar tasks for probability-model, llm, and ollama deployments
