@@ -111,6 +111,8 @@ spec:
           env:
             - name: PORT
               value: "8001"
+            - name: DATA_FILE
+              value: "training_data_lookback=10.pkl"
       volumes:
         - name: gcp-key
           secret:
