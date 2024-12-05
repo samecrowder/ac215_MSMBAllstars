@@ -113,6 +113,16 @@ spec:
               value: "8001"
             - name: DATA_FILE
               value: "training_data_lookback=10.pkl"
+            - name: WEIGHTS_FILE
+              value: "prob_model.pt"
+            - name: HIDDEN_SIZE
+              value: "32"
+            - name: NUM_LAYERS
+              value: "2"
+            - name: CUDA_VISIBLE_DEVICES
+              value: ""
+            - name: TORCH_DEVICE
+              value: "cpu"
       volumes:
         - name: gcp-key
           secret:
