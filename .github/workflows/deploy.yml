@@ -35,11 +35,12 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Install Ansible
+      - name: Install Ansible and dependencies
         run: |
           sudo apt-add-repository ppa:ansible/ansible
           sudo apt-get update
-          sudo apt-get install ansible
+          sudo apt-get install ansible python3-pip
+          pip3 install requests google-auth openshift pyyaml kubernetes
           ansible-galaxy collection install google.cloud kubernetes.core
 
       - name: Run Ansible Playbook
