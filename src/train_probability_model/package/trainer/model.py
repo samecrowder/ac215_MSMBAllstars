@@ -5,18 +5,18 @@ from torch import nn
 class TennisLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers):
         super(TennisLSTM, self).__init__()
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.4)
 
         self.lstm = nn.LSTM(
-            input_size, hidden_size, num_layers, batch_first=True, dropout=self.dropout
+            input_size, hidden_size, num_layers, batch_first=True, dropout=0.4
         )
 
         # Attention layer to score matches based on relevance
         self.attention = nn.Linear(hidden_size, 1)
 
-        # Final layers
-        self.fc = nn.Linear(hidden_size * 2, 64)  # Combines attended features
-        self.fc2 = nn.Linear(64, 1)
+        # Final layers - changed input size to hidden_size
+        self.fc = nn.Linear(hidden_size, 32)  # Takes difference of attended features
+        self.fc2 = nn.Linear(32, 1)
         self.relu = nn.ReLU()
 
     def compute_attention(self, sequence, opponent_mask=None):
