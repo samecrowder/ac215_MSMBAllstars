@@ -117,7 +117,8 @@ def main():
         device,
         data["X1"],
         data["X2"],
-        data["H2H"],
+        data["M1"],
+        data["M2"],
         data["y"],
         test_size=TEST_SIZE,
         batch_size=BATCH_SIZE,
@@ -125,8 +126,7 @@ def main():
 
     # Initialize model
     input_size = data["X1"].shape[-1]
-    h2h_size = data["H2H"].shape[-1]
-    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS, h2h_size).to(device)
+    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS).to(device)
     trainable_params = count_trainable_parameters(model)
     logging.info(f"Total number of trainable parameters: {trainable_params}")
 
