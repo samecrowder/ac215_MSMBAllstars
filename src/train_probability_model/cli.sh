@@ -13,8 +13,8 @@ export UUID=$(openssl rand -hex 6)
 export DISPLAY_NAME="tennis_training_job_$UUID"
 export MACHINE_TYPE="n1-standard-4"
 export REPLICA_COUNT=1
-# export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.1-13:latest"
-export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/pytorch-xla.2-3.py310:latest"
+export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.1-13:latest"
+# export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/pytorch-xla.2-3.py310:latest"
 export PYTHON_PACKAGE_URI="$GCS_BUCKET_URI/$TRAIN_TAR_DIR/$TRAINER_FILENAME"
 export PYTHON_MODULE="trainer.task"
 export ACCELERATOR_TYPE="NVIDIA_TESLA_T4"
@@ -22,8 +22,8 @@ export ACCELERATOR_COUNT=1
 export GCP_REGION="us-east1"
 
 # Training-specific environment variables
-export DATA_FOLDER="version2"
-export DATA_FILE="training_data_lookback=10.pkl"
+export DATA_FOLDER="version3"
+export DATA_FILE="training_data_lookback=30.pkl"
 export TEST_SIZE=0.2
 export BATCH_SIZE=32
 export HIDDEN_SIZE=64
