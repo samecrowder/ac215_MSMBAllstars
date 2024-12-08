@@ -40,8 +40,8 @@ def create_data_loaders(device, X1, X2, M1, M2, y, test_size, batch_size):
     device (torch.device): Device to use for training
     X1 (np.array): Array of player 1 features
     X2 (np.array): Array of player 2 features
-    M1 (np.array): Array of player 1 masks
-    M2 (np.array): Array of player 2 masks
+    M1 (np.array): Array of player 1 opponent masks
+    M2 (np.array): Array of player 2 opponent masks
     y (np.array): Array of labels
     test_size (float): Fraction of data to use for testing
     batch_size (int): Batch size for training
@@ -140,8 +140,8 @@ def train_model(
 
             # Forward pass
             optimizer.zero_grad()
-            output, _ = model(X1, X2, M1, M2)
-            loss = criterion(output.squeeze(), y)
+            outputs, _ = model(X1, X2, M1, M2)
+            loss = criterion(outputs.squeeze(), y)
 
             # Backward pass
             loss.backward()
@@ -160,8 +160,8 @@ def train_model(
             for X1, X2, M1, M2, y in val_loader:
 
                 # Forward pass
-                output, _ = model(X1, X2, M1, M2)
-                loss = criterion(output.squeeze(), y)
+                outputs, _ = model(X1, X2, M1, M2)
+                loss = criterion(outputs.squeeze(), y)
 
                 val_loss += loss.item()
                 val_preds.extend(
