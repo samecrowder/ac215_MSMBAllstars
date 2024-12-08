@@ -70,10 +70,26 @@ def create_data_loaders(device, X1, X2, M1, M2, y, test_size, batch_size):
     X2_scaled = X2_scaled.reshape(samples, time_steps, features)
 
     # Split the scaled data
-    X1_train, X1_test, X2_train, X2_test, M1_train, M1_test, M2_train, M2_test, y_train, y_test = (
-        train_test_split(
-            X1_scaled, X2_scaled, M1, M2, y, test_size=test_size, random_state=42, shuffle=False
-        )
+    (
+        X1_train,
+        X1_test,
+        X2_train,
+        X2_test,
+        M1_train,
+        M1_test,
+        M2_train,
+        M2_test,
+        y_train,
+        y_test,
+    ) = train_test_split(
+        X1_scaled,
+        X2_scaled,
+        M1,
+        M2,
+        y,
+        test_size=test_size,
+        random_state=42,
+        shuffle=False,
     )
 
     logging.info(f"Training samples: {len(X1_train)}")
