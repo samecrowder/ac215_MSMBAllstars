@@ -231,6 +231,8 @@ def test_edge_cases(sample_training_data):
 
     # Scale to handle extreme values
     scaler = StandardScaler()
-    scaled_features = scaler.fit_transform(sample_training_data.drop(["winner", "opponent_mask"], axis=1))
+    scaled_features = scaler.fit_transform(
+        sample_training_data.drop(["winner", "opponent_mask"], axis=1)
+    )
 
     assert not np.isinf(scaled_features).any()

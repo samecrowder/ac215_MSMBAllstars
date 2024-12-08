@@ -69,7 +69,7 @@ def main():
         )
 
         # Skip if either player has fewer matches than LOOKBACK
-        if len(winner_history) < LOOKBACK or len(loser_history) < LOOKBACK:
+        if len(winner_history) < LOOKBACK + 1 or len(loser_history) < LOOKBACK + 1:
             continue
 
         # Create matchup data with opponent masks
