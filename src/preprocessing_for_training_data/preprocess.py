@@ -9,8 +9,6 @@ from io import BytesIO, StringIO
 
 from helper import (
     create_matchup_data,
-    get_h2h_match_history_since_date,
-    get_h2h_stats,
     get_player_last_nplus1_matches_since_date,
     preprocess_data,
 )

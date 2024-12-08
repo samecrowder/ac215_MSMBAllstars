@@ -58,21 +58,6 @@ def get_player_last_nplus1_matches_since_date(
     )
 
 
-def get_h2h_match_history(
-    player_dfs: Dict[str, Any], player_a_id: str, player_b_id: str
-) -> pd.DataFrame:
-    return player_dfs[player_a_id][player_dfs[player_a_id]["opponent"] == player_b_id]
-
-
-def get_h2h_match_history_since_date(
-    player_dfs: Dict[str, Any], player_a_id: str, player_b_id: str, date: str
-) -> pd.DataFrame:
-    return player_dfs[player_a_id][
-        (player_dfs[player_a_id]["opponent"] == player_b_id)
-        & (player_dfs[player_a_id]["tourney_date"] < date)
-    ]
-
-
 def get_h2h_stats(h2h_df: pd.DataFrame) -> List[float]:
     h2h_wins = h2h_df["is_winner"].sum()
     h2h_total = len(h2h_df)
