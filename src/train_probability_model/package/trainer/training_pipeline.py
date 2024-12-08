@@ -149,9 +149,9 @@ def train_model(
     """
     for epoch in range(num_epochs):
         model.train()
-        total_loss = 0
-        batch_count = 0
-
+        train_loss = 0.0
+        train_preds = []
+        train_true = []
         for X1, X2, M1, M2, y in train_loader:
 
             # Forward pass
