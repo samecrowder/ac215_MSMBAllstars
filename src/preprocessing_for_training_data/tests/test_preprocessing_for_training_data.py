@@ -104,8 +104,8 @@ def test_data_preprocessing_pipeline(sample_df):
     # Use the last match (2023-01-04) to ensure we have some history
     matchup = sample_df.iloc[-1]  # Changed from iloc[0] to iloc[-1]
     winner = matchup["winner_name"]  # Player2
-    loser = matchup["loser_name"]   # Player1
-    date = matchup["tourney_date"]   # 2023-01-04
+    loser = matchup["loser_name"]  # Player1
+    date = matchup["tourney_date"]  # 2023-01-04
 
     # Get player histories
     winner_history = get_player_last_nplus1_matches_since_date(
@@ -125,11 +125,15 @@ def test_data_preprocessing_pipeline(sample_df):
     assert isinstance(loser_features, list)
     assert isinstance(winner_mask, list)
     assert isinstance(loser_mask, list)
-    assert len(winner_features) <= LOOKBACK  # Can be less than LOOKBACK if not enough history
+    assert (
+        len(winner_features) <= LOOKBACK
+    )  # Can be less than LOOKBACK if not enough history
     assert len(loser_features) <= LOOKBACK
     assert len(winner_mask) == len(winner_features)
     assert len(loser_mask) == len(loser_features)
     if len(winner_features) > 0:
-        assert all(isinstance(x, (int, float)) for x in winner_features[0])  # Check feature types
+        assert all(
+            isinstance(x, (int, float)) for x in winner_features[0]
+        )  # Check feature types
     if len(loser_features) > 0:
         assert all(isinstance(x, (int, float)) for x in loser_features[0])

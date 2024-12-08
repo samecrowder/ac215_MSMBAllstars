@@ -55,7 +55,7 @@ def main():
     df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y-%m-%d")
     player_dfs, feature_cols = preprocess_data(df)
     X1, X2, M1, M2, y = [], [], [], [], []  # M1, M2 are opponent masks
-    
+
     for _, matchup in tqdm(df.iterrows()):
         winner = matchup["winner_name"]
         loser = matchup["loser_name"]
@@ -77,7 +77,7 @@ def main():
             winner_history, loser_history, feature_cols, LOOKBACK
         )
 
-        # Add winning match 
+        # Add winning match
         X1.append(winner_features)
         X2.append(loser_features)
         M1.append(winner_mask)
