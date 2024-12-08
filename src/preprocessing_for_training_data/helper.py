@@ -28,7 +28,9 @@ def preprocess_data(df):
             player_matches["loser_name"],
             player_matches["winner_name"],
         )
-        player_matches = player_matches.sort_values("tourney_date").reset_index(drop=True)
+        player_matches = player_matches.sort_values("tourney_date").reset_index(
+            drop=True
+        )
         player_dfs[player] = player_matches
 
     return player_dfs, feature_cols
@@ -89,7 +91,7 @@ def create_matchup_data(
 
     for df, features, opponents in [
         (p1_history, p1_features, p1_opponents),
-        (p2_history, p2_features, p2_opponents)
+        (p2_history, p2_features, p2_opponents),
     ]:
         for i, matchup in df.iterrows():
             if i == 0:
@@ -101,7 +103,9 @@ def create_matchup_data(
             # Extract match features
             match_features = [
                 1 if matchup["is_winner"] == 1 else 0,  # player_is_winner
-                (df.iloc[i]["tourney_date"] - df.iloc[i - 1]["tourney_date"]).days,  # time_since_last_match
+                (
+                    df.iloc[i]["tourney_date"] - df.iloc[i - 1]["tourney_date"]
+                ).days,  # time_since_last_match
                 matchup["draw_size"],  # draw_size
                 1 if matchup["surface"] == "clay" else 0,  # surface_clay
                 1 if matchup["surface"] == "grass" else 0,  # surface_grass
@@ -128,8 +132,8 @@ def create_matchup_data(
             features.append(match_features)
 
     # Get player names by counting occurrences in their histories
-    p1_names = pd.concat([p1_history['winner_name'], p1_history['loser_name']])
-    p2_names = pd.concat([p2_history['winner_name'], p2_history['loser_name']])
+    p1_names = pd.concat([p1_history["winner_name"], p1_history["loser_name"]])
+    p2_names = pd.concat([p2_history["winner_name"], p2_history["loser_name"]])
     p1_name = p1_names.value_counts().index[0]  # Most frequent name is the player
     p2_name = p2_names.value_counts().index[0]
 
