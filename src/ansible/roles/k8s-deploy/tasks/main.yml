@@ -168,6 +168,11 @@
                       configMapKeyRef:
                         name: tennis-env
                         key: LLM_PORT
+                  - name: OLLAMA_HOST
+                    valueFrom:
+                      configMapKeyRef:
+                        name: tennis-env
+                        key: OLLAMA_HOST
                 envFrom:
                   - configMapRef:
                       name: tennis-env

@@ -6,18 +6,19 @@ kind: ConfigMap
 metadata:
   name: tennis-env
 data:
+  ENV: "prod"
   PORT: "8000"
   API_PORT: "8000"
   MODEL_PORT: "8001"
+  MODEL_HOST: "probability-model"
   LLM_PORT: "8002"
-  ENV: "dev"
+  LLM_HOST: "llm"
+  OLLAMA_HOST: "ollama"
   GCP_PROJECT: "tennis-match-predictor"
   GCP_ZONE: "us-central1-a"
   GCS_BUCKET_NAME: "msmballstars-data"
   DATA_FOLDER: "version1"
   DATA_FILE: "combined_atp_matches.csv"
-  MODEL_HOST: "probability-model"
-  LLM_HOST: "llm"
 ---
 # API Service
 apiVersion: v1
