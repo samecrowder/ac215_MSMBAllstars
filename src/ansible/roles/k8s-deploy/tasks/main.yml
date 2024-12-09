@@ -226,11 +226,13 @@
 - name: Deploy Ingress
   kubernetes.core.k8s:
     state: present
+    namespace: default
     definition:
       apiVersion: networking.k8s.io/v1
       kind: Ingress
       metadata:
         name: api-ingress
+        namespace: default
         annotations:
           kubernetes.io/ingress.class: "gce"
           kubernetes.io/ingress.allow-http: "false"
