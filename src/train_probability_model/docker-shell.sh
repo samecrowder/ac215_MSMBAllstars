@@ -17,6 +17,7 @@ export HIDDEN_SIZE=32
 export NUM_LAYERS=2
 export LR=0.001
 export NUM_EPOCHS=30
+export RUN_SWEEP=1
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/model-training-account.json
 
 # Read WANDB_KEY from JSON file
@@ -61,5 +62,5 @@ docker run --rm -it \
 -e LR=$LR \
 -e NUM_EPOCHS=$NUM_EPOCHS \
 -e WANDB_KEY=$WANDB_KEY \
+-e RUN_SWEEP=$RUN_SWEEP \
 -e DEV=1 $IMAGE_NAME
- 

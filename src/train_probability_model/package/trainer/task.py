@@ -41,6 +41,9 @@ def parse_args():
     parser.add_argument(
         "--wandb-key", type=str, required=True, help="Weights & Biases API key"
     )
+    parser.add_argument(
+        "--run-sweep", type=int, required=True, help="Whether to run hyperparameter sweep (1) or not (0)"
+    )
 
     args = parser.parse_args()
 
@@ -55,6 +58,7 @@ def parse_args():
     os.environ["LR"] = str(args.lr)
     os.environ["NUM_EPOCHS"] = str(args.num_epochs)
     os.environ["WANDB_KEY"] = args.wandb_key
+    os.environ["RUN_SWEEP"] = str(args.run_sweep)
 
     # Log all settings
     logging.info("=== Training Configuration ===")
@@ -67,6 +71,7 @@ def parse_args():
     logging.info(f"Number of Layers: {args.num_layers}")
     logging.info(f"Learning Rate: {args.lr}")
     logging.info(f"Number of Epochs: {args.num_epochs}")
+    logging.info(f"Run Sweep: {args.run_sweep}")
     logging.info("===========================")
 
     return args

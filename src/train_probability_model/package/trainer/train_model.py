@@ -26,6 +26,7 @@ HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE"))
 NUM_LAYERS = int(os.environ.get("NUM_LAYERS"))
 LR = float(os.environ.get("LR"))
 NUM_EPOCHS = int(os.environ.get("NUM_EPOCHS"))
+RUN_SWEEP = bool(os.environ.get("RUN_SWEEP"))
 WANDB_KEY = os.environ.get("WANDB_KEY")
 
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
@@ -83,23 +84,7 @@ class WandbCallback:
             wandb.run.summary["best_val_f1"] = val_f1
 
 
-def main():
-    logging.info("Starting training script")
-
-    # Initialize wandb
-    wandb.login(key=WANDB_KEY)
-    wandb.init(
-        project="tennis-match-predictor",
-        config={
-            "test_size": TEST_SIZE,
-            "batch_size": BATCH_SIZE,
-            "hidden_size": HIDDEN_SIZE,
-            "num_layers": NUM_LAYERS,
-            "learning_rate": LR,
-            "num_epochs": NUM_EPOCHS,
-        },
-    )
-
+def run_training_setup(wandb_run, hidden_size, num_layers, learning_rate, test_size, batch_size):
     # Check if GPU is available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
@@ -120,13 +105,13 @@ def main():
         data["M1"],
         data["M2"],
         data["y"],
-        test_size=TEST_SIZE,
-        batch_size=BATCH_SIZE,
+        test_size=test_size,
+        batch_size=batch_size,
     )
 
     # Initialize model
     input_size = data["X1"].shape[-1]
-    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS).to(device)
+    model = TennisLSTM(input_size, hidden_size, num_layers).to(device)
     trainable_params = count_trainable_parameters(model)
     logging.info(f"Total number of trainable parameters: {trainable_params}")
 
@@ -136,8 +121,8 @@ def main():
     # Initialize AdamW optimizer with weight decay
     optimizer = torch.optim.AdamW(
         model.parameters(),
-        lr=LR,
-        amsgrad=True  # Better handling of sparse gradients
+        lr=learning_rate,
+        amsgrad=True
     )
     
     # Learning rate scheduler
@@ -149,7 +134,7 @@ def main():
         verbose=True
     )
     
-    wandb.watch(model)
+    wandb_run.watch(model)
     model = train_model(
         model,
         train_loader,
@@ -162,20 +147,88 @@ def main():
     )
 
     # Save model directly to GCS using BytesIO
-    gcs_output_path = f"{DATA_FOLDER}/prob_model.pt"
-    buffer = BytesIO()
-    torch.save(model.state_dict(), buffer)
-    buffer.seek(0)
+    # Save model only for non-sweep runs
+    if not RUN_SWEEP:
+        gcs_output_path = f"{DATA_FOLDER}/prob_model.pt"
+        buffer = BytesIO()
+        torch.save(model.state_dict(), buffer)
+        buffer.seek(0)
 
-    logging.info(f"Uploading model to Google Cloud Storage at: {gcs_output_path}")
-    bucket.blob(gcs_output_path).upload_from_file(
-        buffer, content_type="application/octet-stream"
+        logging.info(f"Uploading model to Google Cloud Storage at: {gcs_output_path}")
+        bucket.blob(gcs_output_path).upload_from_file(
+            buffer, content_type="application/octet-stream"
+        )
+        logging.info("Successfully uploaded model to Google Cloud Storage")
+
+
+def objective():
+    """Objective function for wandb sweep"""
+    # Initialize a new wandb run
+    wandb.init()
+    
+    # Get parameters from sweep config
+    config = wandb.config
+    
+    # Run training with sweep parameters
+    run_training_setup(
+        wandb,
+        hidden_size=config.hidden_size,
+        num_layers=config.num_layers,
+        learning_rate=LR,
+        test_size=TEST_SIZE,
+        batch_size=BATCH_SIZE
     )
-    logging.info("Successfully uploaded model to Google Cloud Storage")
-
+    
     wandb.finish()
 
-    logging.info("=== Training Pipeline Complete ===")
+
+def main():
+    logging.info("Starting training script")
+    
+    # Initialize wandb
+    wandb.login(key=WANDB_KEY)
+    
+    if RUN_SWEEP:
+        # Define sweep configuration
+        sweep_config = {
+            'method': 'random',
+            'metric': {
+                'name': 'val_f1',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'hidden_size': {
+                    'values': [HIDDEN_SIZE, HIDDEN_SIZE * 2, HIDDEN_SIZE * 4]
+                },
+                'num_layers': {
+                    'values': [max(1, NUM_LAYERS-1), NUM_LAYERS, NUM_LAYERS+1, NUM_LAYERS+2]
+                }
+            }
+        }
+        
+        # Initialize sweep
+        sweep_id = wandb.sweep(sweep_config, project="tennis-match-predictor")
+        
+        # Run sweep (will try all combinations)
+        wandb.agent(sweep_id, objective)
+    else:
+        # Regular single training run
+        wandb.init(
+            project="tennis-match-predictor",
+            config={
+                "test_size": TEST_SIZE,
+                "batch_size": BATCH_SIZE,
+                "hidden_size": HIDDEN_SIZE,
+                "num_layers": NUM_LAYERS,
+                "learning_rate": LR,
+                "num_epochs": NUM_EPOCHS,
+            },
+        )
+        
+        # Run training setup
+        run_training_setup(wandb, HIDDEN_SIZE, NUM_LAYERS, LR, TEST_SIZE, BATCH_SIZE)
+        wandb.finish()
+        logging.info("=== Training Pipeline Complete ===")
 
 
 if __name__ == "__main__":
