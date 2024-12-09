@@ -26,54 +26,74 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // init ws connection
-    const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
-    const isOnSecureUrl = apiUrl.startsWith("https://");
-    const wsUrl = isOnSecureUrl
-      ? apiUrl.replace("https://", "wss://")
-      : apiUrl.replace("http://", "ws://");
-    const ws = new WebSocket(`${wsUrl}/chat`, isOnSecureUrl ? ["wss"] : []);
-    ws.onmessage = (event) => {
-      if (event.data === END_MARKER) {
-        // set the last message to not pending
-        setMessages((prevMessages) => {
-          if (prevMessages.length > 0) {
-            return [
-              ...prevMessages.slice(0, -1),
-              { ...prevMessages[prevMessages.length - 1], pending: false },
-            ];
-          }
-          return prevMessages;
-        });
-        setIsLoading(false);
-      } else {
-        setMessages((prevMessages) => {
-          if (prevMessages[prevMessages.length - 1]?.sender === "assistant") {
-            return [
-              // remove the last pending message
-              ...prevMessages.slice(0, -1),
-              // add the new message
-              {
-                message:
-                  prevMessages[prevMessages.length - 1].message + event.data,
-                sender: "assistant",
-                pending: true,
-              },
-            ];
-          } else {
-            return [
-              ...prevMessages,
-              { message: event.data, sender: "assistant", pending: true },
-            ];
-          }
-        });
-      }
+    let ws: WebSocket | null = null;
+    
+    const connectWebSocket = () => {
+      const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
+      const isOnSecureUrl = apiUrl.startsWith("https://");
+      const wsUrl = isOnSecureUrl
+        ? apiUrl.replace("https://", "wss://")
+        : apiUrl.replace("http://", "ws://");
+      
+      ws = new WebSocket(`${wsUrl}/chat`, isOnSecureUrl ? ["wss"] : []);
+      
+      ws.onmessage = (event) => {
+        if (event.data === END_MARKER) {
+          // set the last message to not pending
+          setMessages((prevMessages) => {
+            if (prevMessages.length > 0) {
+              return [
+                ...prevMessages.slice(0, -1),
+                { ...prevMessages[prevMessages.length - 1], pending: false },
+              ];
+            }
+            return prevMessages;
+          });
+          setIsLoading(false);
+        } else {
+          setMessages((prevMessages) => {
+            if (prevMessages[prevMessages.length - 1]?.sender === "assistant") {
+              return [
+                // remove the last pending message
+                ...prevMessages.slice(0, -1),
+                // add the new message
+                {
+                  message:
+                    prevMessages[prevMessages.length - 1].message + event.data,
+                  sender: "assistant",
+                  pending: true,
+                },
+              ];
+            } else {
+              return [
+                ...prevMessages,
+                { message: event.data, sender: "assistant", pending: true },
+              ];
+            }
+          });
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setError(new Error("WebSocket connection error"));
+      };
+
+      ws.onclose = (event) => {
+        console.log("WebSocket closed:", event);
+        if (!event.wasClean) {
+          // Attempt to reconnect after a delay
+          setTimeout(connectWebSocket, 3000);
+        }
+      };
+
+      wsRef.current = ws;
     };
-    wsRef.current = ws;
+
+    connectWebSocket();
 
     return () => {
-      // Cleanup WebSocket connection on component unmount
-      if (wsRef.current) {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.close();
       }
     };
@@ -88,6 +108,11 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
   };
 
   const handleSendMessage = async (txt: string) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      setError(new Error("WebSocket connection not available"));
+      return;
+    }
+
     setMessages((prevMessages) => [
       ...prevMessages,
       {
@@ -99,11 +124,7 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
     setError(null);
 
     try {
-      if (!wsRef.current) {
-        throw new Error("WebSocket connection not established");
-      }
-
-      wsRef.current?.send(
+      wsRef.current.send(
         JSON.stringify({
           query: txt,
           history: messagesState,
