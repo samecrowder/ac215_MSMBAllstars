@@ -272,6 +272,15 @@
               - name: gcp-key
                 secret:
                   secretName: gcp-credentials
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: kubernetes.io/hostname
+                          operator: In
+                          values:
+                            - gke-tennis-predictor-clu-default-pool-0580d898-vh3j
 
 - name: Deploy LLM
   kubernetes.core.k8s:
