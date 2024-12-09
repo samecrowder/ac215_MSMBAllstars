@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Player } from "../players";
 
 const END_MARKER = "**|||END|||**";
@@ -25,7 +25,7 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  const connectWebSocket = () => {
+  const connectWebSocket = useCallback(() => {
     const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
     const isOnSecureUrl = apiUrl.startsWith("https://");
     const wsUrl = isOnSecureUrl
@@ -84,7 +84,7 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
 
     wsRef.current = ws;
     return ws;
-  };
+  }, []);
 
   useEffect(() => {
     connectWebSocket();
@@ -94,7 +94,7 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
         wsRef.current.close();
       }
     };
-  }, []);
+  }, [connectWebSocket]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
