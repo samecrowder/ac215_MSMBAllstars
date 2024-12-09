@@ -45,94 +45,79 @@ def main():
     bucket = client.bucket(BUCKET_NAME)
     logging.info(f"Connected to GCS bucket: {BUCKET_NAME}")
 
-    # Read data file
-    df = read_csv_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
-    logging.info(f"Data shape: {df.shape}")
+    local_output_file = f"./training_data_lookback={LOOKBACK}.pkl"
+    if not os.path.exists(local_output_file):
 
-    # Create dataset
-    df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y-%m-%d")
-    player_dfs, feature_cols = preprocess_data(df)
-    X1, X2, M1, M2, y = [], [], [], [], []  # M1, M2 are opponent masks
+        # Read data file
+        df = read_csv_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
+        logging.info(f"Data shape: {df.shape}")
 
-    for _, matchup in tqdm(df.iterrows()):
-        winner = matchup["winner_name"]
-        loser = matchup["loser_name"]
-        date = matchup["tourney_date"]
+        # Create dataset
+        df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y-%m-%d")
+        player_dfs, feature_cols = preprocess_data(df)
+        X1, X2, M1, M2, y = [], [], [], [], []  # M1, M2 are opponent masks
 
-        winner_history = get_player_last_nplus1_matches_since_date(
-            player_dfs, winner, LOOKBACK, date
-        )
-        loser_history = get_player_last_nplus1_matches_since_date(
-            player_dfs, loser, LOOKBACK, date
-        )
+        for _, matchup in tqdm(df.iterrows()):
+            winner = matchup["winner_name"]
+            loser = matchup["loser_name"]
+            date = matchup["tourney_date"]
 
-        # Skip if either player has fewer matches than LOOKBACK
-        if len(winner_history) < LOOKBACK + 1 or len(loser_history) < LOOKBACK + 1:
-            continue
+            winner_history = get_player_last_nplus1_matches_since_date(
+                player_dfs, winner, LOOKBACK, date
+            )
+            loser_history = get_player_last_nplus1_matches_since_date(
+                player_dfs, loser, LOOKBACK, date
+            )
 
-        # Create matchup data with opponent masks
-        winner_features, loser_features, winner_mask, loser_mask = create_matchup_data(
-            winner_history, loser_history, feature_cols, LOOKBACK
-        )
+            # Skip if either player has fewer matches than LOOKBACK
+            if len(winner_history) < LOOKBACK + 1 or len(loser_history) < LOOKBACK + 1:
+                continue
 
-        # Add winning match
-        X1.append(winner_features)
-        X2.append(loser_features)
-        M1.append(winner_mask)
-        M2.append(loser_mask)
-        y.append(1)  # Winner (X1) beats Loser (X2)
+            # Create matchup data with opponent masks
+            winner_features, loser_features, winner_mask, loser_mask = (
+                create_matchup_data(
+                    winner_history, loser_history, feature_cols, LOOKBACK
+                )
+            )
 
-        # Add losing match by swapping players
-        # Even though model architecture ensures P(B beats A) = 1 - P(A beats B),
-        # we need both y=0 and y=1 samples during training for the loss function
-        # to learn properly and place the decision boundary correctly
-        X1.append(loser_features.copy())
-        X2.append(winner_features.copy())
-        M1.append(loser_mask.copy())
-        M2.append(winner_mask.copy())
-        y.append(0)  # Loser (X1) loses to Winner (X2)
+            # Add winning match
+            X1.append(winner_features)
+            X2.append(loser_features)
+            M1.append(winner_mask)
+            M2.append(loser_mask)
+            y.append(1)  # Winner (X1) beats Loser (X2)
 
-    # Convert to numpy arrays
-    X1 = np.array(X1)
-    X2 = np.array(X2)
-    M1 = np.array(M1)
-    M2 = np.array(M2)
-    y = np.array(y)
+            # Add losing match by swapping players
+            # Even though model architecture ensures P(B beats A) = 1 - P(A beats B),
+            # we need both y=0 and y=1 samples during training for the loss function
+            # to learn properly and place the decision boundary correctly
+            X1.append(loser_features.copy())
+            X2.append(winner_features.copy())
+            M1.append(loser_mask.copy())
+            M2.append(winner_mask.copy())
+            y.append(0)  # Loser (X1) loses to Winner (X2)
 
-    # # Read local pkl data file, conver to numpy arrays
-    # local_output_file = f"./training_data_lookback={LOOKBACK}.pkl"
-    # with open(local_output_file, 'rb') as f:
-    #     data = pickle.load(f)
-    # X1 = data['X1']
-    # X2 = data['X2']
-    # M1 = data['M1']
-    # M2 = data['M2']
-    # y = data['y']
+            data = {
+                "X1": np.array(X1),
+                "X2": np.array(X2),
+                "M1": np.array(M1),
+                "M2": np.array(M2),
+                "y": np.array(y),
+            }
 
-    # Convert to numpy arrays
-    X1 = np.array(X1)
-    X2 = np.array(X2)
-    M1 = np.array(M1)
-    M2 = np.array(M2)
-    y = np.array(y)
+            with open(local_output_file, "wb") as f:
+                pickle.dump(data, f)
 
-    # Create object to save
-    print('creating data object')
-    data = {
-        "X1": X1,
-        "X2": X2,
-        "M1": M1,
-        "M2": M2,
-        "y": y,
-    }
+    # Read local pkl data file
+    local_output_file = f"./training_data_lookback={LOOKBACK}.pkl"
+    with open(local_output_file, "rb") as f:
+        data = pickle.load(f)
 
-    print('serializing data object')
     serialized_data = pickle.dumps(data)
-    print('creatin bytes')
     file_obj = BytesIO(serialized_data)
 
     # Write the combined data to a new CSV in the next version folder
-    print('writing to GCS')
+    print("writing to GCS")
     output_file = f"{DATA_FOLDER}/training_data_lookback={LOOKBACK}.pkl"
     logging.info(f"Writing combined data to {output_file}")
     bucket.blob(output_file).upload_from_file(
