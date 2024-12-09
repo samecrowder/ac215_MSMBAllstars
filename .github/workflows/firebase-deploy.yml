@@ -18,25 +18,47 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18" # Adjust Node.js version as per your project's requirement
+          node-version: "18"
 
-      # Step 3: Navigate to the React project directory
-      - name: Change to frontend project directory
-        run: cd src/frontend/tennis-app
-
-      # Step 4: Install dependencies
-      - name: Install dependencies
-        working-directory: src/frontend/tennis-app
-        run: npm install
-
-      # Step 5: Build the project
-      - name: Build the React app
-        working-directory: src/frontend/tennis-app
-        run: npm run build
-
-      # Step 6: Deploy to Firebase Hosting
-      - name: Deploy to Firebase
+      # Step 3: Build the React app
+      - name: Install dependencies and build
         working-directory: src/frontend/tennis-app
         run: |
-          npm install -g firebase-tools
-          firebase deploy --token "${{ secrets.FIREBASE_TOKEN }}"
+          npm install
+          npm run build
+
+      # Step 4: Build and push nginx container
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to GCR
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v2
+        with:
+          context: src/frontend/tennis-app
+          file: src/frontend/tennis-app/Dockerfile.nginx
+          push: true
+          tags: gcr.io/tennis-match-predictor/frontend:${{ github.sha }}
+
+      # Step 5: Update Kubernetes deployment
+      - name: Set up kubectl
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: tennis-match-predictor
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v0
+        with:
+          cluster_name: tennis-predictor-cluster
+          location: us-central1
+
+      - name: Deploy to GKE
+        run: |
+          kubectl set image deployment/frontend frontend=gcr.io/tennis-match-predictor/frontend:${{ github.sha }}
