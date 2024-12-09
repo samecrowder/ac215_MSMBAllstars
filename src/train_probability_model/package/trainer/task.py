@@ -44,6 +44,9 @@ def parse_args():
     parser.add_argument(
         "--run-sweep", type=int, required=True, help="Whether to run hyperparameter sweep (1) or not (0)"
     )
+    parser.add_argument(
+        "--val-f1-threshold", type=float, required=True, help="Validation F1 score threshold"
+    )
 
     args = parser.parse_args()
 
@@ -59,6 +62,7 @@ def parse_args():
     os.environ["NUM_EPOCHS"] = str(args.num_epochs)
     os.environ["WANDB_KEY"] = args.wandb_key
     os.environ["RUN_SWEEP"] = str(args.run_sweep)
+    os.environ["VAL_F1_THRESHOLD"] = str(args.val_f1_threshold)
 
     # Log all settings
     logging.info("=== Training Configuration ===")
@@ -72,6 +76,7 @@ def parse_args():
     logging.info(f"Learning Rate: {args.lr}")
     logging.info(f"Number of Epochs: {args.num_epochs}")
     logging.info(f"Run Sweep: {args.run_sweep}")
+    logging.info(f"Validation F1 Threshold: {args.val_f1_threshold}")
     logging.info("===========================")
 
     return args

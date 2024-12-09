@@ -276,4 +276,4 @@ def train_model(
             f"LR: {current_lr:.2e}"
         )
 
-    return model
+    return model, early_stopping.best_f1

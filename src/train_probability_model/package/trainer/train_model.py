@@ -27,6 +27,7 @@ NUM_LAYERS = int(os.environ.get("NUM_LAYERS"))
 LR = float(os.environ.get("LR"))
 NUM_EPOCHS = int(os.environ.get("NUM_EPOCHS"))
 RUN_SWEEP = bool(os.environ.get("RUN_SWEEP"))
+VAL_F1_THRESHOLD = float(os.environ.get("VAL_F1_THRESHOLD"))
 WANDB_KEY = os.environ.get("WANDB_KEY")
 
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
@@ -135,7 +136,7 @@ def run_training_setup(wandb_run, hidden_size, num_layers, learning_rate, test_s
     )
     
     wandb_run.watch(model)
-    model = train_model(
+    model, best_val_f1 = train_model(
         model,
         train_loader,
         test_loader,
@@ -146,9 +147,14 @@ def run_training_setup(wandb_run, hidden_size, num_layers, learning_rate, test_s
         callback=WandbCallback(),
     )
 
+
+
     # Save model directly to GCS using BytesIO
     # Save model only for non-sweep runs
     if not RUN_SWEEP:
+        if best_val_f1 < VAL_F1_THRESHOLD:
+            logging.info(f"Skipping saving model due to low F1 score: {best_val_f1}. Does not meet threshold: {VAL_F1_THRESHOLD}")
+            return
         gcs_output_path = f"{DATA_FOLDER}/prob_model.pt"
         buffer = BytesIO()
         torch.save(model.state_dict(), buffer)
