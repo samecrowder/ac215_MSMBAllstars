@@ -99,7 +99,25 @@ def main():
     M2 = np.array(M2)
     y = np.array(y)
 
+    # # Read local pkl data file, conver to numpy arrays
+    # local_output_file = f"./training_data_lookback={LOOKBACK}.pkl"
+    # with open(local_output_file, 'rb') as f:
+    #     data = pickle.load(f)
+    # X1 = data['X1']
+    # X2 = data['X2']
+    # M1 = data['M1']
+    # M2 = data['M2']
+    # y = data['y']
+
+    # Convert to numpy arrays
+    X1 = np.array(X1)
+    X2 = np.array(X2)
+    M1 = np.array(M1)
+    M2 = np.array(M2)
+    y = np.array(y)
+
     # Create object to save
+    print('creating data object')
     data = {
         "X1": X1,
         "X2": X2,
@@ -107,10 +125,14 @@ def main():
         "M2": M2,
         "y": y,
     }
+
+    print('serializing data object')
     serialized_data = pickle.dumps(data)
+    print('creatin bytes')
     file_obj = BytesIO(serialized_data)
 
     # Write the combined data to a new CSV in the next version folder
+    print('writing to GCS')
     output_file = f"{DATA_FOLDER}/training_data_lookback={LOOKBACK}.pkl"
     logging.info(f"Writing combined data to {output_file}")
     bucket.blob(output_file).upload_from_file(

@@ -23,7 +23,7 @@ export GCP_REGION="us-east1"
 
 # Training-specific environment variables
 export DATA_FOLDER="version3"
-export DATA_FILE="training_data_lookback=30.pkl"
+export DATA_FILE="full_training_data_lookback=10.pkl"
 export TEST_SIZE=0.2
 export BATCH_SIZE=32
 export HIDDEN_SIZE=64
