@@ -38,7 +38,9 @@
 - name: Add GPU node pool
   google.cloud.gcp_container_node_pool:
     name: gpu-pool
-    cluster: tennis-predictor-cluster
+    cluster:
+      name: tennis-predictor-cluster
+      location: us-central1-a
     location: us-central1-a
     project: "{{ gcp_project }}"
     auth_kind: "{{ gcp_auth_kind }}"
