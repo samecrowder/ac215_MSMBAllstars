@@ -16,7 +16,7 @@
 
 - name: Create GKE cluster
   google.cloud.gcp_container_cluster:
-    name: tennis-predictor-cluster-2
+    name: tennis-predictor-cluster
     location: us-central1-a
     project: "{{ gcp_project }}"
     auth_kind: "{{ gcp_auth_kind }}"
@@ -25,7 +25,7 @@
     initial_node_count: 3
     node_config:
       machine_type: e2-standard-4
-      disk_size_gb: 100
+      disk_size_gb: 30
       oauth_scopes:
         - https://www.googleapis.com/auth/devstorage.read_only
         - https://www.googleapis.com/auth/logging.write
