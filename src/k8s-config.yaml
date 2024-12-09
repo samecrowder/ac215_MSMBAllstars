@@ -39,8 +39,11 @@ kind: Ingress
 metadata:
   name: api-ingress
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: "api-ip" # Reference the reserved static IP
-    ingress.gcp.kubernetes.io/pre-shared-cert: "tennis-predictor-cert" # Reference the SSL certificate
+    # this is the name of the static IP that was created via command line
+    kubernetes.io/ingress.global-static-ip-name: "api-ip"
+    # this is the name of the SSL cert that was created via command line, 
+    # it points to a domain name that has a DNS record pointing to the above static IP 
+    ingress.gcp.kubernetes.io/pre-shared-cert: "tennis-predictor-cert"
 spec:
   rules:
     - host: tennis-match-predictor.claycoleman.us
