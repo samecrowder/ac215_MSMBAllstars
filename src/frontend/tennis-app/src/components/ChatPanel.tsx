@@ -25,73 +25,68 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  useEffect(() => {
-    let ws: WebSocket | null = null;
+  const connectWebSocket = () => {
+    const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
+    const isOnSecureUrl = apiUrl.startsWith("https://");
+    const wsUrl = isOnSecureUrl
+      ? apiUrl.replace("https://", "wss://")
+      : apiUrl.replace("http://", "ws://");
     
-    const connectWebSocket = () => {
-      const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
-      const isOnSecureUrl = apiUrl.startsWith("https://");
-      const wsUrl = isOnSecureUrl
-        ? apiUrl.replace("https://", "wss://")
-        : apiUrl.replace("http://", "ws://");
-      
-      ws = new WebSocket(`${wsUrl}/chat`, isOnSecureUrl ? ["wss"] : []);
-      
-      ws.onmessage = (event) => {
-        if (event.data === END_MARKER) {
-          // set the last message to not pending
-          setMessages((prevMessages) => {
-            if (prevMessages.length > 0) {
-              return [
-                ...prevMessages.slice(0, -1),
-                { ...prevMessages[prevMessages.length - 1], pending: false },
-              ];
-            }
-            return prevMessages;
-          });
-          setIsLoading(false);
-        } else {
-          setMessages((prevMessages) => {
-            if (prevMessages[prevMessages.length - 1]?.sender === "assistant") {
-              return [
-                // remove the last pending message
-                ...prevMessages.slice(0, -1),
-                // add the new message
-                {
-                  message:
-                    prevMessages[prevMessages.length - 1].message + event.data,
-                  sender: "assistant",
-                  pending: true,
-                },
-              ];
-            } else {
-              return [
-                ...prevMessages,
-                { message: event.data, sender: "assistant", pending: true },
-              ];
-            }
-          });
-        }
-      };
-
-      ws.onerror = (error) => {
-        // eslint-disable-next-line no-console
-        console.error("WebSocket error:", error);
-        setError(new Error("WebSocket connection error"));
-      };
-
-      ws.onclose = (event) => {
-        // eslint-disable-next-line no-console
-        console.log("WebSocket closed:", event);
-        if (!event.wasClean) {
-          // Attempt to reconnect after a delay
-          setTimeout(connectWebSocket, 3000);
-        }
-      };
-
-      wsRef.current = ws;
+    const ws = new WebSocket(`${wsUrl}/chat`, isOnSecureUrl ? ["wss"] : []);
+    
+    ws.onmessage = (event) => {
+      if (event.data === END_MARKER) {
+        setMessages((prevMessages) => {
+          if (prevMessages.length > 0) {
+            return [
+              ...prevMessages.slice(0, -1),
+              { ...prevMessages[prevMessages.length - 1], pending: false },
+            ];
+          }
+          return prevMessages;
+        });
+        setIsLoading(false);
+      } else {
+        setMessages((prevMessages) => {
+          if (prevMessages[prevMessages.length - 1]?.sender === "assistant") {
+            return [
+              ...prevMessages.slice(0, -1),
+              {
+                message:
+                  prevMessages[prevMessages.length - 1].message + event.data,
+                sender: "assistant",
+                pending: true,
+              },
+            ];
+          } else {
+            return [
+              ...prevMessages,
+              { message: event.data, sender: "assistant", pending: true },
+            ];
+          }
+        });
+      }
     };
 
+    ws.onerror = (error) => {
+      // eslint-disable-next-line no-console
+      console.error("WebSocket error:", error);
+      setError(new Error("WebSocket connection error"));
+    };
+
+    ws.onclose = (event) => {
+      // eslint-disable-next-line no-console
+      console.log("WebSocket closed:", event);
+      if (!event.wasClean) {
+        connectWebSocket(); // Immediate reconnection
+      }
+    };
+
+    wsRef.current = ws;
+    return ws;
+  };
+
+  useEffect(() => {
     connectWebSocket();
 
     return () => {
@@ -110,9 +105,15 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
   };
 
   const handleSendMessage = async (txt: string) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      setError(new Error("WebSocket connection not available"));
-      return;
+    let ws = wsRef.current;
+    
+    // If no connection or not open, create new connection
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      ws = connectWebSocket();
+      // Wait for connection to open
+      await new Promise((resolve) => {
+        ws!.onopen = () => resolve(true);
+      });
     }
 
     setMessages((prevMessages) => [
@@ -126,7 +127,7 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
     setError(null);
 
     try {
-      wsRef.current.send(
+      ws!.send(
         JSON.stringify({
           query: txt,
           history: messagesState,
