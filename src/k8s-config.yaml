@@ -231,11 +231,20 @@ spec:
       labels:
         app: ollama
     spec:
+      nodeSelector:
+        cloud.google.com/gke-nodepool: gpu-pool
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
       containers:
         - name: ollama
           image: gcr.io/tennis-match-predictor/ollama
           ports:
             - containerPort: 11434
+          resources:
+            limits:
+              nvidia.com/gpu: 1
           volumeMounts:
             - name: ollama-storage
               mountPath: /root/.ollama
