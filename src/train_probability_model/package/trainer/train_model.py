@@ -132,14 +132,31 @@ def main():
 
     # Train model
     criterion = nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+    
+    # Initialize AdamW optimizer with weight decay
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=LR,
+        amsgrad=True  # Better handling of sparse gradients
+    )
+    
+    # Learning rate scheduler
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='max',  # Monitor F1 score (higher is better)
+        factor=0.5,  # Reduce LR by half when plateauing
+        patience=3,  # Wait 3 epochs before reducing LR
+        verbose=True
+    )
+    
     wandb.watch(model)
-    train_model(
+    model = train_model(
         model,
         train_loader,
         test_loader,
         criterion,
         optimizer,
+        scheduler,
         num_epochs=NUM_EPOCHS,
         callback=WandbCallback(),
     )

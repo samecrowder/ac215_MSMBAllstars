@@ -132,26 +132,54 @@ def create_data_loaders(device, X1, X2, M1, M2, y, test_size, batch_size):
     return train_loader, test_loader
 
 
+class EarlyStopping:
+    def __init__(self, patience=5, min_delta=0.001):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.best_f1 = None
+        self.early_stop = False
+        self.best_state = None
+
+    def __call__(self, val_f1, model):
+        if self.best_f1 is None:
+            self.best_f1 = val_f1
+            self.best_state = model.state_dict()
+        elif val_f1 < self.best_f1 + self.min_delta:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_f1 = val_f1
+            self.best_state = model.state_dict()
+            self.counter = 0
+
+
 def train_model(
-    model, train_loader, val_loader, criterion, optimizer, num_epochs, callback=None
+    model, train_loader, val_loader, criterion, optimizer, scheduler, num_epochs, callback=None
 ):
     """
-    Train the model with optional wandb callback for logging.
+    Train the model with early stopping, learning rate scheduling, and optional wandb callback.
 
     Args:
         model: The PyTorch model to train
         train_loader: DataLoader for training data
         val_loader: DataLoader for validation data
         criterion: Loss function
-        optimizer: Optimizer
+        optimizer: Optimizer (AdamW with weight decay)
+        scheduler: Learning rate scheduler
         num_epochs: Number of epochs to train
         callback: Optional WandbCallback instance for logging metrics
     """
+    early_stopping = EarlyStopping(patience=5, min_delta=0.001)
+    
     for epoch in range(num_epochs):
         model.train()
         train_loss = 0.0
         train_preds = []
         train_true = []
+        
+        # Training loop
         for X1, X2, M1, M2, y in train_loader:
 
             # Forward pass
@@ -161,6 +189,10 @@ def train_model(
 
             # Backward pass
             loss.backward()
+            
+            # Gradient clipping to prevent exploding gradients
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            
             optimizer.step()
             train_loss += loss.item()
             train_preds.extend(
@@ -168,6 +200,7 @@ def train_model(
             )
             train_true.extend(y.cpu().numpy())
 
+        # Validation loop
         model.eval()
         val_loss = 0
         val_preds = []
@@ -191,13 +224,13 @@ def train_model(
         # Calculate average losses and metrics
         train_loss /= len(train_loader)
         val_loss /= len(val_loader)
-
+        
         # Calculate training metrics
         train_acc = accuracy_score(train_true, train_preds)
         train_precision = precision_score(train_true, train_preds)
         train_recall = recall_score(train_true, train_preds)
         train_f1 = f1_score(train_true, train_preds)
-
+        
         # Calculate validation metrics
         val_acc = accuracy_score(val_true, val_preds)
         val_precision = precision_score(val_true, val_preds)
@@ -222,14 +255,25 @@ def train_model(
 
         # Print metrics
         logging.info(f"Epoch {epoch+1}/{num_epochs}")
+
+        # Early stopping check
+        early_stopping(val_f1, model)
+        if early_stopping.early_stop:
+            logging.info(f'Early stopping triggered after {epoch + 1} epochs')
+            # Restore best model
+            model.load_state_dict(early_stopping.best_state)
+            break
+
+        # Step the scheduler based on validation F1 score
+        scheduler.step(val_f1)
+        current_lr = optimizer.param_groups[0]['lr']
+        
+        # Log progress
         logging.info(
-            f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, "
-            f"Train Precision: {train_precision:.4f}, Train Recall: {train_recall:.4f}, "
-            f"Train F1: {train_f1:.4f}"
+            f"Epoch {epoch+1}/{num_epochs} - "
+            f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, Train F1: {train_f1:.4f} - "
+            f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}, Val F1: {val_f1:.4f} - "
+            f"LR: {current_lr:.2e}"
         )
-        logging.info(
-            f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}, "
-            f"Val Precision: {val_precision:.4f}, Val Recall: {val_recall:.4f}, "
-            f"Val F1: {val_f1:.4f}"
-        )
-        logging.info("---")
+
+    return model

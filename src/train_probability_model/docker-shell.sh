@@ -10,13 +10,13 @@ export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
 export GCS_BUCKET_NAME="msmballstars-data"
 export DATA_FOLDER="version3"
-export DATA_FILE="training_data_lookback=30.pkl"
+export DATA_FILE="training_data_lookback=10.pkl"
 export TEST_SIZE=.2
 export BATCH_SIZE=32
 export HIDDEN_SIZE=32
 export NUM_LAYERS=2
 export LR=0.001
-export NUM_EPOCHS=10
+export NUM_EPOCHS=30
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/model-training-account.json
 
 # Read WANDB_KEY from JSON file
