@@ -1,4 +1,4 @@
-# Save this as tennis-predictor.yaml
+# DEPRECATED FOR k8s-deploy/tasks/main.yml
 
 # ConfigMap for environment variables
 apiVersion: v1
@@ -34,37 +34,39 @@ spec:
       targetPort: 8000
   type: LoadBalancer
 ---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: managed-cert
+spec:
+  domains:
+    - tennis-match-predictor.claycoleman.us
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: api-ingress
+  name: managed-cert-ingress
   annotations:
     # this is the name of the static IP that was created via command line
-    kubernetes.io/ingress.global-static-ip-name: "api-ip"
-    # this is the name of the SSL cert that was created via command line, 
+    kubernetes.io/ingress.global-static-ip-name: api-ip
+    # this is the name of the SSL cert that was created above, 
     # it points to a domain name that has a DNS record pointing to the above static IP 
-    ingress.gcp.kubernetes.io/pre-shared-cert: "tennis-predictor-cert"
+    networking.gke.io/managed-certificates: managed-cert
+    kubernetes.io/ingress.class: "gce"  
 spec:
-  rules:
-    - host: tennis-match-predictor.claycoleman.us
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: api
-                port:
-                  number: 8000
-  tls:
-    - hosts:
-        - tennis-match-predictor.claycoleman.us
+  defaultBackend:
+    service:
+      name: api
+      port:
+        number: 8000
 ---
 # API Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
+  annotations:
+    kubernetes.io/change-cause: "Deploy {{ IMAGE_TAG }}"
 spec:
   replicas: 1
   selector:
@@ -74,12 +76,17 @@ spec:
     metadata:
       labels:
         app: api
+      annotations:
+        rollme: "{{ IMAGE_TAG }}"
     spec:
       containers:
         - name: api
-          image: gcr.io/tennis-match-predictor/api
+          image: "gcr.io/tennis-match-predictor/api:{{ IMAGE_TAG }}"
           ports:
             - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
           envFrom:
             - configMapRef:
                 name: tennis-env
@@ -87,9 +94,7 @@ spec:
             - name: gcp-key
               mountPath: "/secrets"
               readOnly: true
-          env:
-            - name: PORT
-              value: "8000"
+          imagePullPolicy: Always
       volumes:
         - name: gcp-key
           secret:
@@ -113,6 +118,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: probability-model
+  annotations:
+    kubernetes.io/change-cause: "Deploy {{ IMAGE_TAG }}"
 spec:
   replicas: 1
   selector:
@@ -122,19 +129,14 @@ spec:
     metadata:
       labels:
         app: probability-model
+      annotations:
+        rollme: "{{ IMAGE_TAG }}"
     spec:
       containers:
         - name: probability-model
-          image: gcr.io/tennis-match-predictor/probability-model
+          image: "gcr.io/tennis-match-predictor/probability-model:{{ IMAGE_TAG }}"
           ports:
             - containerPort: 8001
-          envFrom:
-            - configMapRef:
-                name: tennis-env
-          volumeMounts:
-            - name: gcp-key
-              mountPath: "/secrets"
-              readOnly: true
           env:
             - name: PORT
               value: "8001"
@@ -150,6 +152,14 @@ spec:
               value: ""
             - name: TORCH_DEVICE
               value: "cpu"
+          envFrom:
+            - configMapRef:
+                name: tennis-env
+          volumeMounts:
+            - mountPath: /secrets
+              name: gcp-key
+              readOnly: true
+          imagePullPolicy: Always
       volumes:
         - name: gcp-key
           secret:
@@ -173,6 +183,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: llm
+  annotations:
+    kubernetes.io/change-cause: "Deploy {{ IMAGE_TAG }}"
 spec:
   replicas: 1
   selector:
@@ -182,12 +194,22 @@ spec:
     metadata:
       labels:
         app: llm
+      annotations:
+        rollme: "{{ IMAGE_TAG }}"
     spec:
       containers:
         - name: llm
-          image: gcr.io/tennis-match-predictor/llm
+          image: "gcr.io/tennis-match-predictor/llm:{{ IMAGE_TAG }}"
           ports:
             - containerPort: 8002
+          env:
+            - name: PORT
+              value: "8002"
+            - name: OLLAMA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: tennis-env
+                  key: OLLAMA_HOST
           envFrom:
             - configMapRef:
                 name: tennis-env
@@ -195,9 +217,7 @@ spec:
             - name: gcp-key
               mountPath: "/secrets"
               readOnly: true
-          env:
-            - name: PORT
-              value: "8002"
+          imagePullPolicy: Always
       volumes:
         - name: gcp-key
           secret:
@@ -217,10 +237,16 @@ spec:
       targetPort: 11434
 ---
 # Ollama Deployment
+# we need to run ollama on a node with a GPU to speed up inference
+# since we only have quota for 1 GPU, however, when we try to spin up a new instance,
+# it will fail with a quota error.
+# so we need to run ollama on the same node as the API, which does not require a GPU.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ollama
+  annotations:
+    kubernetes.io/change-cause: "Deploy {{ IMAGE_TAG }}"
 spec:
   replicas: 1
   selector:
@@ -230,16 +256,17 @@ spec:
     metadata:
       labels:
         app: ollama
+      annotations:
+        rollme: "{{ IMAGE_TAG }}"
     spec:
-      nodeSelector:
-        cloud.google.com/gke-nodepool: gpu-pool
+      # require that the deployment's node has a GPU
       tolerations:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
       containers:
         - name: ollama
-          image: gcr.io/tennis-match-predictor/ollama
+          image: "gcr.io/tennis-match-predictor/ollama:{{ IMAGE_TAG }}"
           ports:
             - containerPort: 11434
           resources:
@@ -248,6 +275,7 @@ spec:
           volumeMounts:
             - name: ollama-storage
               mountPath: /root/.ollama
+          imagePullPolicy: Always
       volumes:
         - name: ollama-storage
           emptyDir: {}

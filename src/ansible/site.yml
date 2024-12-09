@@ -5,5 +5,5 @@
   vars_files:
     - group_vars/all/gcp.yml
   roles:
-    - gcp-cluster
-    - k8s-deploy
+    - { role: gcp-cluster, tags: ['gcp-cluster'] }
+    - { role: k8s-deploy, tags: ['k8s-deploy'] }
