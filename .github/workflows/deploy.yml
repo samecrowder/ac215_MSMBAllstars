@@ -58,7 +58,7 @@ jobs:
       - name: Build and Push Container
         run: |
           cd ${{ matrix.service.path }}
-          docker build -f ${{ matrix.service.dockerfile }} -t gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }} .
+          docker build --platform linux/amd64 -f ${{ matrix.service.dockerfile }} -t gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }} .
           docker push gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }}
           docker tag gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }} gcr.io/$PROJECT_ID/${{ matrix.service.name }}:latest
           docker push gcr.io/$PROJECT_ID/${{ matrix.service.name }}:latest
