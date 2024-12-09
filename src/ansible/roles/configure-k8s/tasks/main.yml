@@ -178,7 +178,7 @@
         namespace: default
       spec:
         sslPolicy: modern-ssl-policy
-        
+
 - name: Create SSL Policy
   kubernetes.core.k8s:
     state: present
@@ -192,8 +192,6 @@
         minTlsVersion: TLS_1_2
         profile: MODERN
 
-# Ingress
-# this still isnt' working because of "backend" issues, not sure
 - name: Create Ingress
   kubernetes.core.k8s:
     state: present
@@ -220,4 +218,3 @@
                       name: api-backend
                       port:
                         number: 8000
-

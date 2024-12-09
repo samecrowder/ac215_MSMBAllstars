@@ -199,6 +199,9 @@
                 image: "gcr.io/tennis-match-predictor/ollama:{{ lookup('env', 'IMAGE_TAG') }}"
                 ports:
                   - containerPort: 11434
+                resources:
+                  limits:
+                    nvidia.com/gpu: 1
                 volumeMounts:
                   - mountPath: /root/.ollama
                     name: ollama-storage
