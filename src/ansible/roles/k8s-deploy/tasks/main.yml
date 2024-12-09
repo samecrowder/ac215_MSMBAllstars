@@ -223,19 +223,6 @@
               - name: ollama-storage
                 emptyDir: {}
 
-- name: Create Managed Certificate
-  kubernetes.core.k8s:
-    state: present
-    namespace: default
-    definition:
-      apiVersion: networking.gke.io/v1
-      kind: ManagedCertificate
-      metadata:
-        name: api-cert
-      spec:
-        domains:
-          - "34.56.62.222" # Your IP
-
 - name: Create TLS Secret
   kubernetes.core.k8s:
     state: present
@@ -247,7 +234,7 @@
         name: api-tls
       type: kubernetes.io/tls
       data:
-        # These will be populated by GKE once the certificate is ready
+        # These will be populated by GKE
         tls.crt: ""
         tls.key: ""
 
@@ -264,7 +251,6 @@
         annotations:
           kubernetes.io/ingress.class: "gce"
           kubernetes.io/ingress.allow-http: "false"
-          networking.gke.io/managed-certificates: "api-cert"
       spec:
         tls:
           - secretName: api-tls
