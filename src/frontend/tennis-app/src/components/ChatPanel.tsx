@@ -75,11 +75,13 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
       };
 
       ws.onerror = (error) => {
+        // eslint-disable-next-line no-console
         console.error("WebSocket error:", error);
         setError(new Error("WebSocket connection error"));
       };
 
       ws.onclose = (event) => {
+        // eslint-disable-next-line no-console
         console.log("WebSocket closed:", event);
         if (!event.wasClean) {
           // Attempt to reconnect after a delay
