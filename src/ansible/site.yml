@@ -1,0 +1,10 @@
+---
+- name: Deploy Tennis Predictor to GCP
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - group_vars/all/gcp.yml
+  roles:
+    - { role: gcp-cluster, tags: ['gcp-cluster'] }
+    - { role: configure-k8s, tags: ['configure-k8s'] }
+    - { role: k8s-deploy, tags: ['k8s-deploy'] }

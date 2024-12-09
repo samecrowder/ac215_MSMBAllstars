@@ -6,6 +6,7 @@ import ollama
 from pydantic import BaseModel
 
 ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
+print(f"\n\n\n\nollama_host: {ollama_host}\n\n\n\n")
 oc = ollama.Client(host=ollama_host)
 
 

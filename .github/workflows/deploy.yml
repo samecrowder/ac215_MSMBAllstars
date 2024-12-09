@@ -1,19 +1,70 @@
-name: Deploy to Cloud Run
+name: Deploy to GKE
 
 on:
   push:
     branches:
-      - main # Triggers on any push to main branch
+      - main
     paths:
       - "src/**"
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch:
 
 env:
   PROJECT_ID: tennis-match-predictor
   REGION: us-central1
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          [
+            { name: "api", dockerfile: "Dockerfile", path: "src/api" },
+            {
+              name: "probability-model",
+              dockerfile: "Dockerfile",
+              path: "src/probability_model",
+            },
+            { name: "llm", dockerfile: "Dockerfile", path: "src/llm" },
+            {
+              name: "ollama",
+              dockerfile: "ollama.Dockerfile",
+              path: "src/llm",
+            },
+          ]
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker
+
+      - name: Build and Push Container
+        run: |
+          cd ${{ matrix.service.path }}
+          docker build --platform linux/amd64 -f ${{ matrix.service.dockerfile }} -t gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }} .
+          docker push gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }}
+          docker tag gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }} gcr.io/$PROJECT_ID/${{ matrix.service.name }}:latest
+          docker push gcr.io/$PROJECT_ID/${{ matrix.service.name }}:latest
+
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: "read"
@@ -35,23 +86,22 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Authorize Docker push
+      - name: Install GKE Auth Plugin
         run: |
-          gcloud auth configure-docker
+          gcloud components install gke-gcloud-auth-plugin
+          gcloud components update
 
-      - name: Grant execute permission to deploy script
-        run: chmod +x src/deploy.sh
+      - name: Install Ansible and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ansible requests google-auth openshift pyyaml kubernetes
+          ansible-galaxy collection install google.cloud kubernetes.core
 
-      - name: Deploy to Cloud Run
-        working-directory: ./src
+      - name: Run Ansible Playbook
         env:
-          GCP_PROJECT: ${{ env.PROJECT_ID }}
-          GCP_REGION: ${{ env.REGION }}
-          RUNNING_FROM_CI: "true"
-        run: ./deploy.sh
-
-      - name: Output Service URLs
+          CI: "true"
+          USE_GKE_GCLOUD_AUTH_PLUGIN: True
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          echo "API URL: https://api-470970511307.us-central1.run.app"
-          echo "Model URL: https://probability-model-470970511307.us-central1.run.app"
-          echo "LLM URL: https://llm-470970511307.us-central1.run.app"
+          cd src/ansible
+          ansible-playbook site.yml
