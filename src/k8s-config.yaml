@@ -34,6 +34,29 @@ spec:
       targetPort: 8000
   type: LoadBalancer
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "api-ip" # Reference the reserved static IP
+    ingress.gcp.kubernetes.io/pre-shared-cert: "tennis-predictor-cert" # Reference the SSL certificate
+spec:
+  rules:
+    - host: tennis-match-predictor.claycoleman.us
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8000
+  tls:
+    - hosts:
+        - tennis-match-predictor.claycoleman.us
+---
 # API Deployment
 apiVersion: apps/v1
 kind: Deployment
