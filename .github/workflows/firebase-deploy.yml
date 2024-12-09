@@ -18,7 +18,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18" # Adjust Node.js version as per your project's requirement
+          node-version: "18" # Adjust Node.js version as per your project's requirements
 
       # Step 3: Navigate to the React project directory
       - name: Change to frontend project directory
