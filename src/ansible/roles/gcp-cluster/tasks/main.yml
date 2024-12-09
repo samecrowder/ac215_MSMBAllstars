@@ -22,7 +22,7 @@
     auth_kind: "{{ gcp_auth_kind }}"
     service_account_file: "{{ gcp_cred_file if gcp_auth_kind == 'serviceaccount' else omit }}"
     scopes: "{{ gcp_scopes }}"
-    initial_node_count: 1
+    initial_node_count: 3
     node_config:
       machine_type: e2-medium
       disk_size_gb: 100

@@ -236,13 +236,12 @@
                 image: "gcr.io/tennis-match-predictor/probability-model:{{ lookup('env', 'IMAGE_TAG') }}"
                 ports:
                   - containerPort: 8001
+                # solution may be here
                 resources:
                   requests:
-                    memory: "1Gi"
-                    cpu: "500m"
-                  limits:
                     memory: "2Gi"
-                    cpu: "1000m"
+                  limits:
+                    memory: "3Gi"
                 env:
                   - name: PORT
                     valueFrom:
