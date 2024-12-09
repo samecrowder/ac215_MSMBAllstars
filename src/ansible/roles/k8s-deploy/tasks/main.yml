@@ -222,3 +222,28 @@
             volumes:
               - name: ollama-storage
                 emptyDir: {}
+
+- name: Deploy Ingress
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: api-ingress
+        annotations:
+          kubernetes.io/ingress.class: "gce"
+          kubernetes.io/ingress.allow-http: "false"
+      spec:
+        tls:
+          - secretName: api-tls
+        rules:
+          - http:
+              paths:
+                - path: /*
+                  pathType: ImplementationSpecific
+                  backend:
+                    service:
+                      name: api
+                      port:
+                        number: 8000
