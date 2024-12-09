@@ -1,0 +1,223 @@
+---
+- name: Debug variables
+  debug:
+    msg:
+      - "IMAGE_TAG env var: '{{ lookup('env', 'IMAGE_TAG') }}'"
+      - "Git SHA: '{{ lookup('pipe', 'git rev-parse HEAD') }}'"
+      - "Current working directory: '{{ lookup('pipe', 'pwd') }}'"
+
+- name: Show what image we're about to deploy
+  debug:
+    msg: "About to deploy image: gcr.io/tennis-match-predictor/api:{{ lookup('env', 'IMAGE_TAG') }}"
+
+- name: Create default namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: default
+
+- name: Create ConfigMap for environment variables
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: tennis-env
+        namespace: default
+      data:
+        ENV: "prod"
+        PORT: "8000"
+        API_PORT: "8000"
+        MODEL_PORT: "8001"
+        MODEL_HOST: "probability-model"
+        LLM_PORT: "8002"
+        LLM_HOST: "llm"
+        OLLAMA_HOST: "ollama"
+        GCP_PROJECT: "tennis-match-predictor"
+        GCP_ZONE: "us-central1-a"
+        GCS_BUCKET_NAME: "msmballstars-data"
+        DATA_FOLDER: "version1"
+        DATA_FILE: "combined_atp_matches.csv"
+
+# Services
+- name: Create API Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: api
+        namespace: default
+      spec:
+        selector:
+          app: api
+        ports:
+          - protocol: TCP
+            port: 8000
+            targetPort: 8000
+        type: LoadBalancer
+
+- name: Create Probability Model Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: probability-model
+        namespace: default
+      spec:
+        selector:
+          app: probability-model
+        ports:
+          - protocol: TCP
+            port: 8001
+            targetPort: 8001
+
+- name: Create LLM Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: llm
+        namespace: default
+      spec:
+        selector:
+          app: llm
+        ports:
+          - protocol: TCP
+            port: 8002
+            targetPort: 8002
+
+- name: Create Ollama Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: ollama
+        namespace: default
+      spec:
+        selector:
+          app: ollama
+        ports:
+          - protocol: TCP
+            port: 11434
+            targetPort: 11434
+
+# Backend Service for API
+- name: Create Backend Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: api-backend
+        namespace: default
+        annotations:
+          cloud.google.com/backend-config: '{"default": "api-backend-config"}'
+      spec:
+        selector:
+          app: api
+        ports:
+          - protocol: TCP
+            port: 8000
+            targetPort: 8000
+        type: NodePort
+
+- name: Create Backend Config
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: cloud.google.com/v1
+      kind: BackendConfig
+      metadata:
+        name: api-backend-config
+        namespace: default
+      spec:
+        healthCheck:
+          checkIntervalSec: 30
+          timeoutSec: 5
+          healthyThreshold: 1
+          unhealthyThreshold: 2
+          type: HTTP
+          requestPath: /health
+          port: 8000
+
+# Managed Certificate
+- name: Create Managed Certificate
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: networking.gke.io/v1
+      kind: ManagedCertificate
+      metadata:
+        name: managed-cert
+        namespace: default
+      spec:
+        domains:
+          - tennis-match-predictor.claycoleman.us
+
+- name: Create FrontendConfig for SSL
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: networking.gke.io/v1beta1
+      kind: FrontendConfig
+      metadata:
+        name: ssl-policy
+        namespace: default
+      spec:
+        sslPolicy: modern-ssl-policy
+        
+- name: Create SSL Policy
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: compute.cnrm.cloud.google.com/v1beta1
+      kind: ComputeSSLPolicy
+      metadata:
+        name: modern-ssl-policy
+        namespace: default
+      spec:
+        minTlsVersion: TLS_1_2
+        profile: MODERN
+
+# Ingress
+# this still isnt' working because of "backend" issues, not sure
+- name: Create Ingress
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: managed-cert-ingress
+        namespace: default
+        annotations:
+          kubernetes.io/ingress.global-static-ip-name: api-ip
+          networking.gke.io/managed-certificates: managed-cert
+          kubernetes.io/ingress.class: "gce"
+          networking.gke.io/v1beta1.FrontendConfig: "ssl-policy"
+      spec:
+        rules:
+          - host: tennis-match-predictor.claycoleman.us
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: api-backend
+                      port:
+                        number: 8000
+
