@@ -24,7 +24,7 @@
     scopes: "{{ gcp_scopes }}"
     initial_node_count: 3
     node_config:
-      machine_type: e2-medium
+      machine_type: e2-standard-4
       disk_size_gb: 100
       oauth_scopes:
         - https://www.googleapis.com/auth/devstorage.read_only
