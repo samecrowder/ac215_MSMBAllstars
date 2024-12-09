@@ -31,6 +31,7 @@ export NUM_LAYERS=2
 export LR=0.001
 export NUM_EPOCHS=100
 export RUN_SWEEP=0
+export VAL_F1_THRESHOLD=.63
 
 # Read WANDB_KEY from JSON file
 if [ ! -f "$SECRETS_DIR/wandb-key.json" ]; then
@@ -53,6 +54,7 @@ export CMDARGS="--bucket-name=$BUCKET_NAME,\
 --lr=$LR,\
 --num-epochs=$NUM_EPOCHS,\
 --run-sweep=$RUN_SWEEP,\
+--val-f1-threshold=$VAL_F1_THRESHOLD,\
 --wandb-key=$WANDB_KEY"
 
 # Submit job to Vertex AI with command line arguments
