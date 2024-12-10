@@ -8,7 +8,9 @@ class TennisLSTM(nn.Module):
         self.dropout = nn.Dropout(0.4)
 
         # Bidirectional LSTM
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=0.4)
+        self.lstm = nn.LSTM(
+            input_size, hidden_size, num_layers, batch_first=True, dropout=0.4
+        )
 
         # Batch normalization after LSTM
         self.bn_lstm = nn.BatchNorm1d(hidden_size)
@@ -20,7 +22,9 @@ class TennisLSTM(nn.Module):
             nn.Tanh(),
             nn.Linear(hidden_size // 2, 1),
         )
-        self.attention_temperature = nn.Parameter(torch.ones(1) * 0.5)  # Learnable temperature
+        self.attention_temperature = nn.Parameter(
+            torch.ones(1) * 0.5
+        )  # Learnable temperature
 
         # Final layers with batch norm
         self.fc = nn.Linear(hidden_size, 32)
@@ -47,7 +51,9 @@ class TennisLSTM(nn.Module):
             attention_scores = attention_scores + opponent_bias
 
         # Apply temperature scaling for sharper focus
-        attention_weights = torch.softmax(attention_scores / self.attention_temperature, dim=1)
+        attention_weights = torch.softmax(
+            attention_scores / self.attention_temperature, dim=1
+        )
 
         # Weight and sum the matches
         weighted_sequence = sequence * attention_weights
