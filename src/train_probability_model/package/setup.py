@@ -2,7 +2,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 REQUIRED_PACKAGES = [
-    "numpy>=2.0.0",
+    "numpy==1.25.2",
     "torch>=2.5.1",
     "pandas>=1.1.3",
     "scikit-learn>=0.23.2",

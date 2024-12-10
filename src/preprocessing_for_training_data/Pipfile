@@ -7,8 +7,8 @@ name = "pypi"
 pandas = "*"
 google-cloud-storage = "*"
 tqdm = "*"
-numpy = "==2.0.2"
 python-dotenv = "*"
+numpy = "==1.25.2"
 
 [requires]
 python_version = "3.9"
