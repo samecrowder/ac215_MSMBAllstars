@@ -26,7 +26,7 @@ HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE"))
 NUM_LAYERS = int(os.environ.get("NUM_LAYERS"))
 LR = float(os.environ.get("LR"))
 NUM_EPOCHS = int(os.environ.get("NUM_EPOCHS"))
-RUN_SWEEP = bool(os.environ.get("RUN_SWEEP"))
+RUN_SWEEP = os.environ.get("RUN_SWEEP", "0").lower() == "1"
 VAL_F1_THRESHOLD = float(os.environ.get("VAL_F1_THRESHOLD"))
 WANDB_KEY = os.environ.get("WANDB_KEY")
 
