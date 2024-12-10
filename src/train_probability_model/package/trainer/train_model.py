@@ -150,7 +150,8 @@ def run_training_setup(
     if not RUN_SWEEP:
         if best_val_f1 < VAL_F1_THRESHOLD:
             logging.info(
-                f"Skipping saving model due to low F1 score: {best_val_f1}. Does not meet threshold: {VAL_F1_THRESHOLD}"
+                f"Skipping saving model due to low F1 score: {best_val_f1}."
+                f"Threshold: {VAL_F1_THRESHOLD}"
             )
             return
         gcs_output_path = f"{DATA_FOLDER}/prob_model.pt"

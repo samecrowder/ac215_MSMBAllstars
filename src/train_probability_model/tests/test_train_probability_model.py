@@ -5,7 +5,6 @@ from unittest.mock import patch
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, roc_auc_score
-import torch
 
 
 @pytest.fixture
@@ -45,9 +44,7 @@ def test_data_split(preprocessed_data):
     X, y, _ = preprocessed_data
 
     # Perform train-test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Check shapes
     assert len(X_train) == 800  # 80% of 1000
@@ -65,9 +62,7 @@ def test_model_training(preprocessed_data):
     from sklearn.linear_model import LogisticRegression
 
     X, y, opponent_mask = preprocessed_data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     opponent_mask_train, opponent_mask_test = train_test_split(
         opponent_mask, test_size=0.2, random_state=42
     )
@@ -91,9 +86,7 @@ def test_model_evaluation(preprocessed_data):
     from sklearn.linear_model import LogisticRegression
 
     X, y, opponent_mask = preprocessed_data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     opponent_mask_train, opponent_mask_test = train_test_split(
         opponent_mask, test_size=0.2, random_state=42
     )
@@ -126,9 +119,7 @@ def test_full_training_pipeline(sample_training_data):
     X_scaled = pd.DataFrame(X_scaled, columns=X.columns)
 
     # 3. Split data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_scaled, y, test_size=0.2, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
     opponent_mask_train, opponent_mask_test = train_test_split(
         opponent_mask, test_size=0.2, random_state=42
     )
@@ -192,9 +183,7 @@ def test_model_predictions(preprocessed_data):
     from sklearn.calibration import calibration_curve
 
     X, y, opponent_mask = preprocessed_data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     opponent_mask_train, opponent_mask_test = train_test_split(
         opponent_mask, test_size=0.2, random_state=42
     )

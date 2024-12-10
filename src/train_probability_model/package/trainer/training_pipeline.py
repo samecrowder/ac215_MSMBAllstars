@@ -6,9 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 class TennisDataset(Dataset):
@@ -221,10 +219,7 @@ def train_model(
 
                 val_loss += loss.item()
                 val_preds.extend(
-                    [
-                        1 if p > 0.5 else 0
-                        for p in outputs.squeeze().detach().cpu().numpy()
-                    ]
+                    [1 if p > 0.5 else 0 for p in outputs.squeeze().detach().cpu().numpy()]
                 )
                 val_true.extend(y.cpu().numpy())
 
