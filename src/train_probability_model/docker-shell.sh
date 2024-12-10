@@ -3,23 +3,23 @@
 # exit immediately if a command exits with a non-zero status
 set -e
 
-export IMAGE_NAME="train-probability-model"
+export IMAGE_NAME=${IMAGE_NAME:-"train-probability-model"}
 export BASE_DIR=$(pwd)
-export SECRETS_DIR="$BASE_DIR/../../../secrets"
-export GCP_PROJECT="tennis-match-predictor"
-export GCP_ZONE="us-central1-a"
-export GCS_BUCKET_NAME="msmballstars-data"
-export DATA_FOLDER="version3"
-export DATA_FILE="training_data_lookback=10.pkl"
-export TEST_SIZE=.2
-export BATCH_SIZE=32
-export HIDDEN_SIZE=32
-export NUM_LAYERS=2
-export LR=0.001
-export NUM_EPOCHS=30
-export RUN_SWEEP=0
-export VAL_F1_THRESHOLD=.63
-export GOOGLE_APPLICATION_CREDENTIALS=/secrets/model-training-account.json
+export SECRETS_DIR=${SECRETS_DIR:-"$BASE_DIR/../../../secrets"}
+export GCP_PROJECT=${GCP_PROJECT:-"tennis-match-predictor"}
+export GCP_ZONE=${GCP_ZONE:-"us-central1-a"}
+export GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-"msmballstars-data"}
+export DATA_FOLDER=${DATA_FOLDER:-"version3"}
+export DATA_FILE=${DATA_FILE:-"training_data_lookback=10.pkl"}
+export TEST_SIZE=${TEST_SIZE:-.2}
+export BATCH_SIZE=${BATCH_SIZE:-32}
+export HIDDEN_SIZE=${HIDDEN_SIZE:-64}
+export NUM_LAYERS=${NUM_LAYERS:-2}
+export LR=${LR:-0.001}
+export NUM_EPOCHS=${NUM_EPOCHS:-30}
+export RUN_SWEEP=${RUN_SWEEP:-0}
+export VAL_F1_THRESHOLD=${VAL_F1_THRESHOLD:-.63}
+export GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-"/secrets/model-training-account.json"}
 
 # Read WANDB_KEY from JSON file
 if [ ! -f "$SECRETS_DIR/wandb-key.json" ]; then
