@@ -5,6 +5,9 @@ from unittest.mock import patch
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.linear_model import LogisticRegression
+import joblib
+from sklearn.calibration import calibration_curve
 
 
 @pytest.fixture
@@ -19,7 +22,6 @@ def sample_training_data():
         "height_diff": np.random.normal(0, 10, n_samples),
         "surface_code": np.random.choice([0, 1, 2], n_samples),
         "tourney_level_code": np.random.choice([0, 1, 2], n_samples),
-        "opponent_mask": np.random.choice([0, 1], n_samples),  # Opponent mask
         "winner": np.random.choice([0, 1], n_samples),  # Target variable
     }
     return pd.DataFrame(data)
@@ -28,20 +30,19 @@ def sample_training_data():
 @pytest.fixture
 def preprocessed_data(sample_training_data):
     """Create preprocessed data with scaled features"""
-    X = sample_training_data.drop(["winner", "opponent_mask"], axis=1)
+    X = sample_training_data.drop(["winner"], axis=1)
     y = sample_training_data["winner"]
-    opponent_mask = sample_training_data["opponent_mask"]
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     X_scaled = pd.DataFrame(X_scaled, columns=X.columns)
 
-    return X_scaled, y, opponent_mask
+    return X_scaled, y
 
 
 def test_data_split(preprocessed_data):
     """Test train-test split functionality"""
-    X, y, _ = preprocessed_data
+    X, y = preprocessed_data
 
     # Perform train-test split
     X_train, X_test, y_train, y_test = train_test_split(
@@ -61,18 +62,15 @@ def test_data_split(preprocessed_data):
 
 def test_model_training(preprocessed_data):
     """Test model training process"""
-    from sklearn.linear_model import LogisticRegression
+    from tennis_lstm import TennisLSTM
 
-    X, y, opponent_mask = preprocessed_data
+    X, y = preprocessed_data
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
-    opponent_mask_train, opponent_mask_test = train_test_split(
-        opponent_mask, test_size=0.2, random_state=42
-    )
 
     # Train model
-    model = LogisticRegression(random_state=42)
+    model = TennisLSTM(input_size=X.shape[1], hidden_size=64, num_layers=2)
     model.fit(X_train, y_train)
 
     # Make predictions
@@ -87,18 +85,15 @@ def test_model_training(preprocessed_data):
 
 def test_model_evaluation(preprocessed_data):
     """Test model evaluation metrics"""
-    from sklearn.linear_model import LogisticRegression
+    from tennis_lstm import TennisLSTM
 
-    X, y, opponent_mask = preprocessed_data
+    X, y = preprocessed_data
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
-    opponent_mask_train, opponent_mask_test = train_test_split(
-        opponent_mask, test_size=0.2, random_state=42
-    )
 
     # Train and evaluate model
-    model = LogisticRegression(random_state=42)
+    model = TennisLSTM(input_size=X.shape[1], hidden_size=64, num_layers=2)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
@@ -115,9 +110,8 @@ def test_model_evaluation(preprocessed_data):
 def test_full_training_pipeline(sample_training_data):
     """Test the entire training pipeline"""
     # 1. Preprocessing
-    X = sample_training_data.drop(["winner", "opponent_mask"], axis=1)
+    X = sample_training_data.drop(["winner"], axis=1)
     y = sample_training_data["winner"]
-    opponent_mask = sample_training_data["opponent_mask"]
 
     # 2. Scale features
     scaler = StandardScaler()
@@ -128,14 +122,11 @@ def test_full_training_pipeline(sample_training_data):
     X_train, X_test, y_train, y_test = train_test_split(
         X_scaled, y, test_size=0.2, random_state=42
     )
-    opponent_mask_train, opponent_mask_test = train_test_split(
-        opponent_mask, test_size=0.2, random_state=42
-    )
 
     # 4. Train model
-    from sklearn.linear_model import LogisticRegression
+    from tennis_lstm import TennisLSTM
 
-    model = LogisticRegression(random_state=42)
+    model = TennisLSTM(input_size=X.shape[1], hidden_size=64, num_layers=2)
     model.fit(X_train, y_train)
 
     # 5. Evaluate
@@ -150,10 +141,10 @@ def test_full_training_pipeline(sample_training_data):
 def test_model_persistence(preprocessed_data):
     """Test model saving and loading"""
     import joblib
-    from sklearn.linear_model import LogisticRegression
+    from tennis_lstm import TennisLSTM
 
-    X, y, _ = preprocessed_data
-    model = LogisticRegression(random_state=42)
+    X, y = preprocessed_data
+    model = TennisLSTM(input_size=X.shape[1], hidden_size=64, num_layers=2)
     model.fit(X, y)
 
     # Save model
@@ -167,15 +158,15 @@ def test_model_persistence(preprocessed_data):
         loaded_model = joblib.load("model.joblib")
         mock_load.assert_called_once()
 
-    assert isinstance(loaded_model, LogisticRegression)
+    assert isinstance(loaded_model, TennisLSTM)
 
 
 def test_feature_importance(preprocessed_data):
     """Test feature importance analysis"""
-    from sklearn.linear_model import LogisticRegression
+    from tennis_lstm import TennisLSTM
 
-    X, y, _ = preprocessed_data
-    model = LogisticRegression(random_state=42)
+    X, y = preprocessed_data
+    model = TennisLSTM(input_size=X.shape[1], hidden_size=64, num_layers=2)
     model.fit(X, y)
 
     # Get feature importance
@@ -187,18 +178,15 @@ def test_feature_importance(preprocessed_data):
 
 def test_model_predictions(preprocessed_data):
     """Test model predictions and probability calibration"""
-    from sklearn.linear_model import LogisticRegression
+    from tennis_lstm import TennisLSTM
     from sklearn.calibration import calibration_curve
 
-    X, y, opponent_mask = preprocessed_data
+    X, y = preprocessed_data
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
-    opponent_mask_train, opponent_mask_test = train_test_split(
-        opponent_mask, test_size=0.2, random_state=42
-    )
 
-    model = LogisticRegression(random_state=42)
+    model = TennisLSTM(input_size=X.shape[1], hidden_size=64, num_layers=2)
     model.fit(X_train, y_train)
 
     # Get predictions and probabilities
@@ -231,7 +219,7 @@ def test_edge_cases(sample_training_data):
     # Scale to handle extreme values
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(
-        sample_training_data.drop(["winner", "opponent_mask"], axis=1)
+        sample_training_data.drop(["winner"], axis=1)
     )
 
     assert not np.isinf(scaled_features).any()

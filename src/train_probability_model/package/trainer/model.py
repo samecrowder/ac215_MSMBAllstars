@@ -61,44 +61,29 @@ class TennisLSTM(nn.Module):
 
         return context, attention_weights
 
-    def forward(self, x1, x2, opponent_mask1, opponent_mask2):
+    def forward(self, x):
         """
         Args:
-            x1, x2: Tensors of shape (batch_size, seq_len, input_size)
-            opponent_mask1: Binary tensor where 1 indicates x1's matches against x2
-            opponent_mask2: Binary tensor where 1 indicates x2's matches against x1
+            x: Tensor of shape (batch_size, seq_len, input_size)
         """
         # Process sequences through LSTM
-        h1_seq, _ = self.lstm(x1)
-        h2_seq, _ = self.lstm(x2)
+        h_seq, _ = self.lstm(x)
 
         # Apply batch norm to LSTM outputs
-        # Need to transpose for BatchNorm1d: [batch_size, hidden_size, seq_len]
-        h1_seq = h1_seq.transpose(1, 2)  # Now: [batch_size, hidden_size, seq_len]
-        h2_seq = h2_seq.transpose(1, 2)
+        h_seq = h_seq.transpose(1, 2)  # Now: [batch_size, hidden_size, seq_len]
+        h_seq = self.bn_lstm(h_seq)  # BatchNorm1d operates on hidden_size dimension
+        h_seq = h_seq.transpose(1, 2)  # Back to: [batch_size, seq_len, hidden_size]
 
-        # Apply batch norm
-        h1_seq = self.bn_lstm(h1_seq)  # BatchNorm1d operates on hidden_size dimension
-        h2_seq = self.bn_lstm(h2_seq)
-
-        # Transpose back to original shape
-        h1_seq = h1_seq.transpose(1, 2)  # Back to: [batch_size, seq_len, hidden_size]
-        h2_seq = h2_seq.transpose(1, 2)
-
-        # Compute attention with opponent masking
-        h1_context, weights1 = self.compute_attention(h1_seq, opponent_mask1)
-        h2_context, weights2 = self.compute_attention(h2_seq, opponent_mask2)
-
-        # Symmetric combination
-        diff = h1_context - h2_context
+        # Compute attention without opponent masking
+        context, weights = self.compute_attention(h_seq)
 
         # Final prediction with batch norm
-        x = self.relu(self.fc(diff))
+        x = self.relu(self.fc(context))
         x = self.bn_fc(x)  # Apply batch norm after first dense layer
         x = self.dropout(x)
         output = torch.sigmoid(self.fc2(x))
 
         # Return attention weights for visualization
-        attention_weights = {"player1_weights": weights1, "player2_weights": weights2}
+        attention_weights = {"weights": weights}
 
         return output, attention_weights

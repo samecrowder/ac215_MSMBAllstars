@@ -8,12 +8,11 @@ def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) ->
     (
         player_a_previous_matches,
         player_b_previous_matches,
-        h2h_match_history,
+        _,
         feature_cols,
     ) = get_match_data(player_a_id, player_b_id, lookback)
-    h2h_features = get_h2h_stats(h2h_match_history)
 
-    player_a_features, player_b_features = create_matchup_data(
+    player_a_features, player_b_features, player_a_mask, player_b_mask = create_matchup_data(
         player_a_previous_matches, player_b_previous_matches, feature_cols, lookback
     )
 
@@ -22,7 +21,8 @@ def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) ->
         json={
             "X1": player_a_features,
             "X2": player_b_features,
-            "H2H": [float(x) for x in h2h_features],
+            "M1": player_a_mask,
+            "M2": player_b_mask,
         },
     )
     return response.json()["player_a_win_probability"]

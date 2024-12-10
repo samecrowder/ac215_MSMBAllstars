@@ -51,8 +51,8 @@ logging.basicConfig(
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "msmballstars-data")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", None)
 DATA_FOLDER = os.environ.get("DATA_FOLDER", "version1")
-DATA_FILE = os.environ.get("DATA_FILE", "prob_model.pt ")
-WEIGHTS_FILE = os.environ.get("WEIGHTS_FILE", "model_weights.pt")
+DATA_FILE = os.environ.get("DATA_FILE", "combined_atp_matches.csv")
+WEIGHTS_FILE = os.environ.get("WEIGHTS_FILE", "prob_model.pt")
 HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE", "256"))
 NUM_LAYERS = int(os.environ.get("NUM_LAYERS", "2"))
 
@@ -87,7 +87,8 @@ if os.environ.get("ENV") != "test":
     data = read_pkl_file_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
     X1 = data["X1"]
     X2 = data["X2"]
-    H2H = data["H2H"]
+    M1 = data["M1"]
+    M2 = data["M2"]
 
     # Assuming X1 and X2 are 3D arrays with shape (samples, time_steps, features)
     samples, time_steps, features = X1.shape
@@ -96,25 +97,20 @@ if os.environ.get("ENV") != "test":
     X1_reshaped = X1.reshape(-1, features)
     X2_reshaped = X2.reshape(-1, features)
 
-    # TODO: save scaler objects during training time and fetch from GCS
-
     # Initialize scalers
     scaler_X1 = StandardScaler()
     scaler_X2 = StandardScaler()
-    # scaler_H2H = StandardScaler()
 
     # Fit and transform X1 and X2
     scaler_X1.fit(X1_reshaped)
     scaler_X2.fit(X2_reshaped)
-    # H2H_scaled = scaler_H2H.fit(H2H_reshaped)
 
     # Initialize model
     input_size = X1.shape[-1]
-    h2h_size = H2H.shape[-1]
 
     # Load the model weights from GCS
     weights = read_pt_file_from_gcs(bucket, os.path.join(DATA_FOLDER, WEIGHTS_FILE))
-    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS, h2h_size)
+    model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS)
     model.load_state_dict(weights)
     model.to(device)
 
@@ -129,7 +125,8 @@ class PredictionResponse(BaseModel):
 class PredictionRequest(BaseModel):
     X1: List[List[float]]
     X2: List[List[float]]
-    H2H: List[float]
+    M1: List[float]
+    M2: List[float]
 
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -140,10 +137,11 @@ def predict(request: PredictionRequest):
         # Convert inputs to tensors
         X1 = torch.tensor(request.X1, dtype=torch.float32)
         X2 = torch.tensor(request.X2, dtype=torch.float32)
-        H2H = torch.tensor(request.H2H, dtype=torch.float32).unsqueeze(0).to(device)
+        M1 = torch.tensor(request.M1, dtype=torch.float32).to(device)
+        M2 = torch.tensor(request.M2, dtype=torch.float32).to(device)
 
         logging.info(
-            f"Input tensor shapes - X1: {X1.shape}, X2: {X2.shape}, H2H: {H2H.shape}"
+            f"Input tensor shapes - X1: {X1.shape}, X2: {X2.shape}, M1: {M1.shape}, M2: {M2.shape}"
         )
 
         # Scale the inputs and add batch dimension
@@ -161,7 +159,7 @@ def predict(request: PredictionRequest):
         model.eval()
 
         with torch.no_grad():
-            output = model(X1_scaled, X2_scaled, H2H)
+            output = model(X1_scaled, X2_scaled, M1, M2)
 
         logging.info(f"Model output: {output}")
 
