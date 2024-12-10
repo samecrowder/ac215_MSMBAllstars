@@ -5,7 +5,9 @@ import pandas as pd
 from io import StringIO
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # GCS
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
@@ -18,7 +20,11 @@ logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
 
 def list_csv_files(bucket, prefix):
     logging.info(f"Listing CSV files in {prefix}")
-    files = [blob.name for blob in bucket.list_blobs(prefix=prefix) if blob.name.endswith(".csv")]
+    files = [
+        blob.name
+        for blob in bucket.list_blobs(prefix=prefix)
+        if blob.name.endswith(".csv")
+    ]
     logging.info(f"Found {len(files)} CSV files")
     return files
 
@@ -33,7 +39,9 @@ def read_csv_from_gcs(bucket, file_name):
 def get_next_version(bucket):
     logging.info("Determining next version number")
     versions = [
-        blob.name.split("/")[0] for blob in bucket.list_blobs() if blob.name.startswith("version")
+        blob.name.split("/")[0]
+        for blob in bucket.list_blobs()
+        if blob.name.startswith("version")
     ]
     if not versions:
         return "version1"

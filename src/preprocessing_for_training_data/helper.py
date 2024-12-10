@@ -10,19 +10,27 @@ def preprocess_data(df):
     df = df.sort_values("tourney_date")
 
     # Select relevant features
-    feature_cols = [col for col in df.columns if col.startswith("w_") or col.startswith("l_")]
+    feature_cols = [
+        col for col in df.columns if col.startswith("w_") or col.startswith("l_")
+    ]
 
     # Create player-specific dataframes
     player_dfs = {}
     for player in set(df["winner_name"].unique()) | set(df["loser_name"].unique()):
-        player_matches = df[(df["winner_name"] == player) | (df["loser_name"] == player)].copy()
-        player_matches["is_winner"] = (player_matches["winner_name"] == player).astype(int)
+        player_matches = df[
+            (df["winner_name"] == player) | (df["loser_name"] == player)
+        ].copy()
+        player_matches["is_winner"] = (player_matches["winner_name"] == player).astype(
+            int
+        )
         player_matches["opponent"] = np.where(
             player_matches["winner_name"] == player,
             player_matches["loser_name"],
             player_matches["winner_name"],
         )
-        player_matches = player_matches.sort_values("tourney_date").reset_index(drop=True)
+        player_matches = player_matches.sort_values("tourney_date").reset_index(
+            drop=True
+        )
         player_dfs[player] = player_matches
 
     return player_dfs, feature_cols
@@ -103,7 +111,9 @@ def create_matchup_data(
                         else matchup[col]
                     )
                     diff = calculate_percentage_difference(player_val, opponent_val)
-                    match_features.extend([player_val, diff])  # Include raw value and difference
+                    match_features.extend(
+                        [player_val, diff]
+                    )  # Include raw value and difference
             features.append(match_features)
 
     # Get player names by counting occurrences in their histories
