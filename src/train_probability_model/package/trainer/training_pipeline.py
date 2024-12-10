@@ -156,7 +156,14 @@ class EarlyStopping:
 
 
 def train_model(
-    model, train_loader, val_loader, criterion, optimizer, scheduler, num_epochs, callback=None
+    model,
+    train_loader,
+    val_loader,
+    criterion,
+    optimizer,
+    scheduler,
+    num_epochs,
+    callback=None,
 ):
     """
     Train the model with early stopping, learning rate scheduling, and optional wandb callback.
@@ -172,13 +179,13 @@ def train_model(
         callback: Optional WandbCallback instance for logging metrics
     """
     early_stopping = EarlyStopping(patience=5, min_delta=0.001)
-    
+
     for epoch in range(num_epochs):
         model.train()
         train_loss = 0.0
         train_preds = []
         train_true = []
-        
+
         # Training loop
         for X1, X2, M1, M2, y in train_loader:
 
@@ -189,10 +196,10 @@ def train_model(
 
             # Backward pass
             loss.backward()
-            
+
             # Gradient clipping to prevent exploding gradients
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            
+
             optimizer.step()
             train_loss += loss.item()
             train_preds.extend(
@@ -224,13 +231,13 @@ def train_model(
         # Calculate average losses and metrics
         train_loss /= len(train_loader)
         val_loss /= len(val_loader)
-        
+
         # Calculate training metrics
         train_acc = accuracy_score(train_true, train_preds)
         train_precision = precision_score(train_true, train_preds)
         train_recall = recall_score(train_true, train_preds)
         train_f1 = f1_score(train_true, train_preds)
-        
+
         # Calculate validation metrics
         val_acc = accuracy_score(val_true, val_preds)
         val_precision = precision_score(val_true, val_preds)
@@ -259,15 +266,15 @@ def train_model(
         # Early stopping check
         early_stopping(val_f1, model)
         if early_stopping.early_stop:
-            logging.info(f'Early stopping triggered after {epoch + 1} epochs')
+            logging.info(f"Early stopping triggered after {epoch + 1} epochs")
             # Restore best model
             model.load_state_dict(early_stopping.best_state)
             break
 
         # Step the scheduler based on validation F1 score
         scheduler.step(val_f1)
-        current_lr = optimizer.param_groups[0]['lr']
-        
+        current_lr = optimizer.param_groups[0]["lr"]
+
         # Log progress
         logging.info(
             f"Epoch {epoch+1}/{num_epochs} - "

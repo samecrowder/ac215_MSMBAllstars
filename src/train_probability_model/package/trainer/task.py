@@ -42,10 +42,16 @@ def parse_args():
         "--wandb-key", type=str, required=True, help="Weights & Biases API key"
     )
     parser.add_argument(
-        "--run-sweep", type=int, required=True, help="Whether to run hyperparameter sweep (1) or not (0)"
+        "--run-sweep",
+        type=int,
+        required=True,
+        help="Whether to run hyperparameter sweep (1) or not (0)",
     )
     parser.add_argument(
-        "--val-f1-threshold", type=float, required=True, help="Validation F1 score threshold"
+        "--val-f1-threshold",
+        type=float,
+        required=True,
+        help="Validation F1 score threshold",
     )
 
     args = parser.parse_args()
