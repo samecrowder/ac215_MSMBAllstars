@@ -159,7 +159,7 @@ def predict(request: PredictionRequest):
         model.eval()
 
         with torch.no_grad():
-            output = model(X1_scaled, X2_scaled, M1, M2)
+            output, _ = model(X1_scaled, X2_scaled, M1, M2)
 
         logging.info(f"Model output: {output}")
 
