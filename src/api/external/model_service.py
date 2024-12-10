@@ -1,7 +1,7 @@
 import requests
 from config import MODEL_BASE_URL
 from external.db_service import get_match_data
-from external.helper import create_matchup_data, get_h2h_stats
+from external.helper import create_matchup_data
 
 
 def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) -> float:
