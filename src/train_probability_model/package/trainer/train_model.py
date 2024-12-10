@@ -85,7 +85,9 @@ class WandbCallback:
             wandb.run.summary["best_val_f1"] = val_f1
 
 
-def run_training_setup(wandb_run, hidden_size, num_layers, learning_rate, test_size, batch_size):
+def run_training_setup(
+    wandb_run, hidden_size, num_layers, learning_rate, test_size, batch_size
+):
     # Check if GPU is available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
@@ -118,23 +120,19 @@ def run_training_setup(wandb_run, hidden_size, num_layers, learning_rate, test_s
 
     # Train model
     criterion = nn.BCELoss()
-    
+
     # Initialize AdamW optimizer with weight decay
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=learning_rate,
-        amsgrad=True
-    )
-    
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, amsgrad=True)
+
     # Learning rate scheduler
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
-        mode='max',  # Monitor F1 score (higher is better)
+        mode="max",  # Monitor F1 score (higher is better)
         factor=0.5,  # Reduce LR by half when plateauing
         patience=3,  # Wait 3 epochs before reducing LR
-        verbose=True
+        verbose=True,
     )
-    
+
     wandb_run.watch(model)
     model, best_val_f1 = train_model(
         model,
@@ -147,13 +145,13 @@ def run_training_setup(wandb_run, hidden_size, num_layers, learning_rate, test_s
         callback=WandbCallback(),
     )
 
-
-
     # Save model directly to GCS using BytesIO
     # Save model only for non-sweep runs
     if not RUN_SWEEP:
         if best_val_f1 < VAL_F1_THRESHOLD:
-            logging.info(f"Skipping saving model due to low F1 score: {best_val_f1}. Does not meet threshold: {VAL_F1_THRESHOLD}")
+            logging.info(
+                f"Skipping saving model due to low F1 score: {best_val_f1}. Does not meet threshold: {VAL_F1_THRESHOLD}"
+            )
             return
         gcs_output_path = f"{DATA_FOLDER}/prob_model.pt"
         buffer = BytesIO()
@@ -171,10 +169,10 @@ def objective():
     """Objective function for wandb sweep"""
     # Initialize a new wandb run
     wandb.init()
-    
+
     # Get parameters from sweep config
     config = wandb.config
-    
+
     # Run training with sweep parameters
     run_training_setup(
         wandb,
@@ -182,39 +180,47 @@ def objective():
         num_layers=config.num_layers,
         learning_rate=LR,
         test_size=TEST_SIZE,
-        batch_size=BATCH_SIZE
+        batch_size=BATCH_SIZE,
     )
-    
+
     wandb.finish()
 
 
 def main():
     logging.info("Starting training script")
-    
+
     # Initialize wandb
     wandb.login(key=WANDB_KEY)
-    
+
     if RUN_SWEEP:
         # Define sweep configuration
         sweep_config = {
-            'method': 'random',
-            'metric': {
-                'name': 'val_f1',
-                'goal': 'maximize'
-            },
-            'parameters': {
-                'hidden_size': {
-                    'values': [HIDDEN_SIZE, HIDDEN_SIZE * 2, HIDDEN_SIZE * 4]
+            "method": "random",
+            "metric": {"name": "val_f1", "goal": "maximize"},
+            "parameters": {
+                "hidden_size": {
+                    "values": [
+                        HIDDEN_SIZE,
+                        HIDDEN_SIZE * 2,
+                        HIDDEN_SIZE * 4,
+                        HIDDEN_SIZE * 8,
+                    ]
                 },
-                'num_layers': {
-                    'values': [max(1, NUM_LAYERS-1), NUM_LAYERS, NUM_LAYERS+1, NUM_LAYERS+2]
-                }
-            }
+                "num_layers": {
+                    "values": [
+                        max(1, NUM_LAYERS - 1),
+                        NUM_LAYERS,
+                        NUM_LAYERS + 1,
+                        NUM_LAYERS + 2,
+                        NUM_LAYERS + 3,
+                    ]
+                },
+            },
         }
-        
+
         # Initialize sweep
         sweep_id = wandb.sweep(sweep_config, project="tennis-match-predictor")
-        
+
         # Run sweep (will try all combinations)
         wandb.agent(sweep_id, objective)
     else:
@@ -230,7 +236,7 @@ def main():
                 "num_epochs": NUM_EPOCHS,
             },
         )
-        
+
         # Run training setup
         run_training_setup(wandb, HIDDEN_SIZE, NUM_LAYERS, LR, TEST_SIZE, BATCH_SIZE)
         wandb.finish()
