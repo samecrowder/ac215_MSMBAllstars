@@ -49,14 +49,20 @@ def test_calculate_percentage_difference():
 
 def test_get_player_last_nplus1_matches_since_date(sample_df):
     player_dfs, _ = preprocess_data(sample_df)
-    matches = get_player_last_nplus1_matches_since_date(player_dfs, "Player1", 2, "2023-01-04")
+    matches = get_player_last_nplus1_matches_since_date(
+        player_dfs, "Player1", 2, "2023-01-04"
+    )
     assert len(matches) <= 2
 
 
 def test_create_matchup_data(sample_df):
     player_dfs, feature_cols = preprocess_data(sample_df)
-    p1_history = get_player_last_nplus1_matches_since_date(player_dfs, "Player1", 2, "2023-01-04")
-    p2_history = get_player_last_nplus1_matches_since_date(player_dfs, "Player2", 2, "2023-01-04")
+    p1_history = get_player_last_nplus1_matches_since_date(
+        player_dfs, "Player1", 2, "2023-01-04"
+    )
+    p2_history = get_player_last_nplus1_matches_since_date(
+        player_dfs, "Player2", 2, "2023-01-04"
+    )
 
     p1_features, p2_features, p1_mask, p2_mask = create_matchup_data(
         p1_history, p2_history, feature_cols, history_len=1
@@ -102,8 +108,12 @@ def test_data_preprocessing_pipeline(sample_df):
     date = matchup["tourney_date"]  # 2023-01-04
 
     # Get player histories
-    winner_history = get_player_last_nplus1_matches_since_date(player_dfs, winner, LOOKBACK, date)
-    loser_history = get_player_last_nplus1_matches_since_date(player_dfs, loser, LOOKBACK, date)
+    winner_history = get_player_last_nplus1_matches_since_date(
+        player_dfs, winner, LOOKBACK, date
+    )
+    loser_history = get_player_last_nplus1_matches_since_date(
+        player_dfs, loser, LOOKBACK, date
+    )
 
     # Create matchup features with opponent masks
     winner_features, loser_features, winner_mask, loser_mask = create_matchup_data(
@@ -115,11 +125,15 @@ def test_data_preprocessing_pipeline(sample_df):
     assert isinstance(loser_features, list)
     assert isinstance(winner_mask, list)
     assert isinstance(loser_mask, list)
-    assert len(winner_features) <= LOOKBACK  # Can be less than LOOKBACK if not enough history
+    assert (
+        len(winner_features) <= LOOKBACK
+    )  # Can be less than LOOKBACK if not enough history
     assert len(loser_features) <= LOOKBACK
     assert len(winner_mask) == len(winner_features)
     assert len(loser_mask) == len(loser_features)
     if len(winner_features) > 0:
-        assert all(isinstance(x, (int, float)) for x in winner_features[0])  # Check feature types
+        assert all(
+            isinstance(x, (int, float)) for x in winner_features[0]
+        )  # Check feature types
     if len(loser_features) > 0:
         assert all(isinstance(x, (int, float)) for x in loser_features[0])
