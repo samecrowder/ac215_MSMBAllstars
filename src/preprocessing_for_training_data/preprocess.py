@@ -14,9 +14,7 @@ from helper import (
 )
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # GCS
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "default-bucket-name")
@@ -74,10 +72,8 @@ def main():
                 continue
 
             # Create matchup data with opponent masks
-            winner_features, loser_features, winner_mask, loser_mask = (
-                create_matchup_data(
-                    winner_history, loser_history, feature_cols, LOOKBACK
-                )
+            winner_features, loser_features, winner_mask, loser_mask = create_matchup_data(
+                winner_history, loser_history, feature_cols, LOOKBACK
             )
 
             # Add winning match
@@ -120,9 +116,7 @@ def main():
     print("writing to GCS")
     output_file = f"{DATA_FOLDER}/training_data_lookback={LOOKBACK}.pkl"
     logging.info(f"Writing combined data to {output_file}")
-    bucket.blob(output_file).upload_from_file(
-        file_obj, content_type="application/octet-stream"
-    )
+    bucket.blob(output_file).upload_from_file(file_obj, content_type="application/octet-stream")
 
     logging.info(f"Combined data successfully written to {output_file}")
     logging.info("Preprocessing completed")
