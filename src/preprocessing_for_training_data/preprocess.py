@@ -97,16 +97,16 @@ def main():
             M2.append(winner_mask.copy())
             y.append(0)  # Loser (X1) loses to Winner (X2)
 
-            data = {
-                "X1": np.array(X1),
-                "X2": np.array(X2),
-                "M1": np.array(M1),
-                "M2": np.array(M2),
-                "y": np.array(y),
-            }
+        data = {
+            "X1": np.array(X1),
+            "X2": np.array(X2),
+            "M1": np.array(M1),
+            "M2": np.array(M2),
+            "y": np.array(y),
+        }
 
-            with open(local_output_file, "wb") as f:
-                pickle.dump(data, f)
+        with open(local_output_file, "wb") as f:
+            pickle.dump(data, f)
 
     # Read local pkl data file
     local_output_file = f"./training_data_lookback={LOOKBACK}.pkl"
