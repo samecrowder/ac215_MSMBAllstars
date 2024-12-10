@@ -19,14 +19,16 @@ logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
 
 
 def list_csv_files(bucket, prefix):
-    logging.info(f"Listing CSV files in {prefix}")
+    logging.info(f"Listing ATP match CSV files in {prefix}")
     files = [
         blob.name
         for blob in bucket.list_blobs(prefix=prefix)
         if blob.name.endswith(".csv")
+        and "atp_matches_" in blob.name
+        and len(blob.name.split("atp_matches_")[-1].split(".")[0]) == 4
     ]
-    logging.info(f"Found {len(files)} CSV files")
-    return files
+    logging.info(f"Found {len(files)} ATP match files")
+    return sorted(files)  # Sort to process in chronological order
 
 
 def read_csv_from_gcs(bucket, file_name):
