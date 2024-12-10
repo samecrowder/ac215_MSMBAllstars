@@ -18,5 +18,5 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     description="Tennis Match Prediction Training Application",
-    python_requires=">=3.7",
+    python_requires="==3.9",
 )

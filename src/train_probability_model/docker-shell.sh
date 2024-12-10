@@ -17,7 +17,7 @@ export HIDDEN_SIZE=32
 export NUM_LAYERS=2
 export LR=0.001
 export NUM_EPOCHS=30
-export RUN_SWEEP=1
+export RUN_SWEEP=0
 export VAL_F1_THRESHOLD=.63
 export GOOGLE_APPLICATION_CREDENTIALS=/secrets/model-training-account.json
 
