@@ -5,12 +5,24 @@ set -e
 
 echo "🎾 Starting Tennis Match Prediction Pipeline 🎾"
 
+# SET ENVIRONMENT VARIABLES HERE
+export LOOKBACK=10
+export TEST_SIZE=0.2
+export BATCH_SIZE=32
+export HIDDEN_SIZE=32
+export NUM_LAYERS=2
+export LR=0.001
+export NUM_EPOCHS=30
+export RUN_SWEEP=0
+export VAL_F1_THRESHOLD=.63
+
+# SET TO RUN GPU ON VERTEX AI
+export USE_GPU=0
+
 # Set common environment variables
 export GCP_PROJECT="tennis-match-predictor"
 export GCP_ZONE="us-central1-a"
 export GCS_BUCKET_NAME="msmballstars-data"
-
-export LOOKBACK=10
 
 # Function to get the latest version from GCS
 get_latest_version() {
@@ -55,15 +67,16 @@ echo "Step 3: Running model training..."
 cd ../train_probability_model
 export IMAGE_NAME="train-probability-model"
 export DATA_FILE="training_data_lookback=$LOOKBACK.pkl"
-export TEST_SIZE=0.2
-export BATCH_SIZE=32
-export HIDDEN_SIZE=32
-export NUM_LAYERS=2
-export LR=0.001
-export NUM_EPOCHS=30
-export RUN_SWEEP=0
-export VAL_F1_THRESHOLD=.63
-./docker-shell.sh
+
+if [ "$USE_GPU" = "1" ]; then
+    echo "🚀 Running with GPU on Vertex AI..."
+    ./package-trainer.sh
+    ./cli.sh
+else
+    echo "💻 Running locally with docker..."
+    ./docker-shell.sh
+fi
+
 unset GOOGLE_APPLICATION_CREDENTIALS
 echo "✅ Model training complete!"
 
