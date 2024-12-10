@@ -196,7 +196,7 @@ def main():
     if RUN_SWEEP:
         # Define sweep configuration
         sweep_config = {
-            "method": "random",
+            "method": "grid",
             "metric": {"name": "val_f1", "goal": "maximize"},
             "parameters": {
                 "hidden_size": {
