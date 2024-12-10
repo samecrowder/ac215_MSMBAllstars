@@ -7,8 +7,8 @@ def evaluate_model(model, test_loader):
     test_preds = []
     test_true = []
     with torch.no_grad():
-        for X1, X2, H2H, y in test_loader:
-            outputs = model(X1, X2, H2H)
+        for X1, X2, M1, M2, y in test_loader:
+            outputs = model(X1, X2, M1, M2)
             test_preds.extend(outputs.squeeze().tolist())
             test_true.extend(y.tolist())
 

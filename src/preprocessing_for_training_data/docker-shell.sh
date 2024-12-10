@@ -3,16 +3,16 @@
 # exit immediately if a command exits with a non-zero status
 set -e
 
-export IMAGE_NAME="preprocessing-for-training-data"
+export IMAGE_NAME=${IMAGE_NAME:-"preprocessing-for-training-data"}
 export BASE_DIR=$(pwd)
-export SECRETS_DIR=$(pwd)/../../../secrets/
-export GCP_PROJECT="tennis-match-predictor"
-export GCP_ZONE="us-central1-a"
-export GCS_BUCKET_NAME="msmballstars-data"
-export DATA_FOLDER="version2"
-export DATA_FILE="combined_atp_matches.csv"
-export LOOKBACK=10
-export GOOGLE_APPLICATION_CREDENTIALS=/secrets/data-service-account.json
+export SECRETS_DIR=${SECRETS_DIR:-"$BASE_DIR/../../../secrets"}
+export GCP_PROJECT=${GCP_PROJECT:-"tennis-match-predictor"}
+export GCP_ZONE=${GCP_ZONE:-"us-central1-a"}
+export GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-"msmballstars-data"}
+export DATA_FOLDER=${DATA_FOLDER:-"version3"}
+export DATA_FILE=${DATA_FILE:-"combined_atp_matches.csv"}
+export LOOKBACK=${LOOKBACK:-10}
+export GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-"/secrets/data-service-account.json"}
 
 # Check to see if path to secrets is correct
 if [ ! -f "$SECRETS_DIR/data-service-account.json" ]; then

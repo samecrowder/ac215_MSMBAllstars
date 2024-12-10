@@ -28,7 +28,10 @@ def preprocess_data(df):
             player_matches["loser_name"],
             player_matches["winner_name"],
         )
-        player_dfs[player] = player_matches.reset_index()
+        player_matches = player_matches.sort_values("tourney_date").reset_index(
+            drop=True
+        )
+        player_dfs[player] = player_matches
 
     return player_dfs, feature_cols
 
@@ -55,21 +58,6 @@ def get_player_last_nplus1_matches_since_date(
     )
 
 
-def get_h2h_match_history(
-    player_dfs: Dict[str, Any], player_a_id: str, player_b_id: str
-) -> pd.DataFrame:
-    return player_dfs[player_a_id][player_dfs[player_a_id]["opponent"] == player_b_id]
-
-
-def get_h2h_match_history_since_date(
-    player_dfs: Dict[str, Any], player_a_id: str, player_b_id: str, date: str
-) -> pd.DataFrame:
-    return player_dfs[player_a_id][
-        (player_dfs[player_a_id]["opponent"] == player_b_id)
-        & (player_dfs[player_a_id]["tourney_date"] < date)
-    ]
-
-
 def get_h2h_stats(h2h_df: pd.DataFrame) -> List[float]:
     h2h_wins = h2h_df["is_winner"].sum()
     h2h_total = len(h2h_df)
@@ -83,26 +71,33 @@ def create_matchup_data(
     feature_cols,
     history_len=10,
 ):
-    # Includes the 3 features below that are not stats both players have in a match
-    num_features = len(feature_cols) + 3
+    p1_features, p2_features = [], []
+    p1_opponents, p2_opponents = [], []
 
-    p1_features = []
-    p2_features = []
-
-    for df in [p1_history, p2_history]:
-        player_features = []
+    for df, features, opponents in [
+        (p1_history, p1_features, p1_opponents),
+        (p2_history, p2_features, p2_opponents),
+    ]:
         for i, matchup in df.iterrows():
             if i == 0:
                 continue
 
-            # TODO: Surface Indicator, one of Hard, Clay, Grass, Carpet
-            player_is_winner = 1 if matchup["is_winner"] == 1 else 0
-            time_since_last_match = (
-                df.iloc[i]["tourney_date"] - df.iloc[i - 1]["tourney_date"]
-            ).days
-            draw_size = matchup["draw_size"]
+            # Store opponent ID for this match
+            opponents.append(matchup["opponent"])
 
-            match_features = [player_is_winner, time_since_last_match, draw_size]
+            # Extract match features
+            match_features = [
+                1 if matchup["is_winner"] == 1 else 0,  # player_is_winner
+                (
+                    df.iloc[i]["tourney_date"] - df.iloc[i - 1]["tourney_date"]
+                ).days,  # time_since_last_match
+                matchup["draw_size"],  # draw_size
+                1 if matchup["surface"] == "clay" else 0,  # surface_clay
+                1 if matchup["surface"] == "grass" else 0,  # surface_grass
+                1 if matchup["surface"] == "hard" else 0,  # surface_hard
+            ]
+
+            # Add player stats and differences
             for col in feature_cols:
                 if col.startswith("w_"):
                     player_val = (
@@ -119,15 +114,16 @@ def create_matchup_data(
                     match_features.extend(
                         [player_val, diff]
                     )  # Include raw value and difference
-            player_features.append(match_features)
+            features.append(match_features)
 
-        if len(player_features) < history_len:
-            padding = [[0] * num_features] * (history_len - len(player_features))
-            player_features = padding + player_features
+    # Get player names by counting occurrences in their histories
+    p1_names = pd.concat([p1_history["winner_name"], p1_history["loser_name"]])
+    p2_names = pd.concat([p2_history["winner_name"], p2_history["loser_name"]])
+    p1_name = p1_names.value_counts().index[0]  # Most frequent name is the player
+    p2_name = p2_names.value_counts().index[0]
 
-        if df is p1_history:
-            p1_features = player_features
-        else:
-            p2_features = player_features
+    # Create opponent masks - mark matches where players played each other
+    p1_mask = [1 if opp == p2_name else 0 for opp in p1_opponents]
+    p2_mask = [1 if opp == p1_name else 0 for opp in p2_opponents]
 
-    return p1_features, p2_features
+    return p1_features, p2_features, p1_mask, p2_mask
