@@ -15,18 +15,18 @@ def test_list_csv_files():
     # Mock bucket and blobs
     mock_bucket = Mock()
     mock_blob1 = Mock()
-    mock_blob1.name = "raw_data/file1.csv"
+    mock_blob1.name = "raw_data/atp_matches_2020.csv"
     mock_blob2 = Mock()
     mock_blob2.name = "raw_data/file2.txt"
     mock_blob3 = Mock()
-    mock_blob3.name = "raw_data/file3.csv"
+    mock_blob3.name = "raw_data/atp_matches_2021.csv"
 
     mock_bucket.list_blobs.return_value = [mock_blob1, mock_blob2, mock_blob3]
 
     files = list_csv_files(mock_bucket, "raw_data")
     assert len(files) == 2
-    assert "raw_data/file1.csv" in files
-    assert "raw_data/file3.csv" in files
+    assert "raw_data/atp_matches_2020.csv" in files
+    assert "raw_data/atp_matches_2021.csv" in files
 
 
 def test_read_csv_from_gcs():
