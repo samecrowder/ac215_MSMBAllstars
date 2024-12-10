@@ -1,248 +1,104 @@
-import os
-import pickle
-import logging
-from google.cloud import storage
 import torch
 from torch import nn
-from io import BytesIO
-import wandb
-
-from trainer.training_pipeline import create_data_loaders, train_model
-from trainer.model import TennisLSTM
-
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-# GCS configs
-BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
-GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-DATA_FOLDER = os.environ.get("DATA_FOLDER")
-DATA_FILE = os.environ.get("DATA_FILE")
-TEST_SIZE = float(os.environ.get("TEST_SIZE"))
-BATCH_SIZE = int(os.environ.get("BATCH_SIZE"))
-HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE"))
-NUM_LAYERS = int(os.environ.get("NUM_LAYERS"))
-LR = float(os.environ.get("LR"))
-NUM_EPOCHS = int(os.environ.get("NUM_EPOCHS"))
-RUN_SWEEP = os.environ.get("RUN_SWEEP", "0").lower() == "1"
-VAL_F1_THRESHOLD = float(os.environ.get("VAL_F1_THRESHOLD"))
-WANDB_KEY = os.environ.get("WANDB_KEY")
-
-logging.info(f"Using GCS bucket: {BUCKET_NAME}")
-logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
 
 
-def read_file_from_gcs(bucket, file_name):
-    logging.info(f"Reading file: {file_name}")
-    blob = bucket.blob(file_name)
-    pickle_data = blob.download_as_bytes()
-    return pickle.loads(BytesIO(pickle_data).getvalue())
+class TennisLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super(TennisLSTM, self).__init__()
+        self.dropout = nn.Dropout(0.4)
 
-
-def count_trainable_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-
-class WandbCallback:
-    def __init__(self):
-        self.best_val_f1 = float("-inf")
-
-    def on_epoch_end(
-        self,
-        epoch,
-        train_loss,
-        val_loss,
-        train_acc,
-        val_acc,
-        train_precision,
-        val_precision,
-        train_recall,
-        val_recall,
-        train_f1,
-        val_f1,
-    ):
-        wandb.log(
-            {
-                "epoch": epoch,
-                "train_loss": train_loss,
-                "val_loss": val_loss,
-                "train_accuracy": train_acc,
-                "val_accuracy": val_acc,
-                "train_precision": train_precision,
-                "val_precision": val_precision,
-                "train_recall": train_recall,
-                "val_recall": val_recall,
-                "train_f1": train_f1,
-                "val_f1": val_f1,
-            }
+        # Bidirectional LSTM
+        self.lstm = nn.LSTM(
+            input_size, hidden_size, num_layers, batch_first=True, dropout=0.4
         )
 
-        # Track best F1 score instead of loss
-        if val_f1 > self.best_val_f1:
-            self.best_val_f1 = val_f1
-            wandb.run.summary["best_val_f1"] = val_f1
+        # Batch normalization after LSTM
+        self.bn_lstm = nn.BatchNorm1d(hidden_size)
 
-
-def run_training_setup(
-    wandb_run, hidden_size, num_layers, learning_rate, test_size, batch_size
-):
-    # Check if GPU is available
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logging.info(f"Using device: {device}")
-
-    # Initialize GCS client
-    client = storage.Client()
-    bucket = client.bucket(BUCKET_NAME)
-    logging.info(f"Connected to GCS bucket: {BUCKET_NAME}")
-
-    # Read data file
-    data = read_file_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
-
-    # Create dataset loaders
-    train_loader, test_loader = create_data_loaders(
-        device,
-        data["X1"],
-        data["X2"],
-        data["M1"],
-        data["M2"],
-        data["y"],
-        test_size=test_size,
-        batch_size=batch_size,
-    )
-
-    # Initialize model
-    input_size = data["X1"].shape[-1]
-    model = TennisLSTM(input_size, hidden_size, num_layers).to(device)
-    trainable_params = count_trainable_parameters(model)
-    logging.info(f"Total number of trainable parameters: {trainable_params}")
-
-    # Train model
-    criterion = nn.BCELoss()
-
-    # Initialize AdamW optimizer with weight decay
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, amsgrad=True)
-
-    # Learning rate scheduler
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode="max",  # Monitor F1 score (higher is better)
-        factor=0.5,  # Reduce LR by half when plateauing
-        patience=3,  # Wait 3 epochs before reducing LR
-        verbose=True,
-    )
-
-    wandb_run.watch(model)
-    model, best_val_f1 = train_model(
-        model,
-        train_loader,
-        test_loader,
-        criterion,
-        optimizer,
-        scheduler,
-        num_epochs=NUM_EPOCHS,
-        callback=WandbCallback(),
-    )
-
-    # Save model directly to GCS using BytesIO
-    # Save model only for non-sweep runs
-    if not RUN_SWEEP:
-        if best_val_f1 < VAL_F1_THRESHOLD:
-            logging.info(
-                f"Skipping saving model due to low F1 score: {best_val_f1}."
-                f"Threshold: {VAL_F1_THRESHOLD}"
-            )
-            return
-        gcs_output_path = f"{DATA_FOLDER}/prob_model.pt"
-        buffer = BytesIO()
-        torch.save(model.state_dict(), buffer)
-        buffer.seek(0)
-
-        logging.info(f"Uploading model to Google Cloud Storage at: {gcs_output_path}")
-        bucket.blob(gcs_output_path).upload_from_file(
-            buffer, content_type="application/octet-stream"
+        # Enhanced attention mechanism
+        self.attention_norm = nn.LayerNorm(hidden_size)  # Layer norm for attention
+        self.attention = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size // 2),
+            nn.Tanh(),
+            nn.Linear(hidden_size // 2, 1),
         )
-        logging.info("Successfully uploaded model to Google Cloud Storage")
+        self.attention_temperature = nn.Parameter(
+            torch.ones(1) * 0.5
+        )  # Learnable temperature
 
+        # Final layers with batch norm
+        self.fc = nn.Linear(hidden_size, 32)
+        self.bn_fc = nn.BatchNorm1d(32)
+        self.fc2 = nn.Linear(32, 1)
+        self.relu = nn.ReLU()
 
-def objective():
-    """Objective function for wandb sweep"""
-    # Initialize a new wandb run
-    wandb.init()
+    def compute_attention(self, sequence, opponent_mask=None):
+        """
+        Args:
+            sequence: Tensor of shape (batch_size, seq_len, hidden_size)
+            opponent_mask: Binary tensor of shape (batch_size, seq_len) where 1 indicates
+                         a match against the current opponent
+        """
+        # Apply layer normalization
+        sequence = self.attention_norm(sequence)
 
-    # Get parameters from sweep config
-    config = wandb.config
+        # Compute attention scores through deeper network
+        attention_scores = self.attention(sequence)
 
-    # Run training with sweep parameters
-    run_training_setup(
-        wandb,
-        hidden_size=config.hidden_size,
-        num_layers=config.num_layers,
-        learning_rate=LR,
-        test_size=TEST_SIZE,
-        batch_size=BATCH_SIZE,
-    )
+        if opponent_mask is not None:
+            # Add opponent bias
+            opponent_bias = opponent_mask.unsqueeze(-1) * 2.0
+            attention_scores = attention_scores + opponent_bias
 
-    wandb.finish()
-
-
-def main():
-    logging.info("Starting training script")
-
-    # Initialize wandb
-    wandb.login(key=WANDB_KEY)
-
-    if RUN_SWEEP:
-        # Define sweep configuration
-        sweep_config = {
-            "method": "grid",
-            "metric": {"name": "val_f1", "goal": "maximize"},
-            "parameters": {
-                "hidden_size": {
-                    "values": [
-                        HIDDEN_SIZE,
-                        HIDDEN_SIZE * 2,
-                        HIDDEN_SIZE * 4,
-                        HIDDEN_SIZE * 8,
-                    ]
-                },
-                "num_layers": {
-                    "values": [
-                        max(1, NUM_LAYERS - 1),
-                        NUM_LAYERS,
-                        NUM_LAYERS + 1,
-                        NUM_LAYERS + 2,
-                        NUM_LAYERS + 3,
-                    ]
-                },
-            },
-        }
-
-        # Initialize sweep
-        sweep_id = wandb.sweep(sweep_config, project="tennis-match-predictor")
-
-        # Run sweep (will try all combinations)
-        wandb.agent(sweep_id, objective)
-    else:
-        # Regular single training run
-        wandb.init(
-            project="tennis-match-predictor",
-            config={
-                "test_size": TEST_SIZE,
-                "batch_size": BATCH_SIZE,
-                "hidden_size": HIDDEN_SIZE,
-                "num_layers": NUM_LAYERS,
-                "learning_rate": LR,
-                "num_epochs": NUM_EPOCHS,
-            },
+        # Apply temperature scaling for sharper focus
+        attention_weights = torch.softmax(
+            attention_scores / self.attention_temperature, dim=1
         )
 
-        # Run training setup
-        run_training_setup(wandb, HIDDEN_SIZE, NUM_LAYERS, LR, TEST_SIZE, BATCH_SIZE)
-        wandb.finish()
-        logging.info("=== Training Pipeline Complete ===")
+        # Weight and sum the matches
+        weighted_sequence = sequence * attention_weights
+        context = weighted_sequence.sum(dim=1)
 
+        return context, attention_weights
 
-if __name__ == "__main__":
-    main()
+    def forward(self, x1, x2, opponent_mask1, opponent_mask2):
+        """
+        Args:
+            x1, x2: Tensors of shape (batch_size, seq_len, input_size)
+            opponent_mask1: Binary tensor where 1 indicates x1's matches against x2
+            opponent_mask2: Binary tensor where 1 indicates x2's matches against x1
+        """
+        # Process sequences through LSTM
+        h1_seq, _ = self.lstm(x1)
+        h2_seq, _ = self.lstm(x2)
+
+        # Apply batch norm to LSTM outputs
+        # Need to transpose for BatchNorm1d: [batch_size, hidden_size, seq_len]
+        h1_seq = h1_seq.transpose(1, 2)  # Now: [batch_size, hidden_size, seq_len]
+        h2_seq = h2_seq.transpose(1, 2)
+
+        # Apply batch norm
+        h1_seq = self.bn_lstm(h1_seq)  # BatchNorm1d operates on hidden_size dimension
+        h2_seq = self.bn_lstm(h2_seq)
+
+        # Transpose back to original shape
+        h1_seq = h1_seq.transpose(1, 2)  # Back to: [batch_size, seq_len, hidden_size]
+        h2_seq = h2_seq.transpose(1, 2)
+
+        # Compute attention with opponent masking
+        h1_context, weights1 = self.compute_attention(h1_seq, opponent_mask1)
+        h2_context, weights2 = self.compute_attention(h2_seq, opponent_mask2)
+
+        # Symmetric combination
+        diff = h1_context - h2_context
+
+        # Final prediction with batch norm
+        x = self.relu(self.fc(diff))
+        x = self.bn_fc(x)  # Apply batch norm after first dense layer
+        x = self.dropout(x)
+        output = torch.sigmoid(self.fc2(x))
+
+        # Return attention weights for visualization
+        attention_weights = {"player1_weights": weights1, "player2_weights": weights2}
+
+        return output, attention_weights
