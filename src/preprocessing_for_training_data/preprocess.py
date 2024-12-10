@@ -57,7 +57,7 @@ def main():
         player_dfs, feature_cols = preprocess_data(df)
         X1, X2, M1, M2, y = [], [], [], [], []  # M1, M2 are opponent masks
 
-        for _, matchup in tqdm(df.iterrows()):
+        for _, matchup in tqdm(df.iloc[:10000].iterrows()):
             winner = matchup["winner_name"]
             loser = matchup["loser_name"]
             date = matchup["tourney_date"]
