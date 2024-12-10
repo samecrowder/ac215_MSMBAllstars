@@ -14,6 +14,8 @@ from external.helper import (  # noqa: E402
     get_player_last_nplus1_matches_since_date,
     get_h2h_match_history,
     get_h2h_match_history_since_date,
+    create_matchup_data,
+    get_h2h_stats,
 )
 
 

@@ -12,8 +12,10 @@ def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) ->
         feature_cols,
     ) = get_match_data(player_a_id, player_b_id, lookback)
 
-    player_a_features, player_b_features, player_a_mask, player_b_mask = create_matchup_data(
-        player_a_previous_matches, player_b_previous_matches, feature_cols, lookback
+    player_a_features, player_b_features, player_a_mask, player_b_mask = (
+        create_matchup_data(
+            player_a_previous_matches, player_b_previous_matches, feature_cols, lookback
+        )
     )
 
     response = requests.post(
