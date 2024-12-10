@@ -1,7 +1,5 @@
-import sys
 import os
-from unittest.mock import MagicMock
-from model import scale_data, TennisLSTM
+from model import scale_data
 import pytest
 import numpy as np
 from sklearn.preprocessing import StandardScaler
