@@ -5,6 +5,9 @@ from external.helper import create_matchup_data, get_h2h_stats
 
 
 def get_victory_prediction(player_a_id: str, player_b_id: str, lookback: int) -> float:
+    if player_a_id == player_b_id:
+        return 0.5
+
     (
         player_a_previous_matches,
         player_b_previous_matches,
