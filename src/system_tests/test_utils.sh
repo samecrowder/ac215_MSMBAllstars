@@ -79,4 +79,10 @@ cleanup_containers() {
     else
         echo "🔄 Leaving existing containers running..."
     fi
-} 
+}
+
+setup_cache_directory() {
+    echo "📁 Setting up GCS cache directory..."
+    mkdir -p /tmp/gcs_cache
+    chmod 777 /tmp/gcs_cache
+}

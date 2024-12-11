@@ -67,21 +67,23 @@ def read_file_from_gcs_or_cache(bucket: storage.Bucket, file_name: str) -> bytes
     if GCS_CACHE:
         cache_dir = os.path.join(GCS_CACHE, BUCKET_NAME)
         local_file_path = os.path.join(cache_dir, file_name)
-        
+
         # Create the cache directory structure if it doesn't exist
         try:
             os.makedirs(cache_dir, exist_ok=True)
             logging.info(f"Cache directory ensured: {cache_dir}")
         except Exception as e:
             logging.error(f"Failed to create cache directory: {e}")
-            
+
         if os.path.exists(local_file_path):
             logging.info(f"File found in local cache: {local_file_path}")
             with open(local_file_path, "rb") as f:
                 return f.read()
         else:
             logging.info(f"File not found in local cache: {local_file_path}")
-            logging.info(f"Current directory contents: {os.listdir(cache_dir) if os.path.exists(cache_dir) else 'directory does not exist'}")
+            logging.info(
+                f"Current directory contents: {os.listdir(cache_dir) if os.path.exists(cache_dir) else 'directory does not exist'}"
+            )
     else:
         logging.info("GCS_CACHE is not set, skipping local cache check")
 

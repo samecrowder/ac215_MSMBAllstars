@@ -13,3 +13,5 @@ python-dotenv = "*"
 python_version = "3.9"
 
 [dev-packages]
+black = "*"
+flake8 = "*"

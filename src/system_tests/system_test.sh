@@ -6,6 +6,7 @@ set -e
 # Source common functions
 source "$(dirname "$0")/test_utils.sh"
 
+setup_cache_directory
 setup_containers
 
 # Wait for all services

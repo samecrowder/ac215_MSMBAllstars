@@ -35,7 +35,7 @@ jobs:
               name: "ollama",
               dockerfile: "ollama.Dockerfile",
               path: "src/llm",
-              build_args: "--build-arg LLM_MODEL=${{ env.LLM_MODEL }}",
+              build_args: "--build-arg LLM_MODEL=$LLM_MODEL",
             },
           ]
     permissions:
