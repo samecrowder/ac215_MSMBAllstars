@@ -63,11 +63,11 @@ jobs:
 
       - name: Build and Push Container
         run: |
-          SERVICE_NAME=${{ matrix.service.name }}
-          DOCKERFILE=${{ matrix.service.dockerfile }}
-          SERVICE_PATH=${{ matrix.service.path }}
-          IMAGE_TAG=${{ github.sha }}
-          BUILD_ARGS=${{ matrix.service.build_args }}
+          SERVICE_NAME=${{ matrix.service.name }} \
+          DOCKERFILE=${{ matrix.service.dockerfile }} \
+          SERVICE_PATH=${{ matrix.service.path }} \
+          IMAGE_TAG=${{ github.sha }} \
+          BUILD_ARGS=${{ matrix.service.build_args }} \
           ./src/deploy/docker-build-and-push.sh
 
   deploy:
