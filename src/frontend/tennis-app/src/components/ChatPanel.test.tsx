@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatPanel } from "./ChatPanel";
 import type { Player } from "../players";
+import { act } from "react";
 
 describe("ChatPanel", () => {
   let mockWebSocket: any;
@@ -117,5 +118,36 @@ describe("ChatPanel", () => {
     expect(mockWebSocket.send).toHaveBeenCalledWith(
       expect.stringContaining('"player_b_id":"carlos-alcaraz"')
     );
+  });
+
+  test("attempts to reconnect when WebSocket connection closes unexpectedly", async () => {
+    render(<ChatPanel initialMessages={[]} matchup={mockMatchup} />);
+
+    // Get the first WebSocket instance
+    const firstWs = mockWebSocket;
+
+    // Simulate an unexpected connection close
+    await act(async () => {
+      const closeEvent = new CloseEvent('close', { wasClean: false });
+      firstWs.onclose(closeEvent);
+    });
+
+    // Verify that a new WebSocket connection was attempted
+    expect(global.WebSocket).toHaveBeenCalledTimes(2);
+  });
+
+  test("handles WebSocket errors gracefully", async () => {
+    render(<ChatPanel initialMessages={[]} matchup={mockMatchup} />);
+
+    // Simulate a WebSocket error
+    await act(async () => {
+      const errorEvent = new Event('error');
+      mockWebSocket.onerror(errorEvent);
+    });
+
+    // Wait for error state to be updated and verify error message
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
   });
 });

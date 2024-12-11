@@ -31,9 +31,9 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
     const wsUrl = isOnSecureUrl
       ? apiUrl.replace("https://", "wss://")
       : apiUrl.replace("http://", "ws://");
-    
+
     const ws = new WebSocket(`${wsUrl}/chat`, isOnSecureUrl ? ["wss"] : []);
-    
+
     ws.onmessage = (event) => {
       if (event.data === END_MARKER) {
         setMessages((prevMessages) => {
@@ -106,7 +106,7 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
 
   const handleSendMessage = async (txt: string) => {
     let ws = wsRef.current;
-    
+
     // If no connection or not open, create new connection
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       ws = connectWebSocket();
@@ -201,7 +201,11 @@ export function ChatPanel({ initialMessages, matchup }: ChatPanelProps) {
             {isLoading ? "..." : "Send"}
           </button>
         </div>
-        {error && <div className="text-red-500">{error.message}</div>}
+        {error && (
+          <div role="alert" className="text-red-500">
+            {error.message}
+          </div>
+        )}
       </form>
     </div>
   );
