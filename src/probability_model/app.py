@@ -78,6 +78,11 @@ def read_pkl_file_from_gcs(bucket, file_name):
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
 logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
 
+if os.environ.get("ENV") == "test":
+    # Force CPU device for testing
+    if torch.cuda.is_available():
+        torch.cuda.is_available = lambda: False
+
 if os.environ.get("ENV") != "test":
     # Check if GPU is available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
