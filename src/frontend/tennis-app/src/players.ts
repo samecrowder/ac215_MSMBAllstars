@@ -79,7 +79,7 @@ export const players: Player[] = [
     country: "Serbia",
     height: "6'2\" (188cm)",
     weight: "170 lbs (77kg)",
-    imageUrl: "/images/casper_ruud.png",
+    imageUrl: "/images/novak_djokovic.png",
   },
   {
     id: "Alex De Minaur",
