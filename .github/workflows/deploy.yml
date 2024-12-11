@@ -1,3 +1,6 @@
+# the high level structure of this workflow needs to be kept in sync
+# with the deploy.zsh script. we don't call it directly because we want
+# to have parallel builds for each service.
 name: Deploy to GKE
 
 on:
@@ -57,11 +60,11 @@ jobs:
 
       - name: Build and Push Container
         run: |
-          cd ${{ matrix.service.path }}
-          docker build --platform linux/amd64 -f ${{ matrix.service.dockerfile }} -t gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }} .
-          docker push gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }}
-          docker tag gcr.io/$PROJECT_ID/${{ matrix.service.name }}:${{ github.sha }} gcr.io/$PROJECT_ID/${{ matrix.service.name }}:latest
-          docker push gcr.io/$PROJECT_ID/${{ matrix.service.name }}:latest
+          SERVICE_NAME=${{ matrix.service.name }}
+          DOCKERFILE=${{ matrix.service.dockerfile }}
+          SERVICE_PATH=${{ matrix.service.path }}
+          IMAGE_TAG=${{ github.sha }}
+          ./src/deploy/docker-build-and-push.zsh
 
   deploy:
     needs: build
@@ -103,5 +106,4 @@ jobs:
           USE_GKE_GCLOUD_AUTH_PLUGIN: True
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          cd src/ansible
-          ansible-playbook site.yml
+          ./src/deploy/ansible-deploy.zsh
