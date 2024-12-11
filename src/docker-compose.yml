@@ -91,6 +91,22 @@ services:
     volumes:
       - ollama_data:/root/.ollama
 
+  frontend:
+    build:
+      context: ./frontend/tennis-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    networks:
+      - msmballstars-network
+    volumes:
+      - ./frontend/tennis-app:/app
+      - ./frontend/tennis-app/node_modules:/app/node_modules
+    depends_on:
+      - api
+
 volumes:
   ollama_data:
 
