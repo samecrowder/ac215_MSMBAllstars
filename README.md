@@ -78,35 +78,7 @@ gcloud container node-pools create l4-gpu-pool \
 
 ## Deployment Process
 
-1. **Setup GCP Project**
-
-```bash
-# Set project ID
-export PROJECT_ID="tennis-match-predictor"
-gcloud config set project $PROJECT_ID
-```
-
-2. **Create GKE Cluster**
-
-```bash
-gcloud container clusters create tennis-predictor-cluster \
-    --zone us-central1-a \
-    --machine-type g2-standard-4
-```
-
-3. **Deploy with Ansible**
-
-```bash
-cd src/ansible
-ansible-playbook deploy-k8s.yml
-```
-
-4. **Verify Deployment**
-
-```bash
-kubectl get pods -o wide
-kubectl get services
-```
+To deploy, to to github actions and run the `GKE Deploy` workflow. This will build the Docker images and push them to GCR, and then deploy the application to GKE using Ansible.
 
 ## Service Endpoints
 
