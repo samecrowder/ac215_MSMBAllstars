@@ -12,7 +12,11 @@ from pydantic import BaseModel
 from sklearn.preprocessing import StandardScaler
 
 if os.environ.get("ENV") != "test":
-    from .model import TennisLSTM
+    try:
+        from ac215_MSMBAllstars.src.probability_model.model import TennisLSTM
+    except ImportError:
+        # Fallback to local import if package import fails
+        from model import TennisLSTM
 else:
     # Mock TennisLSTM for non-prod environments
     class TennisLSTM:
