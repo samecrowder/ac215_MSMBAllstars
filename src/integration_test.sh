@@ -13,49 +13,49 @@ echo "🚀 Starting services..."
 docker compose up -d
 
 echo "⏳ Waiting for API to be ready..."
-timeout=300  # 5 minutes in seconds
-interval=5   # Check every 5 seconds
+timeout=300 # 5 minutes in seconds
+interval=5  # Check every 5 seconds
 elapsed=0
-    
-    while true; do
-        if [ $elapsed -ge $timeout ]; then
+
+while true; do
+    if [ $elapsed -ge $timeout ]; then
         echo "❌ Timeout waiting for API to be ready"
         echo "📝 Last API response:"
         curl -s http://localhost:8000/health || echo "Failed to get response"
-            echo -e "\n📋 Last 10 lines of container logs:"
+        echo -e "\n📋 Last 10 lines of container logs:"
         echo -e "\n🔍 API logs:"
         docker compose logs --tail=10 api
         echo -e "\n🔍 LLM logs:"
         docker compose logs --tail=10 llm
         echo -e "\n🔍 Probability Model logs:"
         docker compose logs --tail=10 probability_model
-            exit 1
-        fi
+        exit 1
+    fi
 
     status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health || echo "failed")
-        
-        if [ "$status_code" = "200" ]; then
+
+    if [ "$status_code" = "200" ]; then
         sleep 60 # wait for other services to be ready
         echo "✅ API is ready!"
-            break
-        fi
+        break
+    fi
 
     echo "⏳ Still waiting for API... (${elapsed}s elapsed)"
-        if [ "$status_code" != "failed" ]; then
+    if [ "$status_code" != "failed" ]; then
         echo "📝 API Response (Status: $status_code):"
         curl -s http://localhost:8000/health || echo "Failed to get response"
-            echo -e "\n📋 Last 10 lines of container logs:"
+        echo -e "\n📋 Last 10 lines of container logs:"
         echo -e "\n🔍 API logs:"
         docker compose logs --tail=10 api
         echo -e "\n🔍 LLM logs:"
         docker compose logs --tail=10 llm
         echo -e "\n🔍 Probability Model logs:"
         docker compose logs --tail=10 probability_model
-        fi
-        
-        sleep $interval
-        elapsed=$((elapsed + interval))
-    done
+    fi
+
+    sleep $interval
+    elapsed=$((elapsed + interval))
+done
 
 echo "🎯 Testing prediction endpoint..."
 predict_status_code=$(curl -s -o predict_response.json -w "%{http_code}" \
@@ -77,7 +77,7 @@ if [ "$predict_status_code" != "200" ]; then
     exit 1
 fi
 
-# TODO add streaming chat test here, consider converting to python so 
+# TODO add streaming chat test here, consider converting to python so
 # we can load all the messages while streaming
 
 echo "💬 Testing chat endpoint..."
