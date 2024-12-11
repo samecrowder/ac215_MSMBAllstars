@@ -1,62 +1,143 @@
-import sys
 import os
-from unittest.mock import MagicMock
 from model import scale_data
 import pytest
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
+
 # Create a more sophisticated mock for torch
-mock_torch = MagicMock()
+class TorchMock:
+    def __init__(self):
+        self.nn = nn
+        self.device = lambda x: x
+
+    def ones(self, size):
+        return np.ones(size)
+
+    def tensor(self, data):
+        return np.array(data)
+
+    def from_numpy(self, data):
+        return data
+
+    def cat(self, tensors, dim=0):
+        return np.concatenate(tensors, axis=dim)
+
+    def bmm(self, x, y):
+        return np.einsum("bij,bjk->bik", x, y)
+
+    def softmax(self, x, dim=-1):
+        return np.exp(x) / np.sum(np.exp(x), axis=dim, keepdims=True)
+
+    def sum(self, x, dim=None, keepdim=False):
+        return np.sum(x, axis=dim, keepdims=keepdim)
+
+    def mean(self, x, dim=None, keepdim=False):
+        return np.mean(x, axis=dim, keepdims=keepdim)
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
 
 
-# Create a tensor mock that preserves shape
-class TensorMock:
-    def __init__(self, shape):
-        self.shape = shape
+class ModuleMock:
+    def __init__(self):
+        pass
 
-    def to(self, *args, **kwargs):
+    def to(self, device):
+        return self
+
+    def eval(self):
         return self
 
 
-mock_torch.tensor = lambda x: TensorMock(x.shape)
-mock_torch.device = lambda x: x
+class DropoutMock:
+    def __init__(self, p=0.5, inplace=False):
+        self.p = p
+        self.inplace = inplace
+
+    def __call__(self, x):
+        return x
 
 
-# Create module mocks that return proper shapes
-class LSTMMock(MagicMock):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.input_size = kwargs.get("input_size")
-        self.hidden_size = kwargs.get("hidden_size")
-        self.num_layers = kwargs.get("num_layers")
+class TanhMock:
+    def __call__(self, x):
+        return np.tanh(x)
+
+
+class ReLUMock:
+    def __init__(self):
+        pass
+
+    def __call__(self, x):
+        return np.maximum(0, x)
+
+
+class LSTMMock:
+    def __init__(
+        self, input_size, hidden_size, num_layers, batch_first=False, dropout=0
+    ):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.batch_first = batch_first
+        self.dropout = dropout
 
     def __call__(self, x, *args, **kwargs):
-        batch_size = x.shape[0]
-        return TensorMock((batch_size, x.shape[1], self.hidden_size)), None
+        return x, (None, None)
 
 
-class LinearMock(MagicMock):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.in_features = args[0]
-        self.out_features = args[1]
+class LinearMock:
+    def __init__(self, in_features, out_features):
+        self.in_features = in_features
+        self.out_features = out_features
 
-    def __call__(self, x, *args, **kwargs):
-        return TensorMock((x.shape[0], self.out_features))
+    def __call__(self, x):
+        return x
 
 
-# Set up nn mocks
-mock_torch.nn = MagicMock()
-mock_torch.nn.LSTM = LSTMMock
-mock_torch.nn.Linear = LinearMock
-mock_torch.nn.Dropout = MagicMock
-mock_torch.nn.ReLU = MagicMock
-mock_torch.nn.Module = MagicMock
-mock_torch.nn.Sigmoid = MagicMock
+class BatchNorm1dMock:
+    def __init__(self, num_features):
+        self.num_features = num_features
 
-sys.modules["torch"] = mock_torch
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    def __call__(self, x):
+        return x
+
+
+class LayerNormMock:
+    def __init__(self, normalized_shape):
+        self.normalized_shape = normalized_shape
+
+    def __call__(self, x):
+        return x
+
+
+class SequentialMock:
+    def __init__(self, *args):
+        self.layers = args
+
+    def __call__(self, x):
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
+
+class ParameterMock:
+    def __init__(self, data):
+        self.data = data
+
+
+# Set up nn module
+class nn:
+    Module = ModuleMock
+    LSTM = LSTMMock
+    Linear = LinearMock
+    BatchNorm1d = BatchNorm1dMock
+    LayerNorm = LayerNormMock
+    Sequential = SequentialMock
+    Parameter = ParameterMock
+    Dropout = DropoutMock
+    Tanh = TanhMock
+    ReLU = ReLUMock
 
 
 @pytest.fixture
@@ -89,10 +170,26 @@ def test_scale_data(sample_data, scalers):
     scaler_X2.fit(X2.reshape(-1, features))
 
     # Test scaling
-    X1_scaled, X2_scaled, H2H_scaled = scale_data(
-        X1, X2, H2H, scaler_X1, scaler_X2, scaler_H2H
-    )
+    X1_scaled, X2_scaled = scale_data(X1, X2, scaler_X1, scaler_X2)
 
     assert X1_scaled.shape == X1.shape
     assert X2_scaled.shape == X2.shape
-    assert H2H_scaled.shape == H2H.shape
+
+
+def test_tennis_lstm_init():
+    """Test TennisLSTM initialization"""
+    os.environ["ENV"] = "test"
+
+    # Set up mocks
+    import model
+
+    model.nn = nn
+    model.torch = TorchMock()
+
+    # Create model
+    tennis_lstm = model.TennisLSTM(input_size=10, hidden_size=20, num_layers=2)
+
+    # Test initialization
+    assert tennis_lstm.lstm.input_size == 10
+    assert tennis_lstm.lstm.hidden_size == 20
+    assert tennis_lstm.lstm.num_layers == 2

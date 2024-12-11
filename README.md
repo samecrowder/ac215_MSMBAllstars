@@ -15,7 +15,7 @@ MSMBAllstars
 
 Our project develops a machine learning application that predicts tennis match outcomes using historical ATP match data. The system combines an LSTM-based prediction model with an LLM-powered chat interface for user interaction.
 
-### Milestone 5 - Kubernetes Deployment & GPU Acceleration
+### Milestone 5 - Kubernetes Deployment & GPU Acceleration & ML Pipeline
 
 For this milestone, we've implemented a robust Kubernetes deployment on Google Cloud Platform (GCP) with the following key features:
 
@@ -45,6 +45,11 @@ For this milestone, we've implemented a robust Kubernetes deployment on Google C
    - GPU-optimized Ollama container
    - Efficient resource allocation for ML workloads
 
+5. **ML Pipeline**
+   - Single pipeline for preprocessing (see `run_pipeline.sh` in root)
+   - Trianing on GCP Vertex AI and sweep optimization on Weights & Biases
+   - Deployment of model only if passes validation metric threshold
+
 ## System Architecture
 
 ![System Overview](deliverables/diagrams/solution_architecture.png)
@@ -73,35 +78,7 @@ gcloud container node-pools create l4-gpu-pool \
 
 ## Deployment Process
 
-1. **Setup GCP Project**
-
-```bash
-# Set project ID
-export PROJECT_ID="tennis-match-predictor"
-gcloud config set project $PROJECT_ID
-```
-
-2. **Create GKE Cluster**
-
-```bash
-gcloud container clusters create tennis-predictor-cluster \
-    --zone us-central1-a \
-    --machine-type g2-standard-4
-```
-
-3. **Deploy with Ansible**
-
-```bash
-cd src/ansible
-ansible-playbook deploy-k8s.yml
-```
-
-4. **Verify Deployment**
-
-```bash
-kubectl get pods -o wide
-kubectl get services
-```
+To deploy, to to github actions and run the `GKE Deploy` workflow. This will build the Docker images and push them to GCR, and then deploy the application to GKE using Ansible.
 
 ## Service Endpoints
 
@@ -150,8 +127,7 @@ curl -X POST "http://<external-ip>:8000/predict" \
   -d '{
     "player_a_id": "Novak Djokovic",
     "player_b_id": "Roger Federer",
-    "tournament": "Wimbledon",
-    "round": "F"
+    "lookback": 10
   }'
 ```
 

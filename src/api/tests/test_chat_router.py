@@ -47,3 +47,26 @@ def test_chat_post_endpoint(mock_stream):
     )
 
     assert response.status_code == 200
+
+
+@patch("chat.router.stream_chat_response")
+def test_chat_post_endpoint_with_history(mock_stream):
+    # Mock the stream response
+    mock_stream.return_value = AsyncIterator(["test response with history"])
+
+    response = client.post(
+        "/chat",
+        json={
+            "player_a_id": "test",
+            "player_b_id": "test",
+            "query": "test",
+            "lookback": 5,
+            "history": [
+                {"message": "Hello", "sender": "user"},
+                {"message": "Hi there!", "sender": "assistant"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "test response with history"

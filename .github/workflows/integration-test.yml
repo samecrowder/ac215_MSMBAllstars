@@ -16,6 +16,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install test dependencies
+        working-directory: src/probability_model
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r test-requirements.txt
+
       - name: Install dependencies
         run: |
           sudo apt-get update

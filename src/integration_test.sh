@@ -13,8 +13,8 @@ echo "🚀 Starting services..."
 docker compose up -d
 
 echo "⏳ Waiting for API to be ready..."
-timeout=300  # 5 minutes in seconds
-interval=5   # Check every 5 seconds
+timeout=300 # 5 minutes in seconds
+interval=5  # Check every 5 seconds
 elapsed=0
 
 while true; do
@@ -33,8 +33,9 @@ while true; do
     fi
 
     status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health || echo "failed")
-    
+
     if [ "$status_code" = "200" ]; then
+        sleep 60 # wait for other services to be ready
         echo "✅ API is ready!"
         break
     fi
@@ -51,7 +52,7 @@ while true; do
         echo -e "\n🔍 Probability Model logs:"
         docker compose logs --tail=10 probability_model
     fi
-    
+
     sleep $interval
     elapsed=$((elapsed + interval))
 done
@@ -76,7 +77,7 @@ if [ "$predict_status_code" != "200" ]; then
     exit 1
 fi
 
-# TODO add streaming chat test here, consider converting to python so 
+# TODO add streaming chat test here, consider converting to python so
 # we can load all the messages while streaming
 
 echo "💬 Testing chat endpoint..."

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -58,18 +58,11 @@ def get_player_last_nplus1_matches_since_date(
     )
 
 
-def get_h2h_stats(h2h_df: pd.DataFrame) -> List[float]:
-    h2h_wins = h2h_df["is_winner"].sum()
-    h2h_total = len(h2h_df)
-    h2h_win_percentage = h2h_wins / h2h_total if h2h_total > 0 else 0.5
-    return [h2h_win_percentage, h2h_total]
-
-
 def create_matchup_data(
-    p1_history,
-    p2_history,
-    feature_cols,
-    history_len=10,
+    p1_history: pd.DataFrame,
+    p2_history: pd.DataFrame,
+    feature_cols: list[str],
+    history_len: int = 10,
 ):
     p1_features, p2_features = [], []
     p1_opponents, p2_opponents = [], []
