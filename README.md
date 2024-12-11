@@ -89,12 +89,23 @@ gcloud container clusters create tennis-predictor-cluster \
     --machine-type g2-standard-4
 ```
 
-3. **Deploy with Ansible**
+3. **Deploy Services with Ansible**
 
+There are two ways to deploy:
+
+a. Using the deployment script, which first builds and pushes the Docker images for all services, then deploys them to Kubernetes using Ansible.
 ```bash
-cd src/ansible
-ansible-playbook deploy-k8s.yml
+cd src/deploy
+./deploy.zsh
 ```
+
+b. Using GitHub Actions:
+- Push to main branch, or
+- Manually trigger the "Deploy to GKE" workflow
+
+The deployment script handles:
+- Building and pushing Docker images for all services
+- Deploying services to Kubernetes using Ansible
 
 4. **Verify Deployment**
 
@@ -149,9 +160,7 @@ curl -X POST "http://<external-ip>:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "player_a_id": "Novak Djokovic",
-    "player_b_id": "Roger Federer",
-    "tournament": "Wimbledon",
-    "round": "F"
+    "player_b_id": "Roger Federer"
   }'
 ```
 
@@ -161,7 +170,9 @@ curl -X POST "http://<external-ip>:8000/predict" \
 curl -X POST "http://<external-ip>:8000/chat" \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Who is more likely to win between Federer and Nadal?",
+    "player_a_id": "Novak Djokovic",
+    "player_b_id": "Roger Federer",
+    "query": "Who is more likely to win between Federer and Novak?",
     "history": []
   }'
 ```
