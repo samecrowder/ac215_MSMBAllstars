@@ -1,5 +1,5 @@
 # the high level structure of this workflow needs to be kept in sync
-# with the deploy.zsh script. we don't call it directly because we want
+# with the src/deploy/deploy.sh script. we don't call it directly because we want
 # to have parallel builds for each service.
 name: Deploy to GKE
 
@@ -68,7 +68,7 @@ jobs:
           SERVICE_PATH=${{ matrix.service.path }}
           IMAGE_TAG=${{ github.sha }}
           BUILD_ARGS=${{ matrix.service.build_args }}
-          ./src/deploy/docker-build-and-push.zsh
+          ./src/deploy/docker-build-and-push.sh
 
   deploy:
     needs: build
@@ -110,4 +110,4 @@ jobs:
           USE_GKE_GCLOUD_AUTH_PLUGIN: True
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          ./src/deploy/ansible-deploy.zsh ${{ env.LLM_MODEL }}
+          ./src/deploy/ansible-deploy.sh ${{ env.LLM_MODEL }}
