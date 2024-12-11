@@ -101,6 +101,8 @@ jobs:
         run: |
           mkdir -p ../secrets
           echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > ../secrets/super-admin-key.json
+          # allow ansible to read the file
+          chmod 666 ../secrets/super-admin-key.json
           ls -la ../secrets
 
       - name: Install Ansible and dependencies

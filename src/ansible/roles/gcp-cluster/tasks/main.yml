@@ -41,6 +41,19 @@
         - https://www.googleapis.com/auth/trace.append
     state: present
 
+# debug print working directory
+- name: Get working directory
+  shell: pwd
+  register: working_dir
+
+- name: Debug print working directory
+  debug:
+    msg: "Working directory: {{ working_dir.stdout }}"
+
+- name: Debug print CREDENTIALS_FILE
+  debug:
+    msg: "CREDENTIALS_FILE: {{ lookup('env', 'CREDENTIALS_FILE') }}"
+
 - name: Create or update kubectl secret with account perms
   shell: >
     gcloud container clusters get-credentials tennis-predictor-cluster
@@ -48,7 +61,6 @@
     --project {{ gcp_project }}
     && (kubectl get secret gcp-credentials || kubectl create secret generic gcp-credentials
     --from-file={{ lookup('env', 'CREDENTIALS_FILE') }})
-  
 
 # this may not be needed after we enable the secrets... test after this works
 - name: Set workload pool
