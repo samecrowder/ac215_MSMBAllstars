@@ -39,7 +39,7 @@ jobs:
           npm install
 
       - name: Run system test
-        working-directory: src
+        working-directory: src/system_tests
         run: |
           chmod +x system_test.sh
           ./system_test.sh

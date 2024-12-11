@@ -45,6 +45,7 @@ describe("ChatPanel", () => {
       send: jest.fn(),
       close: jest.fn(),
       onmessage: jest.fn(),
+      onerror: jest.fn(),
     };
     // @ts-ignore
     global.WebSocket = jest.fn().mockImplementation(() => mockWebSocket);

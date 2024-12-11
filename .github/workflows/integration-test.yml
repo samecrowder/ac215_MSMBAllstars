@@ -29,7 +29,7 @@ jobs:
           ls -la ../../secrets
 
       - name: Run integration test
-        working-directory: src
+        working-directory: src/system_tests
         run: |
           chmod +x integration_test.sh
           ./integration_test.sh

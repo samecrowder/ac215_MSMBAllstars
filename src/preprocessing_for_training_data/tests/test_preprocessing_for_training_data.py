@@ -65,7 +65,7 @@ def test_create_matchup_data(sample_df):
     )
 
     p1_features, p2_features, p1_mask, p2_mask = create_matchup_data(
-        p1_history, p2_history, feature_cols, history_len=1
+        p1_history, p2_history, feature_cols
     )
 
     # Test features
@@ -117,7 +117,7 @@ def test_data_preprocessing_pipeline(sample_df):
 
     # Create matchup features with opponent masks
     winner_features, loser_features, winner_mask, loser_mask = create_matchup_data(
-        winner_history, loser_history, feature_cols, LOOKBACK
+        winner_history, loser_history, feature_cols
     )
 
     # Assertions

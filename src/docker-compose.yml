@@ -19,7 +19,7 @@ services:
       - GCP_PROJECT=tennis-match-predictor
       - GCP_ZONE=us-central1-a
       - GCS_BUCKET_NAME=msmballstars-data
-      - DATA_FOLDER=version1
+      - DATA_FOLDER=version5
       - DATA_FILE=combined_atp_matches.csv
       - GCS_CACHE=/gcs_cache
     networks:
@@ -46,7 +46,7 @@ services:
       - GCP_PROJECT=tennis-match-predictor
       - GCP_ZONE=us-central1-a
       - GCS_BUCKET_NAME=msmballstars-data
-      - DATA_FOLDER=version1
+      - DATA_FOLDER=version5
       - DATA_FILE=training_data_lookback=10.pkl
       - WEIGHTS_FILE=prob_model.pt
       - HIDDEN_SIZE=32

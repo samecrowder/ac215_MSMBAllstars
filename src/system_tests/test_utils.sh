@@ -1,10 +1,23 @@
 #!/bin/bash
 
-# Exit on any error
-set -e
+# Function to check and start containers if needed
+STARTED_CONTAINERS=0
+setup_containers() {
+    if [ "$(docker compose ps --status running | grep -c '')" -gt 1 ]; then
+        echo "🔄 Reusing existing containers..."
+        STARTED_CONTAINERS=0
+    else
+        echo "🧹 Cleaning up any existing containers..."
+        docker compose down
 
-# Add flag to track if we started new containers
-CONTAINERS_STARTED=false
+        echo "🏗️ Building containers..."
+        docker compose build
+
+        echo "🚀 Starting services..."
+        docker compose up -d
+        STARTED_CONTAINERS=1
+    fi
+}
 
 # Function to wait for a service to be healthy
 wait_for_service() {
@@ -27,7 +40,6 @@ wait_for_service() {
             exit 1
         fi
 
-        # run curl, get the http status code
         set +e
         status_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$port$health_path" 2>/dev/null)
         set -e
@@ -49,51 +61,22 @@ wait_for_service() {
     done
 }
 
-# Check if containers are already running
-if [ "$(docker compose ps --status running | grep -c '')" -gt 1 ]; then
-    echo "🔄 Reusing existing containers..."
-else
-    echo "🧹 Cleaning up any existing containers..."
-    docker compose down
+# Function to wait for all services
+wait_for_all_services() {
+    echo "🔍 Checking all services..."
+    wait_for_service "api" 8000
+    wait_for_service "probability_model" 8001
+    wait_for_service "llm" 8002
+    wait_for_service "ollama" 11434 "/api/tags"
+}
 
-    echo "🏗️ Building containers..."
-    docker compose build
-
-    echo "🚀 Starting services..."
-    docker compose up -d
-    CONTAINERS_STARTED=true
-fi
-
-# Wait for all services to be ready
-echo "🔍 Checking all services..."
-wait_for_service "api" 8000
-wait_for_service "probability_model" 8001
-wait_for_service "llm" 8002
-wait_for_service "ollama" 11434 "/api/tags"
-
-echo "🎭 Running Playwright E2E tests..."
-cd frontend/tennis-app
-npx playwright install --with-deps chromium
-
-# even if this fails, we should still shut down the containers
-set +e
-npm run test:e2e
-test_result=$?
-set -e
-
-if [ $test_result -eq 0 ]; then
-    echo "🎉 All system tests passed successfully!"
-else
-    echo "❌ Some system tests failed"
-fi
-cd ../..
-
-# Only shut down if we started the containers
-if [ "$CONTAINERS_STARTED" = true ]; then
-    echo "🧹 Cleaning up containers..."
-    docker compose down
-else
-    echo "🔄 Leaving existing containers running..."
-fi
-
-exit $test_result
+# Function to cleanup based on whether we started new containers
+# expects to be called after setup_containers is called
+cleanup_containers() {
+    if [ "$STARTED_CONTAINERS" = "1" ]; then
+        echo "🧹 Cleaning up containers..."
+        docker compose down
+    else
+        echo "🔄 Leaving existing containers running..."
+    fi
+} 

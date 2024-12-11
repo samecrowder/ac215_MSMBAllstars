@@ -15,7 +15,7 @@ MSMBAllstars
 
 Our project develops a machine learning application that predicts tennis match outcomes using historical ATP match data. The system combines an LSTM-based prediction model with an LLM-powered chat interface for user interaction.
 
-### Milestone 5 - Kubernetes Deployment & GPU Acceleration
+### Milestone 5 - Kubernetes Deployment & GPU Acceleration & ML Pipeline
 
 For this milestone, we've implemented a robust Kubernetes deployment on Google Cloud Platform (GCP) with the following key features:
 
@@ -44,6 +44,11 @@ For this milestone, we've implemented a robust Kubernetes deployment on Google C
    - NVIDIA device plugin integration
    - GPU-optimized Ollama container
    - Efficient resource allocation for ML workloads
+
+5. **ML Pipeline**
+   - Single pipeline for preprocessing (see `run_pipeline.sh` in root)
+   - Training on GCP Vertex AI and sweep optimization on Weights & Biases
+   - Deployment of model only if passes validation metric threshold
 
 ## System Architecture
 
@@ -160,7 +165,8 @@ curl -X POST "http://<external-ip>:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "player_a_id": "Novak Djokovic",
-    "player_b_id": "Roger Federer"
+    "player_b_id": "Roger Federer",
+    "lookback": 10
   }'
 ```
 
