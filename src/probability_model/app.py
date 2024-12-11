@@ -3,15 +3,15 @@ import os
 import pickle
 from typing import List
 import logging
+import torch
 
 import fastapi
 
 from google.cloud import storage
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 from sklearn.preprocessing import StandardScaler
 
 if os.environ.get("ENV") != "test":
-    import torch
     from .model import TennisLSTM
 else:
     # Mock TennisLSTM for non-prod environments
@@ -29,7 +29,7 @@ else:
             pass
 
         def __call__(self, *args, **kwargs):
-            return torch.tensor([0.5])
+            return torch.tensor([0.5]), torch.tensor([0.5])
 
 
 if os.environ.get("ENV") != "prod":
@@ -155,6 +155,18 @@ if os.environ.get("ENV") != "test":
     model = TennisLSTM(input_size, HIDDEN_SIZE, NUM_LAYERS)
     model.load_state_dict(weights)
     model.to(device)
+else:
+    device = torch.device("cpu")
+    # use our mock model
+    model = TennisLSTM(None, HIDDEN_SIZE, NUM_LAYERS)
+
+    # mock scalers to have a function called transform that returns the input
+    class MockScaler:
+        def transform(self, x):
+            return x
+
+    scaler_X1 = MockScaler()
+    scaler_X2 = MockScaler()
 
 
 app = fastapi.FastAPI()
@@ -169,6 +181,23 @@ class PredictionRequest(BaseModel):
     X2: List[List[float]]
     M1: List[float]
     M2: List[float]
+
+    @field_validator("X1", "X2", "M1", "M2")
+    @classmethod
+    def check_not_empty(cls, v, info):
+        if not v:
+            raise ValueError(f"{info.field_name} must not be empty")
+        return v
+
+    @model_validator(mode="after")
+    def check_lengths(self):
+        length = len(self.X1)
+        if not all(len(field) == length for field in [self.X2, self.M1, self.M2]):
+            raise ValueError(
+                f"All inputs must have the same length. Lengths: X1={len(self.X1)}, "
+                f"X2={len(self.X2)}, M1={len(self.M1)}, M2={len(self.M2)}"
+            )
+        return self
 
 
 @app.post("/predict", response_model=PredictionResponse)
