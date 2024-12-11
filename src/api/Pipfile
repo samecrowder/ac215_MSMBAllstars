@@ -9,7 +9,7 @@ uvicorn = "*"
 requests = "*"
 python-dotenv = "*"
 pydantic = "*"
-numpy = "*"
+numpy = "<2"
 pandas = "*"
 google-cloud-storage = "*"
 

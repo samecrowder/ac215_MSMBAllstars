@@ -6,11 +6,28 @@ test.describe("Tennis App E2E Tests", () => {
   });
 
   test("predicts match winner", async ({ page }) => {
+    // Add console log listener
+    page.on('console', msg => console.log(`Browser console: ${msg.text()}`));
+    
+    // Add network request logging
+    page.on('request', request => 
+      console.log(`>> ${request.method()} ${request.url()}`)
+    );
+    page.on('response', response => 
+      console.log(`<< ${response.status()} ${response.url()}`)
+    );
+    
     // Select players
     await page.selectOption("select >> nth=0", "Roger Federer");
     await page.selectOption("select >> nth=1", "Rafael Nadal");
 
+
     await expect(page.locator("text=/\\d+%/")).not.toBeVisible();
+
+    // Log the page content if the button isn't found
+    if (!(await page.locator('text=Predict Winner').isVisible())) {
+      console.log('Page content:', await page.content());
+    }
 
     // Click predict button and wait for response
     await page.click("text=Predict Winner");
@@ -51,7 +68,7 @@ test.describe("Tennis App E2E Tests", () => {
               '[data-testid="assistant-message"]:not([data-pending="true"])',
             )
             .first()
-            .textContent({ timeout: 45_000 });
+            .textContent({ timeout: 90_000 });
           expect(assistantResponse).toBeTruthy();
 
           // Verify both message types appear

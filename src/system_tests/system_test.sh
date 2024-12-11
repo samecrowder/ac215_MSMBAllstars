@@ -13,8 +13,7 @@ setup_containers
 wait_for_all_services
 
 echo "🎭 Running Playwright E2E tests..."
-# out of system_tests directory and into frontend/tennis-app
-cd ../frontend/tennis-app
+cd frontend/tennis-app
 npx playwright install --with-deps chromium
 
 # even if this fails, we should still shut down the containers

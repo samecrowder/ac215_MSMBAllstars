@@ -8,7 +8,7 @@ google-cloud-storage = "*"
 scikit-learn = "*"
 wandb = "*"
 pandas = "*"
-numpy = "==1.25.2"
+numpy = "<2"
 python-json-logger = ">=2.0.0"
 torch = "==2.3.0"
 

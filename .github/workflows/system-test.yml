@@ -39,10 +39,10 @@ jobs:
           npm install
 
       - name: Run system test
-        working-directory: src/system_tests
+        working-directory: src
         run: |
-          chmod +x system_test.sh
-          ./system_test.sh
+          chmod +x system_tests/system_test.sh
+          ./system_tests/system_test.sh
 
       - name: Print container logs on failure
         if: failure()

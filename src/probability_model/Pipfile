@@ -8,7 +8,7 @@ fastapi = {extras = ["standard"], version = "*"}
 pydantic = "*"
 python-dotenv = "*"
 google-cloud-storage = "*"
-numpy = "*"
+numpy = "<2"
 torch = "*"
 pandas = "*"
 scikit-learn = "*"

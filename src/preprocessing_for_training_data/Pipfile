@@ -8,7 +8,7 @@ pandas = "*"
 google-cloud-storage = "*"
 tqdm = "*"
 python-dotenv = "*"
-numpy = "==1.25.2"
+numpy = "<2"
 
 [requires]
 python_version = "3.9"
