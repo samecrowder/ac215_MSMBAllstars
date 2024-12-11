@@ -21,6 +21,7 @@ BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "msmballstars-data")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 DATA_FOLDER = os.environ.get("DATA_FOLDER", "version1")
 DATA_FILE = os.environ.get("DATA_FILE", "combined_atp_matches.csv")
+GCS_CACHE = os.environ.get("GCS_CACHE")
 
 
 def get_gcs_client():
@@ -34,8 +35,22 @@ def get_gcs_client():
 
 def read_csv_from_gcs(bucket, file_name):
     logging.info(f"Reading file: {file_name}")
+    if GCS_CACHE:
+        local_file_path = os.path.join(GCS_CACHE, file_name)
+        if os.path.exists(local_file_path):
+            logging.info(f"File found in local cache: {local_file_path}")
+            return pd.read_csv(local_file_path)
+
     blob = bucket.blob(file_name)
     content = blob.download_as_text()
+    # Write to local cache
+    if GCS_CACHE:
+        local_file_path = os.path.join(GCS_CACHE, file_name)
+        # create all parent directories if they don't exist
+        os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+        with open(local_file_path, "w") as f:
+            f.write(content)
+
     return pd.read_csv(StringIO(content))
 
 

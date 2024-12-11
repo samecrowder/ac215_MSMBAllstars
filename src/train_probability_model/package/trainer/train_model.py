@@ -29,15 +29,38 @@ NUM_EPOCHS = int(os.environ.get("NUM_EPOCHS"))
 RUN_SWEEP = os.environ.get("RUN_SWEEP", "0").lower() == "1"
 VAL_F1_THRESHOLD = float(os.environ.get("VAL_F1_THRESHOLD"))
 WANDB_KEY = os.environ.get("WANDB_KEY")
+GCS_CACHE = os.environ.get("GCS_CACHE")
 
 logging.info(f"Using GCS bucket: {BUCKET_NAME}")
 logging.info(f"Using GCS credentials: {GOOGLE_APPLICATION_CREDENTIALS}")
 
 
-def read_file_from_gcs(bucket, file_name):
-    logging.info(f"Reading file: {file_name}")
+def read_file_from_gcs_or_cache(bucket: storage.Bucket, file_name: str):
+    """
+    Read a file from GCS or local cache if it exists.
+    /gcs_cache/msmballstars-data is where the data may be cached.
+    """
+    logging.info(f"Loading file: {file_name}")
+    if GCS_CACHE:
+        local_file_path = os.path.join(GCS_CACHE, file_name)
+        if os.path.exists(local_file_path):
+            logging.info(f"File found in local cache: {local_file_path}")
+            with open(local_file_path, "rb") as f:
+                return pickle.load(f)
+        else:
+            logging.info(f"File not found in local cache: {local_file_path}")
+    else:
+        logging.info("GCS_CACHE is not set, skipping local cache check")
+
     blob = bucket.blob(file_name)
     pickle_data = blob.download_as_bytes()
+    if GCS_CACHE:
+        local_file_path = os.path.join(GCS_CACHE, file_name)
+        # create all parent directories if they don't exist
+        os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+        with open(local_file_path, "wb") as f:
+            f.write(pickle_data)
+
     return pickle.loads(BytesIO(pickle_data).getvalue())
 
 
@@ -98,7 +121,7 @@ def run_training_setup(
     logging.info(f"Connected to GCS bucket: {BUCKET_NAME}")
 
     # Read data file
-    data = read_file_from_gcs(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
+    data = read_file_from_gcs_or_cache(bucket, os.path.join(DATA_FOLDER, DATA_FILE))
 
     # Create dataset loaders
     train_loader, test_loader = create_data_loaders(

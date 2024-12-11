@@ -21,12 +21,14 @@ services:
       - GCS_BUCKET_NAME=msmballstars-data
       - DATA_FOLDER=version1
       - DATA_FILE=combined_atp_matches.csv
+      - GCS_CACHE=/gcs_cache
     networks:
       - msmballstars-network
     volumes:
       - ./api:/app
       - ./.env.dev:/app/.env.dev
       - ../../secrets:/secrets
+      - gcs_cache:/gcs_cache
     depends_on:
       - probability_model
       - llm
@@ -51,12 +53,14 @@ services:
       - NUM_LAYERS=2
       - CUDA_VISIBLE_DEVICES=""
       - TORCH_DEVICE=cpu
+      - GCS_CACHE=/gcs_cache
     networks:
       - msmballstars-network
     volumes:
       - ./probability_model:/app
       - ./.env.dev:/app/.env.dev
       - ../../secrets:/secrets
+      - gcs_cache:/gcs_cache
 
   llm:
     build:
@@ -85,8 +89,10 @@ services:
     build:
       context: ./llm
       dockerfile: ollama.Dockerfile
+      args:
+        LLM_MODEL: ${LLM_MODEL:-llama3.2:1b}
     ports:
-      - "11434"
+      - "11434:11434"
     environment:
       - LLM_MODEL=${LLM_MODEL:-llama3.2:1b}
     networks:
@@ -96,6 +102,12 @@ services:
 
 volumes:
   ollama_data:
+  gcs_cache:
+    driver: local
+    driver_opts:
+      type: none
+      device: /tmp/gcs_cache
+      o: bind
 
 networks:
   msmballstars-network:

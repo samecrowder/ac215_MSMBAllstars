@@ -25,5 +25,7 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 # Copy your application code
 COPY . .
 
+RUN mkdir -p /gcs_cache && chmod 777 /gcs_cache
+
 # Run the FastAPI app
 CMD ["pipenv", "run", "fastapi", "run", "app.py", "--port", "$PORT"]

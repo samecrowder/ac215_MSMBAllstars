@@ -14,6 +14,7 @@ on:
 env:
   PROJECT_ID: tennis-match-predictor
   REGION: us-central1
+  LLM_MODEL: llama3.2:3b
 
 jobs:
   build:
@@ -22,17 +23,19 @@ jobs:
       matrix:
         service:
           [
-            { name: "api", dockerfile: "Dockerfile", path: "src/api" },
+            { name: "api", dockerfile: "Dockerfile", path: "src/api", build_args: "" },
             {
               name: "probability-model",
               dockerfile: "Dockerfile",
               path: "src/probability_model",
+              build_args: "",
             },
-            { name: "llm", dockerfile: "Dockerfile", path: "src/llm" },
+            { name: "llm", dockerfile: "Dockerfile", path: "src/llm", build_args: "" },
             {
               name: "ollama",
               dockerfile: "ollama.Dockerfile",
               path: "src/llm",
+              build_args: "--build-arg LLM_MODEL=${{ env.LLM_MODEL }}",
             },
           ]
     permissions:
@@ -64,6 +67,7 @@ jobs:
           DOCKERFILE=${{ matrix.service.dockerfile }}
           SERVICE_PATH=${{ matrix.service.path }}
           IMAGE_TAG=${{ github.sha }}
+          BUILD_ARGS=${{ matrix.service.build_args }}
           ./src/deploy/docker-build-and-push.zsh
 
   deploy:
@@ -106,4 +110,4 @@ jobs:
           USE_GKE_GCLOUD_AUTH_PLUGIN: True
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          ./src/deploy/ansible-deploy.zsh
+          ./src/deploy/ansible-deploy.zsh ${{ env.LLM_MODEL }}

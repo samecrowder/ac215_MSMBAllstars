@@ -55,19 +55,59 @@ DATA_FILE = os.environ.get("DATA_FILE", "prob_model.pt ")
 WEIGHTS_FILE = os.environ.get("WEIGHTS_FILE", "model_weights.pt")
 HIDDEN_SIZE = int(os.environ.get("HIDDEN_SIZE", "256"))
 NUM_LAYERS = int(os.environ.get("NUM_LAYERS", "2"))
+GCS_CACHE = os.environ.get("GCS_CACHE")
+
+
+def read_file_from_gcs_or_cache(bucket: storage.Bucket, file_name: str) -> bytes:
+    """
+    Read a file from GCS or local cache if it exists.
+    /gcs_cache/msmballstars-data is where the data may be cached.
+    """
+    logging.info(f"Loading file: {file_name}")
+    if GCS_CACHE:
+        cache_dir = os.path.join(GCS_CACHE, BUCKET_NAME)
+        local_file_path = os.path.join(cache_dir, file_name)
+        
+        # Create the cache directory structure if it doesn't exist
+        try:
+            os.makedirs(cache_dir, exist_ok=True)
+            logging.info(f"Cache directory ensured: {cache_dir}")
+        except Exception as e:
+            logging.error(f"Failed to create cache directory: {e}")
+            
+        if os.path.exists(local_file_path):
+            logging.info(f"File found in local cache: {local_file_path}")
+            with open(local_file_path, "rb") as f:
+                return f.read()
+        else:
+            logging.info(f"File not found in local cache: {local_file_path}")
+            logging.info(f"Current directory contents: {os.listdir(cache_dir) if os.path.exists(cache_dir) else 'directory does not exist'}")
+    else:
+        logging.info("GCS_CACHE is not set, skipping local cache check")
+
+    blob = bucket.blob(file_name)
+    pickle_data = blob.download_as_bytes()
+    if GCS_CACHE:
+        try:
+            # Ensure the full directory path exists
+            os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+            with open(local_file_path, "wb") as f:
+                f.write(pickle_data)
+            logging.info(f"Successfully cached file to: {local_file_path}")
+            logging.info(f"Cache file size: {os.path.getsize(local_file_path)} bytes")
+        except Exception as e:
+            logging.error(f"Failed to write to cache: {e}")
+
+    return pickle_data
 
 
 def read_pt_file_from_gcs(bucket, file_name):
-    logging.info(f"Reading file: {file_name}")
-    blob = bucket.blob(file_name)
-    file_content = blob.download_as_bytes()
+    file_content = read_file_from_gcs_or_cache(bucket, file_name)
     return torch.load(BytesIO(file_content), map_location=torch.device("cpu"))
 
 
 def read_pkl_file_from_gcs(bucket, file_name):
-    logging.info(f"Reading file: {file_name}")
-    blob = bucket.blob(file_name)
-    file_content = blob.download_as_bytes()
+    file_content = read_file_from_gcs_or_cache(bucket, file_name)
     return pickle.loads(BytesIO(file_content).getvalue())
 
 

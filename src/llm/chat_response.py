@@ -5,6 +5,8 @@ from typing import List, Literal
 import ollama
 from pydantic import BaseModel
 
+LLM_MODEL = os.getenv("LLM_MODEL", "llama3.2:1b")
+
 ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
 print(f"\n\n\n\nollama_host: {ollama_host}\n\n\n\n")
 oc = ollama.Client(host=ollama_host)
@@ -64,7 +66,7 @@ then expand if the user asks for more detail.
     ]
 
     try:
-        for chunk in oc.chat(model="llama3.2:1b", messages=messages, stream=True):
+        for chunk in oc.chat(model=LLM_MODEL, messages=messages, stream=True):
             if chunk and chunk.get("message", {}).get("content"):
                 content = chunk["message"]["content"]
                 yield content

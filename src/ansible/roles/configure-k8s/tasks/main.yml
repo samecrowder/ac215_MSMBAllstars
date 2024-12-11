@@ -6,6 +6,12 @@
       - "Git SHA: '{{ lookup('pipe', 'git rev-parse HEAD') }}'"
       - "Current working directory: '{{ lookup('pipe', 'pwd') }}'"
 
+# ensure we have the LLM_MODEL env var
+- name: Ensure LLM_MODEL is set
+  fail:
+    msg: "LLM_MODEL is not set"
+  when: lookup('env', 'LLM_MODEL') is not defined
+
 - name: Show what image we're about to deploy
   debug:
     msg: "About to deploy image: gcr.io/tennis-match-predictor/api:{{ lookup('env', 'IMAGE_TAG') }}"
@@ -42,7 +48,7 @@
         GCS_BUCKET_NAME: "msmballstars-data"
         DATA_FOLDER: "version1"
         DATA_FILE: "combined_atp_matches.csv"
-        LLM_MODEL: "llama3.2:3b"
+        LLM_MODEL: "{{ lookup('env', 'LLM_MODEL') }}"
 
 # Services
 - name: Create API Service

@@ -17,6 +17,8 @@ RUN pipenv install
 # Copy the current directory contents into the container at /app
 COPY . .
 
+RUN mkdir -p /gcs_cache && chmod 777 /gcs_cache
+
 # Add the app directory to PYTHONPATH
 ENV PYTHONPATH="/app"
 
