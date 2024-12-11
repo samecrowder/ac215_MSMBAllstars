@@ -174,11 +174,20 @@
       apiVersion: networking.gke.io/v1beta1
       kind: FrontendConfig
       metadata:
-        name: ssl-frontend-config
+        name: ssl-policy
         namespace: default
       spec:
-        sslPolicy:
-          name: "modern-ssl-policy"
+        sslPolicy: modern-ssl-policy
+
+- name: Create SSL Policy
+  google.cloud.gcp_compute_ssl_policy:
+    name: "modern-ssl-policy"
+    profile: "MODERN"
+    min_tls_version: "TLS_1_2"
+    project: "{{ gcp_project }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    state: present
 
 - name: Create Ingress
   kubernetes.core.k8s:
@@ -187,13 +196,13 @@
       apiVersion: networking.k8s.io/v1
       kind: Ingress
       metadata:
-        name: api-ingress
+        name: managed-cert-ingress
         namespace: default
         annotations:
+          kubernetes.io/ingress.global-static-ip-name: api-ip
+          networking.gke.io/managed-certificates: managed-cert
           kubernetes.io/ingress.class: "gce"
-          kubernetes.io/ingress.allow-http: "false"
-          networking.gke.io/managed-certificates: "managed-cert"
-          networking.gke.io/v1beta1.FrontendConfig: "ssl-frontend-config"
+          networking.gke.io/v1beta1.FrontendConfig: "ssl-policy"
       spec:
         rules:
           - host: tennis-match-predictor.claycoleman.us
