@@ -91,7 +91,6 @@ services:
     volumes:
       - ollama_data:/root/.ollama
 
-
   frontend:
     build:
       context: ./frontend/tennis-app
@@ -110,6 +109,7 @@ services:
 
 volumes:
   ollama_data:
+
 
 networks:
   msmballstars-network:
