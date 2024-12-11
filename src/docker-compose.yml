@@ -91,6 +91,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
 
+
   frontend:
     build:
       context: ./frontend/tennis-app
