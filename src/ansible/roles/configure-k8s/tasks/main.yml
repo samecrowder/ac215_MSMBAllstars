@@ -180,17 +180,14 @@
         sslPolicy: modern-ssl-policy
 
 - name: Create SSL Policy
-  kubernetes.core.k8s:
+  google.cloud.gcp_compute_ssl_policy:
+    name: "modern-ssl-policy"
+    profile: "MODERN"
+    min_tls_version: "TLS_1_2"
+    project: "{{ gcp_project }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
     state: present
-    definition:
-      apiVersion: compute.cnrm.cloud.google.com/v1beta1
-      kind: ComputeSSLPolicy
-      metadata:
-        name: modern-ssl-policy
-        namespace: default
-      spec:
-        minTlsVersion: TLS_1_2
-        profile: MODERN
 
 - name: Create Ingress
   kubernetes.core.k8s:
