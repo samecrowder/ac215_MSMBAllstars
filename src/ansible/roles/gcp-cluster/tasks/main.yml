@@ -6,6 +6,12 @@
       - "Project: {{ gcp_project }}"
       - "Service account: {{ lookup('env', 'GOOGLE_APPLICATION_CREDENTIALS') }}"
 
+# ensure we have the CREDENTIALS_FILE env var
+- name: Ensure CREDENTIALS_FILE is set
+  fail:
+    msg: "CREDENTIALS_FILE is not set"
+  when: lookup('env', 'CREDENTIALS_FILE') is not defined or not lookup('env', 'CREDENTIALS_FILE')
+
 - name: Get current identity
   shell: gcloud config list account --format "value(core.account)"
   register: gcloud_identity
@@ -24,6 +30,55 @@
     scopes: "{{ gcp_scopes }}"
     initial_node_count: 3
     node_config:
+      machine_type: e2-standard-4
+      disk_size_gb: 30
+      oauth_scopes:
+        - https://www.googleapis.com/auth/devstorage.read_only
+        - https://www.googleapis.com/auth/logging.write
+        - https://www.googleapis.com/auth/monitoring
+        - https://www.googleapis.com/auth/servicecontrol
+        - https://www.googleapis.com/auth/service.management.readonly
+        - https://www.googleapis.com/auth/trace.append
+    state: present
+
+- name: Create or update kubectl secret with account perms
+  shell: >
+    gcloud container clusters get-credentials tennis-predictor-cluster
+    --zone us-central1-a
+    --project {{ gcp_project }}
+    && (kubectl get secret gcp-credentials || kubectl create secret generic gcp-credentials
+    --from-file={{ lookup('env', 'CREDENTIALS_FILE') }})
+  
+
+# this may not be needed after we enable the secrets... test after this works
+- name: Set workload pool
+  shell: >
+    gcloud container clusters update tennis-predictor-cluster
+    --zone us-central1-a
+    --project {{ gcp_project }}
+    --workload-pool={{ gcp_project }}.svc.id.goog
+  register: workload_pool_result
+
+- name: Enable Config Connector addon separately
+  shell: >
+    gcloud container clusters update tennis-predictor-cluster
+    --zone us-central1-a
+    --project {{ gcp_project }}
+    --update-addons=ConfigConnector=ENABLED
+  register: config_connector_result
+
+- name: Add default CPU node pool
+  google.cloud.gcp_container_node_pool:
+    name: default-pool
+    cluster:
+      name: tennis-predictor-cluster
+      location: us-central1-a
+    location: us-central1-a
+    project: "{{ gcp_project }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_cred_file if gcp_auth_kind == 'serviceaccount' else omit }}"
+    initial_node_count: 3
+    config:
       machine_type: e2-standard-4
       disk_size_gb: 30
       oauth_scopes:

@@ -5,7 +5,9 @@ from typing import List, Literal
 import ollama
 from pydantic import BaseModel
 
-LLM_MODEL = os.getenv("LLM_MODEL", "llama3.2:1b")
+LLM_MODEL = os.getenv("LLM_MODEL")
+if not LLM_MODEL:
+    raise ValueError("LLM_MODEL is not set")
 
 ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
 print(f"\n\n\n\nollama_host: {ollama_host}\n\n\n\n")

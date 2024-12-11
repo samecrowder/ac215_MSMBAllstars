@@ -15,7 +15,6 @@ env:
   PROJECT_ID: tennis-match-predictor
   REGION: us-central1
   LLM_MODEL: llama3.2:3b
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -98,6 +97,12 @@ jobs:
           gcloud components install gke-gcloud-auth-plugin
           gcloud components update
 
+      - name: Set up environment
+        run: |
+          mkdir -p ../secrets
+          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > ../secrets/super-admin-key.json
+          ls -la ../secrets
+
       - name: Install Ansible and dependencies
         run: |
           python -m pip install --upgrade pip
@@ -110,4 +115,4 @@ jobs:
           USE_GKE_GCLOUD_AUTH_PLUGIN: True
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          ./src/deploy/ansible-deploy.sh ${{ env.LLM_MODEL }}
+          ./src/deploy/ansible-deploy.sh ${{ env.LLM_MODEL }} ../secrets/super-admin-key.json

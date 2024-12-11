@@ -10,13 +10,28 @@
 
 set -e
 
+# print usage function
+function print_usage() {
+    echo "Usage: $0 <LLM_MODEL> <CREDENTIALS_FILE>"
+    echo "LLM_MODEL: The LLM model to use"
+    echo "CREDENTIALS_FILE: The path to the credentials file"
+}
+
 # if arg is passed, use it as the LLM_MODEL
 # otherwise log out fallback value
 if [ -n "$1" ]; then
     LLM_MODEL=$1
 else
+    print_usage
     LLM_MODEL="llama3.2:1b"
     echo "LLM_MODEL is not set, using fallback value: $LLM_MODEL"
+fi
+
+if [ -n "$2" ]; then
+    CREDENTIALS_FILE=$2
+else
+    print_usage
+    exit 1
 fi
 
 # Configuration
@@ -44,4 +59,4 @@ for service in "${SERVICES[@]}"; do
     fi
 done
 
-./ansible-deploy.sh "$LLM_MODEL"
+./ansible-deploy.sh "$LLM_MODEL" "$CREDENTIALS_FILE"

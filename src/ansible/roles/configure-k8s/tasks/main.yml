@@ -10,7 +10,8 @@
 - name: Ensure LLM_MODEL is set
   fail:
     msg: "LLM_MODEL is not set"
-  when: lookup('env', 'LLM_MODEL') is not defined
+  # fail if undefined or empty
+  when: lookup('env', 'LLM_MODEL') is not defined or not lookup('env', 'LLM_MODEL')
 
 - name: Show what image we're about to deploy
   debug:
@@ -174,18 +175,6 @@
         domains:
           - tennis-match-predictor.claycoleman.us
 
-- name: Create FrontendConfig for SSL
-  kubernetes.core.k8s:
-    state: present
-    definition:
-      apiVersion: networking.gke.io/v1beta1
-      kind: FrontendConfig
-      metadata:
-        name: ssl-policy
-        namespace: default
-      spec:
-        sslPolicy: modern-ssl-policy
-
 - name: Create SSL Policy
   kubernetes.core.k8s:
     state: present
@@ -193,11 +182,23 @@
       apiVersion: compute.cnrm.cloud.google.com/v1beta1
       kind: ComputeSSLPolicy
       metadata:
-        name: modern-ssl-policy
+        name: tennis-predictor-ssl-policy
         namespace: default
       spec:
         minTlsVersion: TLS_1_2
         profile: MODERN
+
+- name: Create FrontendConfig for SSL
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: networking.gke.io/v1beta1
+      kind: FrontendConfig
+      metadata:
+        name: ssl-frontend-config
+        namespace: default
+      spec:
+        sslPolicy: tennis-predictor-ssl-policy
 
 - name: Create Ingress
   kubernetes.core.k8s:
@@ -212,7 +213,9 @@
           kubernetes.io/ingress.global-static-ip-name: api-ip
           networking.gke.io/managed-certificates: managed-cert
           kubernetes.io/ingress.class: "gce"
-          networking.gke.io/v1beta1.FrontendConfig: "ssl-policy"
+          networking.gke.io/frontend-config: '{"default": "ssl-frontend-config"}'
+          kubernetes.io/ingress.allow-http: "false"
+          networking.gke.io/force-ssl-redirect: "true"
       spec:
         rules:
           - host: tennis-match-predictor.claycoleman.us

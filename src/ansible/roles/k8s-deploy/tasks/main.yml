@@ -153,6 +153,11 @@
                       configMapKeyRef:
                         name: tennis-env
                         key: OLLAMA_HOST
+                  - name: LLM_MODEL
+                    valueFrom:
+                      configMapKeyRef:
+                        name: tennis-env
+                        key: LLM_MODEL
                 envFrom:
                   - configMapRef:
                       name: tennis-env
