@@ -44,6 +44,7 @@ describe("ChatPanel", () => {
       send: jest.fn(),
       close: jest.fn(),
       onmessage: jest.fn(),
+      onerror: jest.fn(),
     };
     // @ts-ignore
     global.WebSocket = jest.fn().mockImplementation(() => mockWebSocket);
@@ -117,5 +118,16 @@ describe("ChatPanel", () => {
     expect(mockWebSocket.send).toHaveBeenCalledWith(
       expect.stringContaining('"player_b_id":"carlos-alcaraz"')
     );
+  });
+
+  test("handles WebSocket error", async () => {
+    render(<ChatPanel initialMessages={[]} matchup={mockMatchup} />);
+
+    // Trigger WebSocket error
+    mockWebSocket.onerror(new Error("WebSocket error"));
+
+    await waitFor(() => {
+      expect(screen.getByText(/WebSocket connection error/i)).toBeInTheDocument();
+    });
   });
 });
