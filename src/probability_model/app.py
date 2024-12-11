@@ -81,9 +81,6 @@ def read_file_from_gcs_or_cache(bucket: storage.Bucket, file_name: str) -> bytes
                 return f.read()
         else:
             logging.info(f"File not found in local cache: {local_file_path}")
-            logging.info(
-                f"Current directory contents: {os.listdir(cache_dir) if os.path.exists(cache_dir) else 'directory does not exist'}"
-            )
     else:
         logging.info("GCS_CACHE is not set, skipping local cache check")
 

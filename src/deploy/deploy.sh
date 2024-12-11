@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/bin/bash
 
 # the high level structure of this script needs to be kept in sync
 # with the deploy.yml workflow. we don't call it directly because we want
@@ -33,15 +33,15 @@ echo "Setting up GCP authentication..."
 gcloud auth configure-docker
 
 # Build and push all services sequentially
-for service in $SERVICES; do
-    IFS=: read SERVICE_NAME DOCKERFILE SERVICE_PATH BUILD_ARGS <<< $service
+for service in "${SERVICES[@]}"; do
+    IFS=: read -r SERVICE_NAME DOCKERFILE SERVICE_PATH BUILD_ARGS <<< "$service"
     
-    echo "\n=== Building $SERVICE_NAME ===\n"
+    echo -e "\n=== Building $SERVICE_NAME ===\n"
     export SERVICE_NAME DOCKERFILE SERVICE_PATH BUILD_ARGS
-    if ! ./docker-build-and-push.zsh; then
+    if ! ./docker-build-and-push.sh; then
         echo "Failed to build $SERVICE_NAME"
         exit 1
     fi
 done
 
-./ansible-deploy.zsh $LLM_MODEL
+./ansible-deploy.sh "$LLM_MODEL"

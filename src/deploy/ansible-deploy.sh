@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/bin/bash
 
 # if arg is passed, use it as the LLM_MODEL
 # otherwise log out fallback value

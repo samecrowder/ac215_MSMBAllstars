@@ -40,11 +40,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           cd src/${{ matrix.service }}
+          pipenv install --dev
           if [ "${{ matrix.service }}" = "probability_model" ] || [ "${{ matrix.service }}" = "train_probability_model" ]; then
             pipenv run pip uninstall torch -y
             pipenv run pip install torch==2.2.1 --index-url https://download.pytorch.org/whl/cpu
-          fi
-          pipenv install --dev
+          fi          
 
       - name: Run tests
         env:
