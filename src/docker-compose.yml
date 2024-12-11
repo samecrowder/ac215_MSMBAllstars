@@ -71,6 +71,7 @@ services:
       - GCP_PROJECT=tennis-match-predictor
       - GCP_ZONE=us-central1-a
       - GCS_BUCKET_NAME=msmballstars-data
+      - LLM_MODEL=${LLM_MODEL:-llama3.2:1b}
     depends_on:
       - ollama
     networks:
@@ -86,6 +87,8 @@ services:
       dockerfile: ollama.Dockerfile
     ports:
       - "11434"
+    environment:
+      - LLM_MODEL=${LLM_MODEL:-llama3.2:1b}
     networks:
       - msmballstars-network
     volumes:

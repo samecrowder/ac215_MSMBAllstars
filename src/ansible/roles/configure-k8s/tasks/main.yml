@@ -42,6 +42,7 @@
         GCS_BUCKET_NAME: "msmballstars-data"
         DATA_FOLDER: "version1"
         DATA_FILE: "combined_atp_matches.csv"
+        LLM_MODEL: "llama3.2:3b"
 
 # Services
 - name: Create API Service

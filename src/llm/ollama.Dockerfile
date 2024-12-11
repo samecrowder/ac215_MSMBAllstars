@@ -5,7 +5,7 @@ ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
 # space separated list of models to download
-ARG MODELS="llama3.2:1b"
+ARG MODELS=${LLM_MODEL:-llama3.2:1b}
 ENV OLLAMA_KEEP_ALIVE=24h
 
 # Create model directory
