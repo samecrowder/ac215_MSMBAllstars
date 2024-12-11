@@ -40,7 +40,7 @@
         GCP_PROJECT: "tennis-match-predictor"
         GCP_ZONE: "us-central1-a"
         GCS_BUCKET_NAME: "msmballstars-data"
-        DATA_FOLDER: "version1"
+        DATA_FOLDER: "version5"
         DATA_FILE: "combined_atp_matches.csv"
 
 # Services
