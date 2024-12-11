@@ -30,6 +30,7 @@ while true; do
     status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health || echo "failed")
     
     if [ "$status_code" = "200" ]; then
+        sleep 10 # wait for 10 seconds for other services to be ready
         echo "✅ API is ready!"
         break
     fi
